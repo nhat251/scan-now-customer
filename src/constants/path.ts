@@ -14,6 +14,10 @@ class Path {
     kitchen: "/kitchen/dashboard" as const,
   };
 
+  owner = {
+    users: "/owner/users" as const,
+  };
+
   blogs = {
     root: "/blogs" as const,
     get _id() {
