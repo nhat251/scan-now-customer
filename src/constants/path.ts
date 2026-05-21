@@ -18,6 +18,10 @@ class Path {
     users: "/owner/users" as const,
   };
 
+  manager = {
+    users: "/manager/users" as const,
+  };
+
   blogs = {
     root: "/blogs" as const,
     get _id() {

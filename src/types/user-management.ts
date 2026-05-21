@@ -1,6 +1,56 @@
 export type UserRole = "OWNER" | "BRANCH_MANAGER" | "STAFF" | "KITCHEN";
 
 export type ManagedUserRole = Exclude<UserRole, "OWNER">;
+export type ManagerUserRoleOption = Extract<ManagedUserRole, "STAFF" | "KITCHEN">;
+
+export type BranchResponse = {
+  branchId: string;
+  restaurantId: string;
+  managerId?: string | null;
+  name: string;
+  slug: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  openTime?: string | null;
+  closeTime?: string | null;
+  isActive: boolean;
+  vatPercent: number;
+  serviceChargePercent: number;
+  serviceChargeFixed: number;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
+export type OwnerScopedUserResponse = {
+  userId: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phoneNumber?: string;
+  role: ManagedUserRole;
+  restaurantId: string;
+  restaurantName: string;
+  branchIds: string[];
+  branchNames: string[];
+  isActive: boolean;
+  isBanned: boolean;
+  createdAt: string;
+};
+
+export type ManagerScopedUserResponse = {
+  userId: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phoneNumber: string | null;
+  role: ManagerUserRoleOption;
+  branchIds: string[];
+  branchNames: string[];
+  isActive: boolean;
+  isBanned: boolean;
+  createdAt: string;
+};
 
 export type UserListQuery = {
   pageNumber: number;
@@ -31,41 +81,6 @@ export type UpdateManagedUserRequest = {
   phoneNumber?: string;
   role: ManagedUserRole;
   branchIds: string[];
-};
-
-export type OwnerScopedUserResponse = {
-  userId: string;
-  fullName: string;
-  username: string;
-  email: string;
-  phoneNumber?: string;
-  role: ManagedUserRole;
-  restaurantId: string;
-  restaurantName: string;
-  branchIds: string[];
-  branchNames: string[];
-  isActive: boolean;
-  isBanned: boolean;
-  createdAt: string;
-};
-
-export type BranchResponse = {
-  branchId: string;
-  restaurantId: string;
-  managerId?: string;
-  name: string;
-  slug: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  openTime?: string;
-  closeTime?: string;
-  isActive: boolean;
-  vatPercent: number;
-  serviceChargePercent: number;
-  serviceChargeFixed: number;
-  createdAt: string;
-  updatedAt?: string;
 };
 
 export type UserStatusFilter = "all" | "active" | "inactive" | "banned";

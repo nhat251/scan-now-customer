@@ -3,4 +3,6 @@ export const QUERY_KEY = {
   AUTH_USER: "auth-user",
   OWNER_USERS: "owner-users",
   OWNER_BRANCHES: "owner-branches",
+  MANAGER_USERS: "manager-users",
+  MY_BRANCHES: "my-branches",
 };
