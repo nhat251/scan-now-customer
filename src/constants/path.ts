@@ -3,6 +3,15 @@ class Path {
 
   auth = {
     login: "/login" as const,
+    logout: "/logout" as const,
+  };
+
+  dashboards = {
+    admin: "/admin/dashboard" as const,
+    owner: "/owner/dashboard" as const,
+    manager: "/manager/dashboard" as const,
+    staff: "/staff/dashboard" as const,
+    kitchen: "/kitchen/dashboard" as const,
   };
 
   blogs = {
