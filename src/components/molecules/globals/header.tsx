@@ -1,6 +1,4 @@
-import Link from "next/link";
-
-import { Logo } from "@/components/icons/logo";
+import { Logo } from "@/components/atoms/logo";
 import { DesktopNav } from "@/components/molecules/globals/desktop-nav";
 import { MobileNav } from "@/components/molecules/globals/mobile-nav";
 
@@ -10,14 +8,7 @@ export const Header = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo Name */}
-          <Link href="/" className="flex items-center gap-2">
-            <Logo
-              className="text-lg font-semibold tracking-tight"
-              width="32"
-              height="32"
-              bgColor="var(--logo-background)"
-            />
-          </Link>
+          <Logo size={20} fill />
 
           {/* Desktop Nav */}
           <DesktopNav />

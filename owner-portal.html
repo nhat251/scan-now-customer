@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Gourmet Hub - User Management</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface": "#191c1e",
+            "surface-variant": "#e0e3e5",
+            "primary-fixed": "#ffdbce",
+            "on-primary-fixed": "#370e00",
+            "tertiary-fixed": "#dae2fd",
+            "secondary-fixed-dim": "#b9c3ff",
+            "primary": "#a73a00",
+            "outline": "#8f7065",
+            "surface-dim": "#d8dadc",
+            "on-secondary": "#ffffff",
+            "on-primary-container": "#521800",
+            "surface-container-low": "#f2f4f6",
+            "primary-container": "#ff5c00",
+            "surface-container-high": "#e6e8ea",
+            "primary-fixed-dim": "#ffb59a",
+            "outline-variant": "#e4beb1",
+            "on-tertiary-fixed-variant": "#3f465c",
+            "inverse-on-surface": "#eff1f3",
+            "on-error-container": "#93000a",
+            "secondary": "#0035c6",
+            "on-tertiary-container": "#232b3f",
+            "on-secondary-fixed": "#001257",
+            "on-secondary-container": "#d6daff",
+            "surface-tint": "#a73a00",
+            "tertiary-fixed-dim": "#bec6e0",
+            "secondary-fixed": "#dde1ff",
+            "inverse-surface": "#2d3133",
+            "background": "#f7f9fb",
+            "on-primary-fixed-variant": "#802a00",
+            "on-surface-variant": "#5b4137",
+            "on-secondary-fixed-variant": "#0033c0",
+            "error": "#ba1a1a",
+            "surface-container-lowest": "#ffffff",
+            "error-container": "#ffdad6",
+            "on-tertiary-fixed": "#131b2e",
+            "tertiary-container": "#8a92aa",
+            "on-tertiary": "#ffffff",
+            "surface-container-highest": "#e0e3e5",
+            "surface": "#f7f9fb",
+            "on-error": "#ffffff",
+            "inverse-primary": "#ffb59a",
+            "secondary-container": "#0448ff",
+            "on-background": "#191c1e",
+            "surface-bright": "#f7f9fb",
+            "surface-container": "#eceef0",
+            "on-primary": "#ffffff",
+            "tertiary": "#565e74"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-desktop": "64px",
+            "container-max": "1280px",
+            "section-gap-md": "80px",
+            "margin-mobile": "20px",
+            "gutter": "24px",
+            "section-gap-lg": "120px",
+            "base": "8px"
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-background text-on-surface min-h-screen">
+  <!-- Top Navigation Bar -->
+  <header
+    class="bg-surface fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 w-full ml-auto shadow-sm dark:shadow-none">
+    <div class="flex items-center gap-4">
+      <span class="font-bold text-2xl tracking-tight text-on-surface">Gourmet Hub</span>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="relative hidden md:block">
+        <span
+          class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        <input
+          class="pl-10 pr-4 py-2 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary-container w-64 text-sm"
+          placeholder="Search operations..." type="text" />
+      </div>
+      <button
+        class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors">notifications</button>
+      <div class="h-10 w-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant">
+        <img alt="Owner Profile"
+          data-alt="A professional headshot of a restaurant owner, a middle-aged man with a friendly yet authoritative expression, wearing a crisp white dress shirt. The lighting is bright and clean, typical of a high-end corporate office setting. The background is softly blurred to keep focus on the subject, maintaining a modern and trustworthy aesthetic with a cool-toned color palette."
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpFIUOdrp6SSidWZS0B6YTZer6eP4jeAWWUZb_smSi3t1sTCcfgH7LRwh3vDAiCLmDHKTjU2uomZJXkFqri5s2ra2Dfdf7aGYkiuxLtYt6l1qPxWYw9xTaQO3pEZH2e-53mjltIy1Zy5jQGVajyjkE_rk9U7Qx5BmeULAVMSWGQ4tlP_plkY2f3kknFKOqAzS7unS87DINoSLRMOQ-BjDBBSQHhXcltZe6aIQo_w0QREqEB6SRBSee2XFkqbPfs8LzwBg9YILixWM" />
+      </div>
+    </div>
+  </header>
+  <!-- Side Navigation Bar -->
+  <aside
+    class="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant flex flex-col p-4 gap-2 z-40 pt-24 shadow-md">
+    <div class="px-4 mb-6">
+      <h2 class="font-bold text-xl text-on-surface">Owner Portal</h2>
+      <p class="text-xs text-on-surface-variant uppercase tracking-widest font-semibold mt-1">Management Suite</p>
+    </div>
+    <nav class="flex flex-col gap-2">
+      <a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-transform hover:scale-[1.02] active:scale-98"
+        href="#">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="font-semibold text-sm">Dashboard</span>
+      </a>
+      <a class="flex items-center gap-4 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg transition-transform hover:scale-[1.02] active:scale-98 shadow-sm"
+        href="#">
+        <span class="material-symbols-outlined">group</span>
+        <span class="font-semibold text-sm">User Management</span>
+      </a>
+      <a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-transform hover:scale-[1.02] active:scale-98"
+        href="#">
+        <span class="material-symbols-outlined">storefront</span>
+        <span class="font-semibold text-sm">Branches</span>
+      </a>
+      <a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-transform hover:scale-[1.02] active:scale-98"
+        href="#">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-semibold text-sm">Settings</span>
+      </a>
+    </nav>
+  </aside>
+  <!-- Main Content Canvas -->
+  <main class="ml-64 pt-24 px-8 pb-12">
+    <div class="max-w-7xl mx-auto">
+      <!-- Page Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="font-bold text-4xl tracking-tight text-on-surface">User Management</h1>
+          <p class="text-on-surface-variant mt-2 font-medium">Manage and monitor staff access across all branches</p>
+        </div>
+        <button
+          class="flex items-center justify-center gap-2 bg-primary-container text-white px-8 py-4 rounded-lg font-bold text-lg hover:brightness-90 transition-all hover:scale-[1.02] active:scale-95 shadow-lg">
+          <span class="material-symbols-outlined">person_add</span>
+          Create User
+        </button>
+      </div>
+      <!-- Filter Bar Card -->
+      <div class="bg-surface-container-lowest rounded-xl shadow-sm p-6 mb-6 border border-outline-variant/30">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+          <!-- Search -->
+          <div class="md:col-span-4">
+            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Search</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+              <input
+                class="w-full pl-10 pr-4 py-3 bg-slate-100 rounded-lg border-none focus:ring-2 focus:ring-primary-container transition-all text-sm"
+                placeholder="Search by name, username, email, phone, branch..." type="text" />
+            </div>
+          </div>
+          <!-- Role Filter -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Role</label>
+            <select
+              class="w-full py-3 bg-slate-100 rounded-lg border-none focus:ring-2 focus:ring-primary-container text-sm">
+              <option>All</option>
+              <option>BRANCH_MANAGER</option>
+              <option>STAFF</option>
+              <option>KITCHEN</option>
+            </select>
+          </div>
+          <!-- Branch Filter -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Branch</label>
+            <select
+              class="w-full py-3 bg-slate-100 rounded-lg border-none focus:ring-2 focus:ring-primary-container text-sm">
+              <option>All Branches</option>
+              <option>Chi Nhanh Quan 1</option>
+              <option>Chi Nhanh Quan 7</option>
+              <option>Binh Thanh Hub</option>
+            </select>
+          </div>
+          <!-- Status Filter -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Status</label>
+            <select
+              class="w-full py-3 bg-slate-100 rounded-lg border-none focus:ring-2 focus:ring-primary-container text-sm">
+              <option>All</option>
+              <option>Active</option>
+              <option>Banned</option>
+            </select>
+          </div>
+          <!-- Page Size -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-on-surface-variant mb-2">Page Size</label>
+            <select
+              class="w-full py-3 bg-slate-100 rounded-lg border-none focus:ring-2 focus:ring-primary-container text-sm">
+              <option>10 per page</option>
+              <option>25 per page</option>
+              <option>50 per page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- User Table Card -->
+      <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant/50">
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant">Full Name</th>
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant">Contact</th>
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant">Role</th>
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant">Branch</th>
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant">Status</th>
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant">Created At</th>
+                <th class="px-6 py-4 font-bold text-sm text-on-surface-variant text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/20">
+              <!-- Example Row 1 -->
+              <tr class="hover:bg-surface-container-low transition-colors group">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      PC</div>
+                    <div>
+                      <p class="font-bold text-on-surface">Phan Van Manager C</p>
+                      <p class="text-xs text-on-surface-variant font-medium">manager_c</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <p class="text-on-surface">manager_c@gmail.com</p>
+                    <p class="text-xs text-on-surface-variant">0977777777</p>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span
+                    class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-bold rounded-full">BRANCH_MANAGER</span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <p class="text-on-surface">Nha Hang Sen Vang</p>
+                    <p class="text-xs text-on-surface-variant italic">Chi Nhanh Quan 1</p>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="flex items-center gap-1.5 text-xs font-bold text-green-600">
+                    <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                    Active
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <p class="text-sm text-on-surface-variant">May 20, 2026</p>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="p-2 hover:bg-surface-container-high rounded-lg text-primary transition-colors"
+                      title="Edit User">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button class="p-2 hover:bg-error-container/50 rounded-lg text-error transition-colors"
+                      title="Ban User">
+                      <span class="material-symbols-outlined text-[20px]">block</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Example Row 2 -->
+              <tr class="hover:bg-surface-container-low transition-colors group">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold">
+                      JD</div>
+                    <div>
+                      <p class="font-bold text-on-surface">John Doe</p>
+                      <p class="text-xs text-on-surface-variant font-medium">john_staff</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <p class="text-on-surface">john.d@gourmethub.com</p>
+                    <p class="text-xs text-on-surface-variant">0912345678</p>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span
+                    class="px-3 py-1 bg-tertiary-container/10 text-tertiary text-xs font-bold rounded-full">STAFF</span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <p class="text-on-surface">Nha Hang Sen Vang</p>
+                    <p class="text-xs text-on-surface-variant italic">Chi Nhanh Quan 7</p>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="flex items-center gap-1.5 text-xs font-bold text-error">
+                    <span class="h-2 w-2 rounded-full bg-error"></span>
+                    Banned
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <p class="text-sm text-on-surface-variant">Apr 12, 2026</p>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="p-2 hover:bg-surface-container-high rounded-lg text-primary transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button class="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors"
+                      title="Unban User">
+                      <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Repeat for aesthetics -->
+              <tr class="hover:bg-surface-container-low transition-colors group">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      AK</div>
+                    <div>
+                      <p class="font-bold text-on-surface">Alice Kitchen</p>
+                      <p class="text-xs text-on-surface-variant font-medium">alice_k</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <p class="text-on-surface">alice.k@gourmethub.com</p>
+                    <p class="text-xs text-on-surface-variant">0988888888</p>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">KITCHEN</span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm">
+                    <p class="text-on-surface">Nha Hang Sen Vang</p>
+                    <p class="text-xs text-on-surface-variant italic">Binh Thanh Hub</p>
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="flex items-center gap-1.5 text-xs font-bold text-green-600">
+                    <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                    Active
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <p class="text-sm text-on-surface-variant">Jun 05, 2026</p>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="p-2 hover:bg-surface-container-high rounded-lg text-primary transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button class="p-2 hover:bg-error-container/50 rounded-lg text-error transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">block</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="bg-surface-container-low px-6 py-5 flex items-center justify-between">
+          <div class="text-sm font-medium text-on-surface-variant">
+            Showing <span class="text-on-surface font-bold">1 - 3</span> of <span
+              class="text-on-surface font-bold">48</span> users
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-1">
+              <button
+                class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30"
+                disabled="">
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
+              <button
+                class="h-10 w-10 flex items-center justify-center rounded-lg bg-primary-container text-white font-bold">1</button>
+              <button
+                class="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface font-medium">2</button>
+              <button
+                class="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface font-medium">3</button>
+              <span class="px-2 text-on-surface-variant font-bold">...</span>
+              <button
+                class="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface font-medium">16</button>
+              <button
+                class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Dashboard Visual Accents -->
+      <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div
+          class="p-6 rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center gap-5">
+          <div class="h-14 w-14 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-3xl">badge</span>
+          </div>
+          <div>
+            <p class="text-on-surface-variant text-sm font-bold uppercase tracking-tight">Total Staff</p>
+            <p class="text-3xl font-extrabold text-on-surface">48</p>
+          </div>
+        </div>
+        <div
+          class="p-6 rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center gap-5">
+          <div class="h-14 w-14 rounded-xl bg-secondary/5 flex items-center justify-center text-secondary">
+            <span class="material-symbols-outlined text-3xl">security</span>
+          </div>
+          <div>
+            <p class="text-on-surface-variant text-sm font-bold uppercase tracking-tight">Active Admins</p>
+            <p class="text-3xl font-extrabold text-on-surface">12</p>
+          </div>
+        </div>
+        <div
+          class="p-6 rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center gap-5">
+          <div class="h-14 w-14 rounded-xl bg-tertiary/5 flex items-center justify-center text-tertiary">
+            <span class="material-symbols-outlined text-3xl">domain</span>
+          </div>
+          <div>
+            <p class="text-on-surface-variant text-sm font-bold uppercase tracking-tight">Branches Managed</p>
+            <p class="text-3xl font-extrabold text-on-surface">3</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    // Simple interactivity for demonstration
+    document.querySelectorAll('select').forEach(select => {
+      select.addEventListener('change', (e) => {
+        console.log(`Filter changed: ${e.target.value}`);
+        // In a real app, this would trigger a re-fetch or internal filter
+      });
+    });
+
+    // Hover effect for table rows
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        row.classList.add('shadow-md', 'z-10', 'relative');
+      });
+      row.addEventListener('mouseleave', () => {
+        row.classList.remove('shadow-md', 'z-10', 'relative');
+      });
+    });
+  </script>
+</body>
+
+</html>
