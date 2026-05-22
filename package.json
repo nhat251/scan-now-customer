@@ -13,6 +13,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0 && tsc --noEmit",
     "lint:fix": "eslint . --fix --max-warnings=0 && tsc --noEmit",
+    "spam:owner-users": "node ./spam-owner-users.mjs",
     "prepare": "husky"
   },
   "dependencies": {

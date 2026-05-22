@@ -11,3 +11,17 @@ export type IconProps = {
   color?: string;
   style?: { [key: string]: string };
 };
+
+export type ApiResponse<T = null> = {
+  code: number;
+  message: string;
+  result: T;
+};
+
+export type PagedResult<T> = {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
