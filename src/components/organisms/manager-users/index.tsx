@@ -43,14 +43,14 @@ import { useUserStore } from "@/stores/user";
 import type {
   BranchResponse,
   ManagerScopedUserResponse,
-  UpdateManagedUserRequest,
-  UserFormValues,
-  UserRoleOption,
+  ManagerUserFormValues,
+  ManagerUserRoleOption,
+  UpdateManagerUserRequest,
   UserStatusFilter,
 } from "@/types/user-management";
 import { useQueryClient } from "@tanstack/react-query";
 
-const ROLE_OPTIONS: UserRoleOption[] = ["STAFF", "KITCHEN"];
+const ROLE_OPTIONS: ManagerUserRoleOption[] = ["STAFF", "KITCHEN"];
 const PAGE_SIZES = [10, 25, 50] as const;
 const STATUS_OPTIONS: Array<{ label: string; value: UserStatusFilter }> = [
   { label: "All", value: "all" },
@@ -59,7 +59,7 @@ const STATUS_OPTIONS: Array<{ label: string; value: UserStatusFilter }> = [
   { label: "Banned", value: "banned" },
 ];
 
-const EMPTY_FORM: UserFormValues = {
+const EMPTY_FORM: ManagerUserFormValues = {
   fullName: "",
   username: "",
   email: "",
@@ -84,23 +84,20 @@ type FilterDropdownProps<TValue extends string> = {
   onValueChange: (value: TValue) => void;
 };
 
-const getStatusFilterPayload = (status: UserStatusFilter) => {
-  if (status === "active") {
-    return { isActive: true, isBanned: false };
+function getStatusFilterPayload(status: UserStatusFilter): Partial<Pick<ManagerScopedUserResponse, "isActive" | "isBanned">> {
+  switch (status) {
+    case "active":
+      return { isActive: true, isBanned: false };
+    case "inactive":
+      return { isActive: false, isBanned: false };
+    case "banned":
+      return { isBanned: true };
+    default:
+      return {};
   }
+}
 
-  if (status === "inactive") {
-    return { isActive: false, isBanned: false };
-  }
-
-  if (status === "banned") {
-    return { isBanned: true };
-  }
-
-  return {};
-};
-
-const formatDate = (value: string) => {
+function formatDate(value: string): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -112,9 +109,9 @@ const formatDate = (value: string) => {
     month: "short",
     day: "numeric",
   }).format(date);
-};
+}
 
-const getErrorMessage = (error: unknown) => {
+function getErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     return (error.response?.data as ApiErrorPayload | undefined)?.message ?? error.message;
   }
@@ -124,11 +121,15 @@ const getErrorMessage = (error: unknown) => {
   }
 
   return "Oops, an error occurred!";
-};
+}
 
-const getScopeErrorBanner = (message: string) => {
-  return message === "Branch is outside your managed scope." ? `403 ${message}` : message;
-};
+function getScopeErrorBanner(message: string): string {
+  if (message === "Branch is outside your managed scope.") {
+    return `403 ${message}`;
+  }
+
+  return message;
+}
 
 const FilterDropdown = <TValue extends string>({
   id,
@@ -174,12 +175,14 @@ const BranchMultiSelect = ({
   onBranchToggle: (branchId: string) => void;
 }) => {
   const selectedCount = selectedBranchIds.length;
-  const triggerLabel =
-    selectedCount === 0
-      ? "Select managed branches"
-      : selectedCount === 1
-        ? branches.find((branch) => branch.branchId === selectedBranchIds[0])?.name ?? "1 branch selected"
-        : `${selectedCount} branches selected`;
+
+  let triggerLabel = "Select managed branches";
+
+  if (selectedCount === 1) {
+    triggerLabel = branches.find((branch) => branch.branchId === selectedBranchIds[0])?.name ?? "1 branch selected";
+  } else if (selectedCount > 1) {
+    triggerLabel = `${selectedCount} branches selected`;
+  }
 
   return (
     <div className="space-y-3">
@@ -231,13 +234,13 @@ const UserFormDialog = ({
   pending,
 }: {
   branches: BranchResponse[];
-  form: UserFormValues;
+  form: ManagerUserFormValues;
   mode: FormMode;
   open: boolean;
   onBranchToggle: (branchId: string) => void;
   onClose: () => void;
   onSubmit: () => void;
-  onChange: (field: keyof UserFormValues, value: string) => void;
+  onChange: (field: keyof ManagerUserFormValues, value: string) => void;
   pending: boolean;
 }) => {
   const selectedRoleLabel = ROLE_OPTIONS.find((role) => role === form.role) ?? "Select role";
@@ -355,7 +358,7 @@ export const ManagerUsersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [editingUser, setEditingUser] = useState<ManagerScopedUserResponse | null>(null);
-  const [form, setForm] = useState<UserFormValues>(EMPTY_FORM);
+  const [form, setForm] = useState<ManagerUserFormValues>(EMPTY_FORM);
 
   useEffect(() => {
     if (!isLogin || !isManager) {
@@ -396,9 +399,9 @@ export const ManagerUsersPage = () => {
     banMutation.isPending ||
     unbanMutation.isPending;
 
-  const invalidateUsers = async () => {
+  async function invalidateUsers(): Promise<void> {
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.MANAGER_USERS] });
-  };
+  }
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
@@ -420,7 +423,7 @@ export const ManagerUsersPage = () => {
       email: user.email,
       phoneNumber: user.phoneNumber ?? "",
       password: "",
-      role: user.role as UserRoleOption,
+      role: user.role,
       branchIds: user.branchIds,
     });
     setDialogOpen(true);
@@ -450,10 +453,10 @@ export const ManagerUsersPage = () => {
 
     try {
       await invalidateUsers();
-    } catch {
+    } catch (error) {
       showNotify({
         type: "warning",
-        message: "The action succeeded, but the latest user list could not be refreshed.",
+        message: `The action succeeded, but the latest user list could not be refreshed. ${getErrorMessage(error)}`,
         duration: 4000,
       });
     }
@@ -495,8 +498,18 @@ export const ManagerUsersPage = () => {
         return;
       }
 
-      if (formMode === "edit" && editingUser) {
-        const payload: UpdateManagedUserRequest = {
+      if (formMode === "edit") {
+        if (!editingUser) {
+          showNotify({
+            type: "error",
+            message: "Unable to update this user because the selected record is missing. Please reopen the dialog and try again.",
+            duration: 4000,
+          });
+          closeDialog();
+          return;
+        }
+
+        const payload: UpdateManagerUserRequest = {
           fullName: form.fullName.trim(),
           username: form.username.trim(),
           email: form.email.trim(),
@@ -530,7 +543,7 @@ export const ManagerUsersPage = () => {
     }
   };
 
-  const handleFieldChange = (field: keyof UserFormValues, value: string) => {
+  const handleFieldChange = (field: keyof ManagerUserFormValues, value: string) => {
     setForm((current) => ({
       ...current,
       [field]: value,

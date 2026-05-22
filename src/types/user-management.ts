@@ -1,7 +1,7 @@
 export type UserRole = "OWNER" | "BRANCH_MANAGER" | "STAFF" | "KITCHEN";
 
 export type ManagedUserRole = Exclude<UserRole, "OWNER">;
-export type ManagerUserRoleOption = Extract<ManagedUserRole, "STAFF" | "KITCHEN">;
+export type ManagerUserRoleOption = Extract<ManagedUserRole, "KITCHEN" | "STAFF">;
 
 export type BranchResponse = {
   branchId: string;
@@ -83,6 +83,14 @@ export type UpdateManagedUserRequest = {
   branchIds: string[];
 };
 
+export type CreateManagerUserRequest = Omit<CreateManagedUserRequest, "role"> & {
+  role: ManagerUserRoleOption;
+};
+
+export type UpdateManagerUserRequest = Omit<UpdateManagedUserRequest, "role"> & {
+  role: ManagerUserRoleOption;
+};
+
 export type UserStatusFilter = "all" | "active" | "inactive" | "banned";
 
 export type UserFormValues = {
@@ -93,4 +101,8 @@ export type UserFormValues = {
   password: string;
   role: ManagedUserRole;
   branchIds: string[];
+};
+
+export type ManagerUserFormValues = Omit<UserFormValues, "role"> & {
+  role: ManagerUserRoleOption;
 };
