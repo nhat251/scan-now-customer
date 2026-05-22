@@ -2,32 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
-import { ChevronDown, MoreHorizontal, Search, UserPlus } from "lucide-react";
+import { ReceiptText, Settings, Soup, UserPlus, Users } from "lucide-react";
 
+import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
+import {
+  getBranchFilterLabel,
+  getErrorMessage,
+  getRoleFilterLabel,
+  getScopeErrorBanner,
+  getStatusFilterLabel,
+  getStatusFilterPayload,
+} from "@/components/organisms/manager-users/helpers";
+import { ManagerUsersToolbar } from "@/components/organisms/manager-users/manager-users-toolbar";
+import {
+  type FormMode,
+  UserFormDialog,
+} from "@/components/organisms/manager-users/user-form-dialog";
+import { ManagerUsersTable } from "@/components/organisms/manager-users/users-table";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Tag } from "@/components/ui/tag";
 import { PATH } from "@/constants/path";
 import { QUERY_KEY } from "@/constants/queryKeys";
 import {
@@ -37,27 +29,18 @@ import {
   useUpdateManagerUserMutation,
 } from "@/hooks/mutations/useManagerUserMutations";
 import { useManagerUsersQuery, useMyBranchesQuery } from "@/hooks/queries/useManagerUsersQuery";
-import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/useDebounce";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
 import type {
-  BranchResponse,
   ManagerScopedUserResponse,
   ManagerUserFormValues,
-  ManagerUserRoleOption,
   UpdateManagerUserRequest,
   UserStatusFilter,
 } from "@/types/user-management";
 import { useQueryClient } from "@tanstack/react-query";
 
-const ROLE_OPTIONS: ManagerUserRoleOption[] = ["STAFF", "KITCHEN"];
-const PAGE_SIZES = [10, 25, 50] as const;
-const STATUS_OPTIONS: Array<{ label: string; value: UserStatusFilter }> = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Banned", value: "banned" },
-];
+const ROLE_OPTIONS = ["STAFF", "KITCHEN"] as const;
 
 const EMPTY_FORM: ManagerUserFormValues = {
   fullName: "",
@@ -69,286 +52,17 @@ const EMPTY_FORM: ManagerUserFormValues = {
   branchIds: [],
 };
 
-type ApiErrorPayload = {
-  message?: string;
-};
-
-type FormMode = "create" | "edit";
-
-type FilterDropdownProps<TValue extends string> = {
-  id: string;
-  label: string;
-  value: TValue;
-  displayValue: string;
-  options: Array<{ label: string; value: TValue }>;
-  onValueChange: (value: TValue) => void;
-};
-
-function getStatusFilterPayload(status: UserStatusFilter): Partial<Pick<ManagerScopedUserResponse, "isActive" | "isBanned">> {
-  switch (status) {
-    case "active":
-      return { isActive: true, isBanned: false };
-    case "inactive":
-      return { isActive: false, isBanned: false };
-    case "banned":
-      return { isBanned: true };
-    default:
-      return {};
-  }
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof AxiosError) {
-    return (error.response?.data as ApiErrorPayload | undefined)?.message ?? error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Oops, an error occurred!";
-}
-
-function getScopeErrorBanner(message: string): string {
-  if (message === "Branch is outside your managed scope.") {
-    return `403 ${message}`;
-  }
-
-  return message;
-}
-
-const FilterDropdown = <TValue extends string>({
-  id,
-  label,
-  value,
-  displayValue,
-  options,
-  onValueChange,
-}: FilterDropdownProps<TValue>) => {
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <FieldContent>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button id={id} variant="outline" className="w-full justify-between rounded-md px-3 font-normal">
-              <span className="truncate">{displayValue}</span>
-              <ChevronDown className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
-            <DropdownMenuRadioGroup value={value} onValueChange={(nextValue) => onValueChange(nextValue as TValue)}>
-              {options.map((option) => (
-                <DropdownMenuRadioItem key={option.value} value={option.value}>
-                  {option.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </FieldContent>
-    </Field>
-  );
-};
-
-const BranchMultiSelect = ({
-  branches,
-  selectedBranchIds,
-  onBranchToggle,
-}: {
-  branches: BranchResponse[];
-  selectedBranchIds: string[];
-  onBranchToggle: (branchId: string) => void;
-}) => {
-  const selectedCount = selectedBranchIds.length;
-
-  let triggerLabel = "Select managed branches";
-
-  if (selectedCount === 1) {
-    triggerLabel = branches.find((branch) => branch.branchId === selectedBranchIds[0])?.name ?? "1 branch selected";
-  } else if (selectedCount > 1) {
-    triggerLabel = `${selectedCount} branches selected`;
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="text-sm font-medium">Managed branches</div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-full justify-between rounded-md px-3 font-normal">
-            <span className="truncate">{triggerLabel}</span>
-            <ChevronDown className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
-          <DropdownMenuLabel>Select branches</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {branches.map((branch) => (
-            <DropdownMenuCheckboxItem
-              key={branch.branchId}
-              checked={selectedBranchIds.includes(branch.branchId)}
-              onCheckedChange={() => onBranchToggle(branch.branchId)}
-            >
-              {branch.name}
-            </DropdownMenuCheckboxItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {selectedCount > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {branches
-            .filter((branch) => selectedBranchIds.includes(branch.branchId))
-            .map((branch) => (
-              <Tag key={branch.branchId} tagString={branch.name} />
-            ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const UserFormDialog = ({
-  branches,
-  form,
-  mode,
-  open,
-  onBranchToggle,
-  onClose,
-  onSubmit,
-  onChange,
-  pending,
-}: {
-  branches: BranchResponse[];
-  form: ManagerUserFormValues;
-  mode: FormMode;
-  open: boolean;
-  onBranchToggle: (branchId: string) => void;
-  onClose: () => void;
-  onSubmit: () => void;
-  onChange: (field: keyof ManagerUserFormValues, value: string) => void;
-  pending: boolean;
-}) => {
-  const selectedRoleLabel = ROLE_OPTIONS.find((role) => role === form.role) ?? "Select role";
-
-  return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent size="xl">
-        <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Create user" : "Update user"}</DialogTitle>
-          <DialogDescription>
-            Branch Managers can manage STAFF and KITCHEN users within their managed branches.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="fullName">Full name</FieldLabel>
-              <FieldContent>
-                <Input id="fullName" value={form.fullName} onChange={(event) => onChange("fullName", event.target.value)} />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
-              <FieldContent>
-                <Input id="username" value={form.username} onChange={(event) => onChange("username", event.target.value)} />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => onChange("email", event.target.value)}
-                />
-              </FieldContent>
-            </Field>
-          </FieldGroup>
-
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="phoneNumber">Phone number</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="phoneNumber"
-                  value={form.phoneNumber}
-                  onChange={(event) => onChange("phoneNumber", event.target.value)}
-                />
-              </FieldContent>
-            </Field>
-
-            <FilterDropdown
-              id="role"
-              label="Role"
-              value={form.role}
-              displayValue={selectedRoleLabel}
-              options={ROLE_OPTIONS.map((roleOption) => ({ label: roleOption, value: roleOption }))}
-              onValueChange={(nextRole) => onChange("role", nextRole)}
-            />
-
-            {mode === "create" && (
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={form.password}
-                    onChange={(event) => onChange("password", event.target.value)}
-                  />
-                </FieldContent>
-              </Field>
-            )}
-          </FieldGroup>
-        </div>
-
-        <BranchMultiSelect
-          branches={branches}
-          selectedBranchIds={form.branchIds}
-          onBranchToggle={onBranchToggle}
-        />
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
-          <Button onClick={onSubmit} disabled={pending}>
-            {mode === "create" ? "Create user" : "Save changes"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 export const ManagerUsersPage = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const currentUser = useUserStore((state) => state.user);
+  const isAuthInitialized = useUserStore((state) => state.isAuthInitialized);
   const isLogin = useUserStore((state) => state.isLogin);
   const userRole = useUserStore((state) => state.user?.role);
   const isManager = userRole === "BRANCH_MANAGER";
 
   const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const search = useDebounce(searchInput.trim());
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [role, setRole] = useState<string>("");
@@ -361,14 +75,18 @@ export const ManagerUsersPage = () => {
   const [form, setForm] = useState<ManagerUserFormValues>(EMPTY_FORM);
 
   useEffect(() => {
+    if (!isAuthInitialized) {
+      return;
+    }
+
     if (!isLogin || !isManager) {
       router.replace(PATH.auth.login);
     }
-  }, [isLogin, isManager, router]);
+  }, [isAuthInitialized, isLogin, isManager, router]);
 
   const filterPayload = useMemo(() => getStatusFilterPayload(status), [status]);
-
   const canAccessManagerUsers = isLogin && isManager;
+  const branchesQuery = useMyBranchesQuery(canAccessManagerUsers);
 
   const usersQuery = useManagerUsersQuery(
     {
@@ -381,10 +99,9 @@ export const ManagerUsersPage = () => {
       sortBy: "createdAt",
       sortDirection: "desc",
     },
-    canAccessManagerUsers
+    canAccessManagerUsers && branchesQuery.data !== undefined
   );
 
-  const branchesQuery = useMyBranchesQuery(canAccessManagerUsers);
   const createMutation = useCreateManagerUserMutation();
   const updateMutation = useUpdateManagerUserMutation();
   const banMutation = useBanManagerUserMutation();
@@ -393,15 +110,29 @@ export const ManagerUsersPage = () => {
   const users = usersQuery.data?.items ?? [];
   const branches = branchesQuery.data ?? [];
   const totalPages = usersQuery.data?.totalPages ?? 0;
+  const totalUsers = usersQuery.data?.totalItems ?? 0;
   const pending =
     createMutation.isPending ||
     updateMutation.isPending ||
     banMutation.isPending ||
     unbanMutation.isPending;
 
-  async function invalidateUsers(): Promise<void> {
+  const kitchenCrewCount = users.filter((user) => user.role === "KITCHEN").length;
+  const activeTodayCount = users.filter((user) => user.isActive && !user.isBanned).length;
+  const bannedCount = users.filter((user) => user.isBanned).length;
+
+  const refreshUsers = async () => {
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.MANAGER_USERS] });
-  }
+    return usersQuery.refetch();
+  };
+
+  const clampPageAfterMutation = (nextTotalPages?: number) => {
+    if (!nextTotalPages) {
+      return;
+    }
+
+    setPageNumber((currentPage) => Math.min(currentPage, Math.max(nextTotalPages, 1)));
+  };
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
@@ -410,6 +141,10 @@ export const ManagerUsersPage = () => {
 
   const openCreateDialog = () => {
     resetForm();
+    setForm({
+      ...EMPTY_FORM,
+      branchIds: branches.map((branch) => branch.branchId),
+    });
     setFormMode("create");
     setDialogOpen(true);
   };
@@ -452,7 +187,8 @@ export const ManagerUsersPage = () => {
     showNotify({ type: "success", message: successMessage });
 
     try {
-      await invalidateUsers();
+      const refreshResult = await refreshUsers();
+      clampPageAfterMutation(refreshResult.data?.totalPages);
     } catch (error) {
       showNotify({
         type: "warning",
@@ -498,29 +234,28 @@ export const ManagerUsersPage = () => {
         return;
       }
 
-      if (formMode === "edit") {
-        if (!editingUser) {
-          showNotify({
-            type: "error",
-            message: "Unable to update this user because the selected record is missing. Please reopen the dialog and try again.",
-            duration: 4000,
-          });
-          closeDialog();
-          return;
-        }
-
-        const payload: UpdateManagerUserRequest = {
-          fullName: form.fullName.trim(),
-          username: form.username.trim(),
-          email: form.email.trim(),
-          phoneNumber: form.phoneNumber.trim() || undefined,
-          role: form.role,
-          branchIds: form.branchIds,
-        };
-
-        await updateMutation.mutateAsync({ id: editingUser.userId, data: payload });
-        await handleRefreshAfterMutation("User updated successfully.", closeDialog);
+      if (!editingUser) {
+        showNotify({
+          type: "error",
+          message:
+            "Unable to update this user because the selected record is missing. Please reopen the dialog and try again.",
+          duration: 4000,
+        });
+        closeDialog();
+        return;
       }
+
+      const payload: UpdateManagerUserRequest = {
+        fullName: form.fullName.trim(),
+        username: form.username.trim(),
+        email: form.email.trim(),
+        phoneNumber: form.phoneNumber.trim() || undefined,
+        role: form.role,
+        branchIds: form.branchIds,
+      };
+
+      await updateMutation.mutateAsync({ id: editingUser.userId, data: payload });
+      await handleRefreshAfterMutation("User updated successfully.", closeDialog);
     } catch (error) {
       handleApiError(error);
     }
@@ -559,128 +294,125 @@ export const ManagerUsersPage = () => {
     }));
   };
 
-  const handleSearchSubmit = () => {
+  useEffect(() => {
     setPageNumber(1);
-    setSearch(searchInput.trim());
-  };
+  }, [search]);
 
-  const roleFilterLabel = role || "All roles";
-  const selectedBranchName = branches.find((branch) => branch.branchId === branchId)?.name;
-  const branchFilterLabel = branchId ? selectedBranchName ?? "Selected branch" : "All managed branches";
-  const statusFilterLabel = STATUS_OPTIONS.find((option) => option.value === status)?.label ?? "All";
-  const pageSizeLabel = String(pageSize);
+  const roleFilterLabel = getRoleFilterLabel(role);
+  const branchFilterLabel = getBranchFilterLabel(branchId, branches);
+  const statusFilterLabel = getStatusFilterLabel(status);
   const queryErrorMessage = usersQuery.isError ? getErrorMessage(usersQuery.error) : "";
   const branchesErrorMessage = branchesQuery.isError ? getErrorMessage(branchesQuery.error) : "";
+  const managerHasNoBranch = queryErrorMessage === "Manager has no branch";
+  const roleFilterOptions = [
+    { label: "All roles", value: "" },
+    ...ROLE_OPTIONS.map((option) => ({ label: getRoleFilterLabel(option), value: option })),
+  ];
+  const branchFilterOptions = [
+    { label: "All branches", value: "" },
+    ...branches.map((branch) => ({ label: branch.name, value: branch.branchId })),
+  ];
 
-  if (!canAccessManagerUsers) {
+  if (!isAuthInitialized) {
     return (
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Redirecting...</div>
+        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Loading...</div>
+      </main>
+    );
+  }
+
+  if (!canAccessManagerUsers) {
+    return null;
+  }
+
+  if (!currentUser) {
+    return (
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
+        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Loading...</div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-2">
-          <p className="text-muted-foreground text-sm">Route: {PATH.manager.users}</p>
-          <h1 className="text-3xl font-semibold tracking-tight">Staff Management</h1>
-          <p className="text-muted-foreground">Manage STAFF and KITCHEN accounts within your managed branches.</p>
-        </div>
-
-        <Button onClick={openCreateDialog} disabled={branchesQuery.isError}>
+    <PortalShell
+      title="Staff Management"
+      description="Manage and monitor your branch employees and kitchen staff."
+      portalLabel="Branch Portal"
+      portalName="Branch Manager Console"
+      navItems={[
+        {
+          label: "Staff Management",
+          href: PATH.manager.users,
+          icon: <Users className="size-4" />,
+          active: true,
+        },
+        { label: "Orders", href: PATH.manager.orders, icon: <ReceiptText className="size-4" /> },
+        { label: "Inventory", href: PATH.manager.inventory, icon: <Soup className="size-4" /> },
+        { label: "Settings", href: PATH.manager.settings, icon: <Settings className="size-4" /> },
+      ]}
+      topbarTitle="Branch Manager Console"
+      currentUser={currentUser}
+      headerAction={
+        <Button className="h-12 px-8" onClick={openCreateDialog} disabled={branchesQuery.isError}>
           <UserPlus className="size-4" />
-          Create user
+          Create User
         </Button>
-      </div>
-
+      }
+      stats={
+        <>
+          <PortalStatCard
+            label="Total Staff"
+            value={String(totalUsers)}
+            helper="Users returned from backend"
+          />
+          <PortalStatCard
+            label="Kitchen Crew"
+            value={String(kitchenCrewCount)}
+            helper="Kitchen accounts in current scope"
+          />
+          <PortalStatCard
+            label="Active Today"
+            value={String(activeTodayCount)}
+            helper="Active and not banned accounts"
+          />
+          <PortalStatCard
+            label="Banned"
+            value={String(bannedCount)}
+            helper="Accounts currently restricted"
+          />
+        </>
+      }
+    >
       {forbiddenMessage && (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
           {forbiddenMessage}
         </div>
       )}
 
-      <section className="bg-card rounded-xl border p-4 shadow-sm">
-        <div className="grid gap-4 lg:grid-cols-[2fr_repeat(4,1fr)]">
-          <Field>
-            <FieldLabel htmlFor="search">Search</FieldLabel>
-            <FieldContent>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                  <Input
-                    id="search"
-                    className="pl-9"
-                    placeholder="Search by name, username, email, phone, branch"
-                    value={searchInput}
-                    onChange={(event) => setSearchInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        handleSearchSubmit();
-                      }
-                    }}
-                  />
-                </div>
-                <Button variant="outline" onClick={handleSearchSubmit}>
-                  Search
-                </Button>
-              </div>
-            </FieldContent>
-          </Field>
-
-          <FilterDropdown
-            id="role-filter"
-            label="Role"
-            value={role}
-            displayValue={roleFilterLabel}
-            options={[{ label: "All roles", value: "" }, ...ROLE_OPTIONS.map((option) => ({ label: option, value: option }))]}
-            onValueChange={(nextRole) => {
-              setPageNumber(1);
-              setRole(nextRole);
-            }}
-          />
-
-          <FilterDropdown
-            id="branch-filter"
-            label="Branch"
-            value={branchId}
-            displayValue={branchFilterLabel}
-            options={[
-              { label: "All managed branches", value: "" },
-              ...branches.map((branch) => ({ label: branch.name, value: branch.branchId })),
-            ]}
-            onValueChange={(nextBranchId) => {
-              setPageNumber(1);
-              setBranchId(nextBranchId);
-            }}
-          />
-
-          <FilterDropdown
-            id="status-filter"
-            label="Status"
-            value={status}
-            displayValue={statusFilterLabel}
-            options={STATUS_OPTIONS}
-            onValueChange={(nextStatus) => {
-              setPageNumber(1);
-              setStatus(nextStatus);
-            }}
-          />
-
-          <FilterDropdown
-            id="page-size"
-            label="Page size"
-            value={pageSizeLabel}
-            displayValue={pageSizeLabel}
-            options={PAGE_SIZES.map((size) => ({ label: String(size), value: String(size) }))}
-            onValueChange={(nextPageSize) => {
-              setPageNumber(1);
-              setPageSize(Number(nextPageSize));
-            }}
-          />
-        </div>
-      </section>
+      <ManagerUsersToolbar
+        branchFilterLabel={branchFilterLabel}
+        branchFilterOptions={branchFilterOptions}
+        branchValue={branchId}
+        roleFilterLabel={roleFilterLabel}
+        roleFilterOptions={roleFilterOptions}
+        roleValue={role}
+        searchInput={searchInput}
+        status={status}
+        statusFilterLabel={statusFilterLabel}
+        onBranchChange={(nextBranchId) => {
+          setPageNumber(1);
+          setBranchId(nextBranchId);
+        }}
+        onRoleChange={(nextRole) => {
+          setPageNumber(1);
+          setRole(nextRole);
+        }}
+        onSearchChange={setSearchInput}
+        onStatusChange={(nextStatus) => {
+          setPageNumber(1);
+          setStatus(nextStatus);
+        }}
+      />
 
       {branchesQuery.isError && (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
@@ -688,122 +420,38 @@ export const ManagerUsersPage = () => {
         </div>
       )}
 
-      <section className="bg-card overflow-hidden rounded-xl border shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-left text-sm">
-            <thead className="bg-muted/40">
-              <tr>
-                <th className="px-4 py-3 font-medium">Full name</th>
-                <th className="px-4 py-3 font-medium">Username</th>
-                <th className="px-4 py-3 font-medium">Email / Phone</th>
-                <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Branches</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Created</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usersQuery.isLoading ? (
-                <tr>
-                  <td className="text-muted-foreground px-4 py-8 text-center" colSpan={8}>
-                    Loading users...
-                  </td>
-                </tr>
-              ) : usersQuery.isError ? (
-                <tr>
-                  <td className="text-destructive px-4 py-8 text-center" colSpan={8}>
-                    Failed to load users. {queryErrorMessage}
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td className="text-muted-foreground px-4 py-8 text-center" colSpan={8}>
-                    No users found.
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.userId} className="border-t align-top">
-                    <td className="px-4 py-4 font-medium">{user.fullName}</td>
-                    <td className="px-4 py-4">{user.username}</td>
-                    <td className="px-4 py-4">
-                      <div>{user.email}</div>
-                      <div className="text-muted-foreground">{user.phoneNumber || "-"}</div>
-                    </td>
-                    <td className="px-4 py-4">{user.role}</td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        {user.branchNames.map((branchName) => (
-                          <Tag key={`${user.userId}-${branchName}`} tagString={branchName} />
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        <Tag tagString={user.isBanned ? "Banned" : user.isActive ? "Active" : "Inactive"} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">{formatDate(user.createdAt)}</td>
-                    <td className="px-4 py-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" aria-label={`Actions for ${user.fullName}`}>
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(user)}>Update user</DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleBanToggle(user)}
-                            className={cn(user.isBanned ? "" : "text-destructive")}
-                          >
-                            {user.isBanned ? "Unban user" : "Ban user"}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex flex-col gap-3 border-t px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Page {usersQuery.data?.pageNumber ?? pageNumber} of {Math.max(totalPages, 1)} · {usersQuery.data?.totalItems ?? 0} users
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPageNumber((current) => Math.max(1, current - 1))}
-              disabled={pageNumber <= 1 || usersQuery.isFetching || usersQuery.isError}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setPageNumber((current) => current + 1)}
-              disabled={usersQuery.isFetching || usersQuery.isError || (totalPages > 0 ? pageNumber >= totalPages : users.length < pageSize)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      </section>
+      <ManagerUsersTable
+        users={users}
+        isError={usersQuery.isError}
+        isFetching={usersQuery.isFetching}
+        isLoading={usersQuery.isLoading}
+        managerHasNoBranch={managerHasNoBranch}
+        pageNumber={usersQuery.data?.pageNumber ?? pageNumber}
+        pageSize={pageSize}
+        queryErrorMessage={queryErrorMessage}
+        totalPages={totalPages}
+        totalUsers={totalUsers}
+        onEditUser={openEditDialog}
+        onPageChange={setPageNumber}
+        onPageSizeChange={(nextPageSize) => {
+          setPageNumber(1);
+          setPageSize(nextPageSize);
+        }}
+        onToggleBan={handleBanToggle}
+      />
 
       <UserFormDialog
         branches={branches}
         form={form}
         mode={formMode}
         open={dialogOpen}
+        showBranchSelection={false}
         onBranchToggle={handleBranchToggle}
         onClose={closeDialog}
         onSubmit={handleSubmit}
         onChange={handleFieldChange}
         pending={pending}
       />
-    </main>
+    </PortalShell>
   );
 };

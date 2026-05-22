@@ -4,11 +4,14 @@ import { logout } from "@/stores/user";
 import type { ApiResponse } from "@/types/api";
 
 export const useLogoutMutation = () => {
+  const clearSession = () => {
+    logout();
+  };
+
   return useMutation<void, ApiResponse<null>>({
     mutationFn: logoutRequest,
     hasLoading: true,
-    onSuccess: () => {
-      logout();
-    },
+    onSuccess: clearSession,
+    onError: clearSession,
   });
 };

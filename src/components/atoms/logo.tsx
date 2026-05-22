@@ -1,6 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { getLocale } from "next-intl/server";
+import { useLocale } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -10,9 +12,9 @@ type Props = {
   fill?: boolean;
 };
 
-export const Logo = async ({ size = 40, textSize = "text-xl", fill = false }: Props) => {
+export const Logo = ({ size = 40, textSize = "text-xl", fill = false }: Props) => {
   const width = size * 2;
-  const locale = await getLocale();
+  const locale = useLocale();
   return (
     <Link href={`/${locale}`} className="flex items-center gap-3">
       <div

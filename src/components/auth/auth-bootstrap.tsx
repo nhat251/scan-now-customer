@@ -2,19 +2,31 @@
 
 import { useEffect } from "react";
 
+import { hasStoredAccessToken } from "@/lib/auth";
 import { refreshTokenRequest } from "@/services/auth";
-import { login, setAuthInitialized, useUserStore } from "@/stores/user";
+import { hydrateUserSession, login, setAuthInitialized, useUserStore } from "@/stores/user";
 
 export const AuthBootstrap = ({ children }: { children: React.ReactNode }) => {
   const isAuthInitialized = useUserStore((state) => state.isAuthInitialized);
   const user = useUserStore((state) => state.user);
+  const isLogin = useUserStore((state) => state.isLogin);
 
   useEffect(() => {
-    if (isAuthInitialized || user) {
-      if (!isAuthInitialized) {
-        setAuthInitialized(true);
-      }
+    hydrateUserSession();
+  }, []);
 
+  useEffect(() => {
+    if (isAuthInitialized) {
+      return;
+    }
+
+    if (user || isLogin) {
+      setAuthInitialized(true);
+      return;
+    }
+
+    if (!hasStoredAccessToken()) {
+      setAuthInitialized(true);
       return;
     }
 
@@ -43,7 +55,7 @@ export const AuthBootstrap = ({ children }: { children: React.ReactNode }) => {
     return () => {
       isMounted = false;
     };
-  }, [isAuthInitialized, user]);
+  }, [isAuthInitialized, isLogin, user]);
 
   return children;
 };

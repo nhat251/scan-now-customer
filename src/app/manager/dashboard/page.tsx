@@ -3,7 +3,7 @@ import { DashboardShell } from "@/components/auth/dashboard-shell";
 const ManagerDashboardPage = () => {
   return (
     <DashboardShell
-      allowedRole="MANAGER"
+      allowedRole="BRANCH_MANAGER"
       description="This placeholder confirms that manager-only protected routing and logout are wired end-to-end."
       title="Manager dashboard"
     >

@@ -16,10 +16,15 @@ class Path {
 
   owner = {
     users: "/owner/users" as const,
+    branches: "/owner/branches" as const,
+    settings: "/owner/settings" as const,
   };
 
   manager = {
     users: "/manager/users" as const,
+    orders: "/manager/orders" as const,
+    inventory: "/manager/inventory" as const,
+    settings: "/manager/settings" as const,
   };
 
   blogs = {

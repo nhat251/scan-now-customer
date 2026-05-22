@@ -1,4 +1,4 @@
-import type { AxiosError, InternalAxiosRequestConfig } from "axios";
+import type { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import defaultAxios from "axios";
 
 import { getStoredAccessToken } from "@/lib/auth";
@@ -11,10 +11,13 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   skipAuthRefresh?: boolean;
 };
 
-let refreshPromise: Promise<string | null> | null = null;
+type ExtendedAxiosRequestConfig = AxiosRequestConfig & {
+  skipAuthRefresh?: boolean;
+};
+
+let refreshPromise: Promise<AuthPayload | null> | null = null;
 
 const clearAuthState = () => {
-  setUser(null);
   logout();
 };
 
@@ -34,12 +37,12 @@ const refreshAccessToken = () => {
         }
       )
       .then((response) => {
-        const accessToken = response.data.result.accessToken;
+        const payload = response.data.result;
 
-        setAccessToken(accessToken);
-        setUser(response.data.result.user);
+        setAccessToken(payload.accessToken);
+        setUser(payload.user);
 
-        return accessToken;
+        return payload;
       })
       .catch((error) => {
         clearAuthState();
@@ -66,11 +69,13 @@ axiosBasic.interceptors.request.use(
   (config) => {
     const token = getStoredAccessToken();
 
+    config.withCredentials = true;
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if (config.headers?.Authorization) {
+      delete config.headers.Authorization;
     }
-
-    config.withCredentials = true;
 
     return config;
   },
@@ -91,17 +96,25 @@ axiosBasic.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    const hadAccessToken = Boolean(getStoredAccessToken());
+
+    if (!hadAccessToken) {
+      clearAuthState();
+      return Promise.reject(error);
+    }
+
     originalRequest._retry = true;
 
     try {
-      const accessToken = await refreshAccessToken();
+      const payload = await refreshAccessToken();
 
-      if (!accessToken) {
+      if (!payload?.accessToken) {
         clearAuthState();
         return Promise.reject(error);
       }
 
-      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      originalRequest.headers.Authorization = `Bearer ${payload.accessToken}`;
+      originalRequest.withCredentials = true;
 
       return axiosBasic(originalRequest);
     } catch (refreshError) {
@@ -110,3 +123,15 @@ axiosBasic.interceptors.response.use(
     }
   }
 );
+
+export const withAuthRequestConfig = (config: ExtendedAxiosRequestConfig = {}): ExtendedAxiosRequestConfig => ({
+  withCredentials: true,
+  ...config,
+});
+
+export const withAuthRefreshSkipped = (config: ExtendedAxiosRequestConfig = {}): ExtendedAxiosRequestConfig => ({
+  ...withAuthRequestConfig(config),
+  skipAuthRefresh: true,
+});
+
+export type { ExtendedAxiosRequestConfig };

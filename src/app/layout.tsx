@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 
-import { ScrollToTopButton } from "@/components/atoms/scroll-to-top-button";
-import { Footer } from "@/components/molecules/globals/footer";
+import { AppChrome } from "@/components/auth/app-chrome";
 import { GlobalLoading } from "@/components/molecules/globals/global-loading";
 import { GlobalToast } from "@/components/molecules/globals/global-toast";
-import { Header } from "@/components/molecules/globals/header";
 import { SITE_CONFIG } from "@/constants/site";
 import { APP_LAYOUT_METADATA } from "@/data/metadataSEO";
 import { NextIntlProvider } from "@/providers/global/next-intl";
@@ -41,10 +39,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextIntlProvider>
           <ReactQueryProvider>
-            <Header />
-            {children}
-            <Footer />
-            <ScrollToTopButton />
+            <AppChrome>{children}</AppChrome>
           </ReactQueryProvider>
           <GlobalToast />
           <GlobalLoading />

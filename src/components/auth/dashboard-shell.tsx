@@ -25,6 +25,8 @@ export const DashboardShell = ({ children, title, description, allowedRole }: Da
   const handleLogout = async () => {
     try {
       await logoutMutation.mutateAsync();
+    } catch {
+      // The client auth state is cleared in the logout mutation error handler.
     } finally {
       router.replace(PATH.auth.login);
     }
