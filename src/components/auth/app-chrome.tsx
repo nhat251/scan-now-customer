@@ -7,7 +7,14 @@ import { Footer } from "@/components/molecules/globals/footer";
 import { Header } from "@/components/molecules/globals/header";
 import { PATH } from "@/constants/path";
 
-const HIDE_PUBLIC_CHROME_PREFIXES = [PATH.owner.users, PATH.manager.users, PATH.dashboards.owner, PATH.dashboards.manager];
+const HIDE_PUBLIC_CHROME_PREFIXES = [
+  PATH.owner.users,
+  PATH.owner.restaurant,
+  PATH.owner.branches,
+  PATH.manager.users,
+  PATH.dashboards.owner,
+  PATH.dashboards.manager,
+];
 const HIDE_PUBLIC_CHROME_PATHS = [PATH.auth.login];
 
 const shouldHidePublicChrome = (pathname: string) => {
