@@ -12,8 +12,8 @@ export const APP_LAYOUT_METADATA: Metadata = {
     template: "%s | Nguyen Sinh Nhat",
   },
   icons: {
-    icon: "/icons/favicon.svg",
-    apple: "/icons/favicon.svg",
+    icon: "/icons/logo-transparent.webp",
+    apple: "/icons/logo-transparent.webp",
   },
   description:
     "Portfolio of Nguyen Sinh Nhat - Fullstack Developer with expertise in React, Next.js, Node.js, TypeScript, and modern web technologies. Explore projects, experience, and skills.",
