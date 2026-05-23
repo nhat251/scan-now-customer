@@ -16,7 +16,17 @@ class Path {
 
   owner = {
     users: "/owner/users" as const,
+    restaurant: "/owner/restaurant" as const,
     branches: "/owner/branches" as const,
+    get branchDetail() {
+      return (id: string) => `${this.branches}/${id}` as const;
+    },
+    get branchEdit() {
+      return (id: string) => `${this.branches}/${id}` as const;
+    },
+    get branchCreate() {
+      return `${this.branches}/create` as const;
+    },
     settings: "/owner/settings" as const,
   };
 

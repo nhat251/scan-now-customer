@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Plus, Settings, Store, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { getOwnerPortalErrorState, statusFilterToQuery } from "@/components/owner/users/helpers";
+import { getOwnerPortalNavItems } from "@/components/owner/users/owner-portal-nav";
 import { OwnerUserFormDialog } from "@/components/owner/users/owner-user-form-dialog";
 import { OwnerUsersTable } from "@/components/owner/users/owner-users-table";
 import { OwnerUsersToolbar } from "@/components/owner/users/owner-users-toolbar";
@@ -238,12 +239,7 @@ export const OwnerUsersPage = () => {
         description="Manage and monitor staff access across all branches."
         portalLabel="Management Suite"
         portalName="Owner Portal"
-        navItems={[
-          { label: "Dashboard", href: PATH.owner.users, icon: <LayoutDashboard className="size-4" /> },
-          { label: "User Management", href: PATH.owner.users, icon: <Users className="size-4" />, active: true },
-          { label: "Branches", href: PATH.owner.branches, icon: <Store className="size-4" /> },
-          { label: "Settings", href: PATH.owner.settings, icon: <Settings className="size-4" /> },
-        ]}
+        navItems={getOwnerPortalNavItems("users")}
         topbarTitle={restaurantName}
         currentUser={currentUser}
       >
@@ -277,12 +273,7 @@ export const OwnerUsersPage = () => {
       description="Manage and monitor staff access across all branches."
       portalLabel="Management Suite"
       portalName="Owner Portal"
-      navItems={[
-        { label: "Dashboard", href: PATH.owner.users, icon: <LayoutDashboard className="size-4" /> },
-        { label: "User Management", href: PATH.owner.users, icon: <Users className="size-4" />, active: true },
-        { label: "Branches", href: PATH.owner.branches, icon: <Store className="size-4" /> },
-        { label: "Settings", href: PATH.owner.settings, icon: <Settings className="size-4" /> },
-      ]}
+      navItems={getOwnerPortalNavItems("users")}
       topbarTitle={restaurantName}
       currentUser={currentUser}
       headerAction={
