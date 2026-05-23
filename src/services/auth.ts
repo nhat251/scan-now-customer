@@ -15,7 +15,7 @@ export const loginRequest = async (payload: LoginRequest): Promise<ApiResponse<A
 export const refreshTokenRequest = async (): Promise<ApiResponse<AuthPayload>> => {
   const response = await axiosBasic.post<ApiResponse<AuthPayload>>(
     "/api/auth/refresh-token",
-    {},
+    undefined,
     withAuthRefreshSkipped()
   );
 

@@ -2,7 +2,7 @@ import type { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 
 import defaultAxios from "axios";
 
 import { getStoredAccessToken } from "@/lib/auth";
-import { logout, setAccessToken, setUser } from "@/stores/user";
+import { login, logout } from "@/stores/user";
 import type { ApiResponse } from "@/types/api";
 import type { AuthPayload } from "@/types/auth";
 
@@ -26,7 +26,7 @@ const refreshAccessToken = () => {
     refreshPromise = defaultAxios
       .post<ApiResponse<AuthPayload>>(
         "/api/auth/refresh-token",
-        {},
+        undefined,
         {
           baseURL: process.env.NEXT_PUBLIC_API_URL,
           withCredentials: true,
@@ -39,8 +39,12 @@ const refreshAccessToken = () => {
       .then((response) => {
         const payload = response.data.result;
 
-        setAccessToken(payload.accessToken);
-        setUser(payload.user);
+        if (!payload) {
+          clearAuthState();
+          return null;
+        }
+
+        login(payload);
 
         return payload;
       })
@@ -93,13 +97,6 @@ axiosBasic.interceptors.response.use(
     const status = error.response?.status;
 
     if (!originalRequest || status !== 401 || originalRequest._retry || originalRequest.skipAuthRefresh) {
-      return Promise.reject(error);
-    }
-
-    const hadAccessToken = Boolean(getStoredAccessToken());
-
-    if (!hadAccessToken) {
-      clearAuthState();
       return Promise.reject(error);
     }
 
