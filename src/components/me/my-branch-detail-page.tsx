@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, Mail, MapPin, Phone, Soup, Tags } from "lucide-react";
+import { ArrowLeft, ChefHat, ClipboardList, Clock, Mail, MapPin, Phone, Soup, Table2, Tags } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,10 @@ import { useMyBranchDetailQuery } from "@/hooks/queries/useMeQueries";
 import { useUserStore } from "@/stores/user";
 
 import {
+  canHandleKitchenOrders,
+  canHandleWaiterOrders,
   canManageMenuAvailability,
+  canManageTableSessions,
   formatFixedAmount,
   formatPercent,
   formatTime,
@@ -37,6 +40,9 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
   const canSeeMenu = canManageMenuAvailability(currentUser?.role);
+  const canSeeTables = canManageTableSessions(currentUser?.role);
+  const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
+  const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
   const canManageBranchMenu = currentUser?.role?.toUpperCase() === "BRANCH_MANAGER";
   const branchQuery = useMyBranchDetailQuery(branchId);
   const branch = branchQuery.data;
@@ -51,7 +57,14 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
       description="Read-only branch and restaurant information assigned to your account."
       portalLabel="Branch Workspace"
       portalName="My Branch Portal"
-      navItems={getMyPortalNavItems({ active: "branch-detail", branchId, canSeeMenu })}
+      navItems={getMyPortalNavItems({
+        active: "branch-detail",
+        branchId,
+        canSeeMenu,
+        canSeeTables,
+        canSeeOrders,
+        canSeeKitchen,
+      })}
       topbarTitle={branch?.name ?? currentUser?.fullName ?? "My Branch Portal"}
       currentUser={currentUser}
       headerAction={
@@ -70,6 +83,30 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
               </Link>
             </Button>
           ) : null}
+          {canSeeTables ? (
+            <Button asChild>
+              <Link href={PATH.me.branchTables(branchId)}>
+                <Table2 className="size-4" />
+                Table Sessions
+              </Link>
+            </Button>
+          ) : null}
+          {canSeeOrders ? (
+            <Button asChild>
+              <Link href={PATH.me.branchOrders(branchId)}>
+                <ClipboardList className="size-4" />
+                Order Service
+              </Link>
+            </Button>
+          ) : null}
+          {canSeeKitchen ? (
+            <Button asChild>
+              <Link href={PATH.me.branchKitchen(branchId)}>
+                <ChefHat className="size-4" />
+                Kitchen Queue
+              </Link>
+            </Button>
+          ) : null}
           {canManageBranchMenu ? (
             <>
               <Button asChild variant="outline">
@@ -82,6 +119,12 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
                 <Link href={PATH.manager.branchMenuItems(branchId)}>
                   <Soup className="size-4" />
                   Manage Menu
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={PATH.manager.branchTables(branchId)}>
+                  <Table2 className="size-4" />
+                  Tables & QR
                 </Link>
               </Button>
             </>

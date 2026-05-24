@@ -42,6 +42,15 @@ class Path {
     get branchMenuItemCreate() {
       return (branchId: string) => `${this.branchMenuItems(branchId)}/create` as const;
     },
+    get branchTables() {
+      return (branchId: string) => `${this.branches}/${branchId}/tables` as const;
+    },
+    get branchTableCreate() {
+      return (branchId: string) => `${this.branchTables(branchId)}/create` as const;
+    },
+    get branchTableDetail() {
+      return (branchId: string, tableId: string) => `${this.branchTables(branchId)}/${tableId}` as const;
+    },
     menuItems: "/owner/menu-items" as const,
     get menuItemDetail() {
       return (id: string) => `${this.menuItems}/${id}` as const;
@@ -70,6 +79,15 @@ class Path {
     get branchMenuItemCreate() {
       return (branchId: string) => `${this.branchMenuItems(branchId)}/create` as const;
     },
+    get branchTables() {
+      return (branchId: string) => `${this.branches}/${branchId}/tables` as const;
+    },
+    get branchTableCreate() {
+      return (branchId: string) => `${this.branchTables(branchId)}/create` as const;
+    },
+    get branchTableDetail() {
+      return (branchId: string, tableId: string) => `${this.branchTables(branchId)}/${tableId}` as const;
+    },
     menuItems: "/manager/menu-items" as const,
     get menuItemDetail() {
       return (id: string) => `${this.menuItems}/${id}` as const;
@@ -82,6 +100,21 @@ class Path {
     settings: "/manager/settings" as const,
   };
 
+  customer = {
+    get sessionMenu() {
+      return (sessionCode: string) => `/sessions/${sessionCode}/menu` as const;
+    },
+    get sessionCheckout() {
+      return (sessionCode: string) => `/sessions/${sessionCode}/checkout` as const;
+    },
+    get sessionMenuItem() {
+      return (sessionCode: string, menuItemId: string) => `/sessions/${sessionCode}/menu-items/${menuItemId}` as const;
+    },
+    get sessionOrder() {
+      return (sessionCode: string, orderId: string) => `/sessions/${sessionCode}/orders/${orderId}` as const;
+    },
+  };
+
   me = {
     branches: "/me/branches" as const,
     get branchDetail() {
@@ -89,6 +122,19 @@ class Path {
     },
     get branchMenu() {
       return (id: string) => `${this.branches}/${id}/menu` as const;
+    },
+    get branchTables() {
+      return (id: string) => `${this.branches}/${id}/tables` as const;
+    },
+    get branchOrders() {
+      return (id: string) => `${this.branches}/${id}/orders` as const;
+    },
+    get branchKitchen() {
+      return (id: string) => `${this.branches}/${id}/kitchen` as const;
+    },
+    tableDetail: "/me/tables" as const,
+    get table() {
+      return (id: string) => `${this.tableDetail}/${id}` as const;
     },
     menuItemDetail: "/me/menu-items" as const,
     get menuItem() {

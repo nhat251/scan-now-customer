@@ -4,6 +4,7 @@ import type {
   JoinSessionRequest,
   JoinSessionResponse,
   PublicCategoryResponse,
+  PublicMenuItemResponse,
   PublicTableResponse,
   SessionMenuQuery,
   SessionMenuResponse,
@@ -27,4 +28,10 @@ export const getPublicSessionMenu = async (sessionCode: string, query: SessionMe
 
 export const getPublicBranchCategories = async (branchId: string) => {
   return await axiosBasic.get<ApiResponse<PublicCategoryResponse[]>>(`/api/public/branches/${branchId}/categories`);
+};
+
+export const getPublicMenuItem = async (branchId: string, menuItemId: string) => {
+  return await axiosBasic.get<ApiResponse<PublicMenuItemResponse>>(
+    `/api/public/branches/${branchId}/menu-items/${menuItemId}`
+  );
 };

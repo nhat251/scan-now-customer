@@ -6,6 +6,9 @@ import type {
   MyMenuCategoryResponse,
   MyMenuItemResponse,
   MyMenuQuery,
+  MyTableResponse,
+  MyTablesQuery,
+  OpenTableSessionResponse,
 } from "@/types/me";
 
 export const getMyBranches = async () => {
@@ -46,4 +49,27 @@ export const bulkUpdateMyMenuAvailability = async ({
     `/api/me/branches/${branchId}/menu-items/bulk-availability`,
     request
   );
+};
+
+export const getMyBranchTables = async (branchId: string, query: MyTablesQuery) => {
+  return await axiosBasic.get<ApiResponse<PagedResult<MyTableResponse>>>(
+    `/api/me/branches/${branchId}/tables`,
+    {
+      params: query,
+    }
+  );
+};
+
+export const getMyTable = async (tableId: string) => {
+  return await axiosBasic.get<ApiResponse<MyTableResponse>>(`/api/me/tables/${tableId}`);
+};
+
+export const openMyTableSession = async ({ branchId, tableId }: { branchId: string; tableId: string }) => {
+  return await axiosBasic.post<ApiResponse<OpenTableSessionResponse>>(
+    `/api/me/branches/${branchId}/tables/${tableId}/open`
+  );
+};
+
+export const closeMyTableSession = async (sessionId: string) => {
+  return await axiosBasic.patch<ApiResponse<unknown>>(`/api/me/sessions/${sessionId}/close`);
 };

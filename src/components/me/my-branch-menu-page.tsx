@@ -28,7 +28,10 @@ import { useUserStore } from "@/stores/user";
 import type { MyMenuItemResponse, MyMenuQuery } from "@/types/me";
 
 import {
+  canHandleKitchenOrders,
+  canHandleWaiterOrders,
   canManageMenuAvailability,
+  canManageTableSessions,
   FALLBACK_MENU_IMAGE,
   formatCurrency,
   getActiveLabel,
@@ -74,6 +77,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const canSeeMenu = canManageMenuAvailability(currentUser?.role);
+  const canSeeTables = canManageTableSessions(currentUser?.role);
+  const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
+  const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
   const branchQuery = useMyBranchDetailQuery(branchId, canSeeMenu);
   const [sortBy, sortDirection] = sortValue.split(":") as [string, "asc" | "desc"];
   const menuQueryParams = useMemo<MyMenuQuery>(
@@ -179,7 +185,14 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
       description="View branch menu items and update availability without changing menu content or prices."
       portalLabel="Branch Workspace"
       portalName="My Branch Portal"
-      navItems={getMyPortalNavItems({ active: "menu", branchId, canSeeMenu })}
+      navItems={getMyPortalNavItems({
+        active: "menu",
+        branchId,
+        canSeeMenu,
+        canSeeTables,
+        canSeeOrders,
+        canSeeKitchen,
+      })}
       topbarTitle={branchQuery.data?.name ?? currentUser?.fullName ?? "Menu Availability"}
       currentUser={currentUser}
       headerAction={
@@ -414,7 +427,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
       {!menuQuery.isLoading && !menuQuery.isError && groups.length > 0 ? (
         <div className="bg-card border-border/60 flex flex-col gap-3 rounded-xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted-foreground text-sm">
-            Page {Math.min(pageNumber, totalPages)} of {totalPages} · {menuQuery.data?.totalItems ?? 0} categories
+            Page {Math.min(pageNumber, totalPages)} of {totalPages} - {menuQuery.data?.totalItems ?? 0} categories
           </p>
           <div className="flex gap-2">
             <Button

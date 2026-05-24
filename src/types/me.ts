@@ -45,3 +45,46 @@ export type BulkAvailabilityRequest = {
   isAvailable: boolean;
   menuItemIds: string[];
 };
+
+export type MyTableStatus = "AVAILABLE" | "OCCUPIED" | "RESERVED" | "DISABLED";
+
+export type MyTableSessionResponse = {
+  sessionId: string;
+  sessionCode: string;
+  openedAt?: string | null;
+  expiresAt: string;
+  isActive: boolean;
+};
+
+export type MyTableResponse = {
+  tableId: string;
+  branchId: string;
+  branchName: string;
+  tableNumber: string;
+  capacity: number;
+  status: MyTableStatus | number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string | null;
+  currentSession: MyTableSessionResponse | null;
+};
+
+export type MyTablesQuery = {
+  pageNumber?: number;
+  pageSize?: number;
+  search?: string;
+  status?: MyTableStatus;
+  isActive?: boolean;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
+};
+
+export type OpenTableSessionResponse = {
+  sessionId: string;
+  tableId: string;
+  branchId: string;
+  sessionCode: string;
+  isActive: boolean;
+  expiresAt: string;
+  createdAt: string;
+};

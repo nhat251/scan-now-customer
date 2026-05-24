@@ -14,6 +14,7 @@ import { useUserStore } from "@/stores/user";
 
 import {
   canManageMenuAvailability,
+  canManageTableSessions,
   getApiErrorMessage,
   getBranchStatusLabel,
   getMyPortalNavItems,
@@ -26,6 +27,7 @@ export const MyBranchesPage = () => {
   const branches = useMemo(() => branchesQuery.data ?? [], [branchesQuery.data]);
   const activeBranches = branches.filter((branch) => branch.isActive).length;
   const canSeeMenu = canManageMenuAvailability(currentUser?.role);
+  const canSeeTables = canManageTableSessions(currentUser?.role);
 
   useEffect(() => {
     if (branchesQuery.isSuccess && branches.length === 1) {
@@ -39,7 +41,7 @@ export const MyBranchesPage = () => {
       description="View the restaurant branches assigned to your account."
       portalLabel="Branch Workspace"
       portalName="My Branch Portal"
-      navItems={getMyPortalNavItems({ active: "branches", canSeeMenu })}
+      navItems={getMyPortalNavItems({ active: "branches", canSeeMenu, canSeeTables })}
       topbarTitle={currentUser?.fullName ?? "My Branch Portal"}
       currentUser={currentUser}
       stats={

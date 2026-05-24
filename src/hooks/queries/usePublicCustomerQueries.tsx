@@ -1,9 +1,10 @@
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useQuery from "@/hooks/useQuery";
-import { getPublicBranchCategories, getPublicSessionMenu, getPublicTable } from "@/services/public-customer";
+import { getPublicBranchCategories, getPublicMenuItem, getPublicSessionMenu, getPublicTable } from "@/services/public-customer";
 import type { ApiResponse } from "@/types/api";
 import type {
   PublicCategoryResponse,
+  PublicMenuItemResponse,
   PublicTableResponse,
   SessionMenuQuery,
   SessionMenuResponse,
@@ -47,5 +48,17 @@ export const usePublicBranchCategoriesQuery = (branchId?: string): UseQueryResul
     queryFn: () => getPublicBranchCategories(branchId ?? ""),
     select: (res) => res.data.result,
     enabled: Boolean(branchId),
+  });
+};
+
+export const usePublicMenuItemQuery = (
+  branchId: string | undefined,
+  menuItemId: string
+): UseQueryResult<PublicMenuItemResponse, Error> => {
+  return useQuery<ApiResponse<PublicMenuItemResponse>, PublicMenuItemResponse>({
+    queryKey: [QUERY_KEY.PUBLIC_MENU_ITEM, branchId ?? "", menuItemId],
+    queryFn: () => getPublicMenuItem(branchId ?? "", menuItemId),
+    select: (res) => res.data.result,
+    enabled: Boolean(branchId) && Boolean(menuItemId),
   });
 };

@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { LayoutDashboard, ListOrdered, Settings, Soup, Store, Tags, Users } from "lucide-react";
+import { LayoutDashboard, ListOrdered, Settings, Soup, Store, Table2, Tags, Users } from "lucide-react";
 
 import type { PortalNavItem } from "@/components/auth/portal-shell";
 import { PATH } from "@/constants/path";
@@ -99,7 +99,7 @@ export const getPortalCopy = (portal: ManagePortal) => {
 
 export const getManageMenuNavItems = (
   portal: ManagePortal,
-  active: "dashboard" | "branches" | "categories" | "menu-items" | "users" | "settings",
+  active: "dashboard" | "branches" | "categories" | "menu-items" | "tables" | "users" | "settings",
   branchId?: string
 ): PortalNavItem[] => {
   if (portal === "manager") {
@@ -118,6 +118,12 @@ export const getManageMenuNavItems = (
               href: PATH.manager.branchMenuItems(branchId),
               icon: <Soup className="size-4" />,
               active: active === "menu-items",
+            },
+            {
+              label: "Tables & QR",
+              href: PATH.manager.branchTables(branchId),
+              icon: <Table2 className="size-4" />,
+              active: active === "tables",
             },
           ]
         : []),
@@ -143,6 +149,12 @@ export const getManageMenuNavItems = (
             href: PATH.owner.branchMenuItems(branchId),
             icon: <Soup className="size-4" />,
             active: active === "menu-items",
+          },
+          {
+            label: "Tables & QR",
+            href: PATH.owner.branchTables(branchId),
+            icon: <Table2 className="size-4" />,
+            active: active === "tables",
           },
         ]
       : []),

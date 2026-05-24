@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import type { ApiProblemDetails, JoinSessionResponse, PersistedCustomerSession } from "@/types/customer-session";
 
 const CUSTOMER_SESSION_KEY = "scan-now.customer-session";
+const CUSTOMER_ORDER_KEY_PREFIX = "scan-now.customer-order";
 
 export const getCustomerApiErrorMessage = (error: unknown, fallback: string) => {
   if (!isAxiosError<ApiProblemDetails>(error)) {
@@ -42,6 +43,14 @@ export const readPersistedCustomerSession = () => {
     window.localStorage.removeItem(CUSTOMER_SESSION_KEY);
     return null;
   }
+};
+
+export const persistCustomerOrder = (sessionCode: string, orderId: string) => {
+  window.localStorage.setItem(`${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`, orderId);
+};
+
+export const readPersistedCustomerOrder = (sessionCode: string) => {
+  return window.localStorage.getItem(`${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`);
 };
 
 export const formatCurrency = (value: number) => {

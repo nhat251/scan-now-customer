@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Soup, Tags } from "lucide-react";
+import { Soup, Table2, Tags } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import {
@@ -147,6 +147,10 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
               <Button onClick={() => router.push(PATH.owner.branchMenuItems(branchId))}>
                 <Soup className="size-4" />
                 Menu Items
+              </Button>
+              <Button variant="outline" onClick={() => router.push(PATH.owner.branchTables(branchId))}>
+                <Table2 className="size-4" />
+                Tables & QR
               </Button>
             </>
           ) : null}

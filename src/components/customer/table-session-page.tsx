@@ -1,10 +1,10 @@
 "use client";
 
 import { type FormEvent, useMemo, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, MapPin, QrCode, Store, Utensils } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Utensils } from "lucide-react";
 
+import { Logo } from "@/components/atoms/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useJoinPublicSessionMutation } from "@/hooks/mutations/usePublicCustomerMutations";
@@ -119,47 +119,34 @@ export const TableSessionPage = ({ qrCodeToken }: Props) => {
   };
 
   return (
-    <main className="bg-background text-on-background fixed inset-0 z-[60] overflow-y-auto">
-      <div className="mx-auto flex min-h-full w-full max-w-md flex-col">
-        <header className="border-border/70 bg-card sticky top-0 z-20 flex items-center justify-between border-b px-4 py-3 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary-container text-on-primary flex size-9 items-center justify-center rounded-xl">
-              <QrCode className="size-5" />
-            </div>
-            <span className="text-primary-container text-xl font-black tracking-tight">ScanNow</span>
-          </div>
-          <div className="border-primary-container/20 bg-primary-container/10 text-primary flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold">
+    <main className="fixed inset-0 z-[60] overflow-y-auto bg-[#f8f9fa] font-sans text-gray-900">
+      <div className="mx-auto flex min-h-full w-full max-w-md flex-col pb-24">
+        <header className="sticky top-0 z-20 flex items-center justify-between bg-white px-4 py-3 shadow-sm">
+          <Logo size={16} textSize="text-xl" />
+          <div className="text-primary-container flex items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-bold">
             <Utensils className="size-4" />
-            {table ? `Table ${table.tableNumber}` : "Table"}
+            {table ? `Bàn ${table.tableNumber}` : "Bàn"}
           </div>
         </header>
 
-        <section className="flex flex-1 flex-col px-4 py-5">
-          <div className="bg-inverse-surface relative h-48 overflow-hidden rounded-2xl shadow-lg">
-            <Image
-              src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80"
-              alt="Restaurant table"
-              fill
-              sizes="(max-width: 640px) 100vw, 448px"
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/35 to-transparent p-5">
-              <div className="mb-2 flex items-center gap-2 text-sm font-medium text-white/90">
-                <Store className="size-4" />
-                Dining session
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">
-                {tableQuery.isLoading ? "Loading table" : table?.branchName ?? "ScanNow Menu"}
-              </h1>
-              <div className="mt-2 flex items-center gap-2 text-sm text-white/85">
-                <MapPin className="size-4" />
-                {table ? `Table ${table.tableNumber}` : "QR table access"}
-              </div>
-            </div>
+        <section className="mt-4 px-4">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <p className="text-primary-container text-sm font-bold">ScanNow Digital Menu</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-gray-900">
+              {tableQuery.isLoading ? "Đang tải bàn" : table?.branchName ?? "ScanNow Menu"}
+            </h1>
+            <p className="mt-1 text-sm font-semibold text-gray-500">
+              {table ? `Bàn ${table.tableNumber}` : "Quét QR để vào phiên dùng bữa"}
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-6 px-4">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="truncate text-xl font-bold text-gray-800">Thông tin bàn</h2>
           </div>
 
-          <div className="border-border/70 bg-card mt-5 rounded-2xl border p-4 shadow-sm">
+          <div className="rounded-2xl border border-gray-50 bg-white p-3 shadow-sm">
             {tableQuery.isLoading ? (
               <div className="flex min-h-52 items-center justify-center">
                 <Loader2 className="text-primary-container size-8 animate-spin" />
@@ -170,10 +157,10 @@ export const TableSessionPage = ({ qrCodeToken }: Props) => {
               <div className="flex min-h-52 flex-col items-center justify-center text-center">
                 <AlertCircle className="text-destructive size-10" />
                 <h2 className="mt-3 text-xl font-bold">Table not found</h2>
-                <p className="text-muted-foreground mt-2 text-sm">
+                <p className="mt-2 text-sm text-gray-500">
                   {getCustomerApiErrorMessage(tableQuery.error, "Table not found")}
                 </p>
-                <Button className="mt-5" onClick={() => tableQuery.refetch()} disabled={tableQuery.isRefetching}>
+                <Button className="mt-5 rounded-2xl" onClick={() => tableQuery.refetch()} disabled={tableQuery.isRefetching}>
                   Try again
                 </Button>
               </div>
@@ -183,7 +170,7 @@ export const TableSessionPage = ({ qrCodeToken }: Props) => {
               <div className="flex min-h-52 flex-col items-center justify-center text-center">
                 <AlertCircle className="text-destructive size-10" />
                 <h2 className="mt-3 text-xl font-bold">Unsupported table status</h2>
-                <p className="text-muted-foreground mt-2 text-sm">
+                <p className="mt-2 text-sm text-gray-500">
                   This table returned status "{String(table.status)}". Please contact staff.
                 </p>
               </div>
@@ -193,16 +180,16 @@ export const TableSessionPage = ({ qrCodeToken }: Props) => {
               <>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-muted-foreground text-sm font-semibold">Branch</p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight">{table.branchName}</h2>
-                    <p className="text-primary mt-1 text-sm font-semibold">Table {table.tableNumber}</p>
+                    <p className="text-sm font-semibold text-gray-500">Chi nhánh</p>
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-gray-900">{table.branchName}</h2>
+                    <p className="text-primary-container mt-1 text-sm font-semibold">Bàn {table.tableNumber}</p>
                   </div>
                   <span className={cn("rounded-full border px-3 py-1 text-xs font-bold", statusTone)}>
                     {statusContent.label}
                   </span>
                 </div>
 
-                <div className="border-border bg-surface-container-low mt-5 rounded-2xl border p-4">
+                <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50 p-4">
                   <div className="flex gap-3">
                     {statusContent.canJoin ? (
                       <CheckCircle2 className="text-primary-container mt-0.5 size-5 shrink-0" />
@@ -210,14 +197,14 @@ export const TableSessionPage = ({ qrCodeToken }: Props) => {
                       <AlertCircle className="text-warning-foreground mt-0.5 size-5 shrink-0" />
                     )}
                     <div>
-                      <p className="font-semibold">{statusContent.description}</p>
-                      <p className="text-muted-foreground mt-1 text-sm">{statusContent.helper}</p>
+                      <p className="font-semibold text-gray-900">{statusContent.description}</p>
+                      <p className="mt-1 text-sm text-gray-600">{statusContent.helper}</p>
                     </div>
                   </div>
                 </div>
 
                 <form className="mt-5" onSubmit={handleSubmit}>
-                  <label htmlFor="session-code" className="text-on-surface text-sm font-bold">
+                  <label htmlFor="session-code" className="text-sm font-bold text-gray-900">
                     Enter session code
                   </label>
                   <Input
@@ -228,11 +215,11 @@ export const TableSessionPage = ({ qrCodeToken }: Props) => {
                     inputMode="text"
                     autoComplete="one-time-code"
                     disabled={!statusContent.canJoin || joinSessionMutation.isPending}
-                    className="border-border text-on-surface mt-2 h-14 rounded-2xl bg-white text-center text-2xl font-black tracking-[0.35em] placeholder:tracking-normal"
+                    className="mt-2 h-14 rounded-2xl border-gray-200 bg-white text-center text-2xl font-black tracking-[0.35em] text-gray-900 placeholder:tracking-normal"
                     aria-invalid={Boolean(formError)}
                   />
                   {formError ? <p className="text-destructive mt-2 text-sm font-medium">{formError}</p> : null}
-                  <Button type="submit" className="mt-4 h-14 w-full rounded-2xl text-base" disabled={!canSubmit}>
+                  <Button type="submit" className="mt-4 h-14 w-full rounded-2xl text-base font-bold" disabled={!canSubmit}>
                     {joinSessionMutation.isPending ? <Loader2 className="size-5 animate-spin" /> : null}
                     View Menu
                   </Button>

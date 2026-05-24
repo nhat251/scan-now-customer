@@ -12,6 +12,9 @@ import { useMyMenuItemQuery } from "@/hooks/queries/useMeQueries";
 import { useUserStore } from "@/stores/user";
 
 import {
+  canHandleKitchenOrders,
+  canHandleWaiterOrders,
+  canManageTableSessions,
   FALLBACK_MENU_IMAGE,
   formatCurrency,
   getActiveLabel,
@@ -37,6 +40,9 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
   const itemQuery = useMyMenuItemQuery(menuItemId);
   const item = itemQuery.data;
   const branchId = item?.branchId;
+  const canSeeTables = canManageTableSessions(currentUser?.role);
+  const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
+  const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
 
   return (
     <PortalShell
@@ -44,7 +50,14 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
       description="View menu item details without editing content, pricing, or category settings."
       portalLabel="Branch Workspace"
       portalName="My Branch Portal"
-      navItems={getMyPortalNavItems({ active: "menu", branchId, canSeeMenu: true })}
+      navItems={getMyPortalNavItems({
+        active: "menu",
+        branchId,
+        canSeeMenu: true,
+        canSeeTables,
+        canSeeOrders,
+        canSeeKitchen,
+      })}
       topbarTitle={item?.branchName ?? currentUser?.fullName ?? "Menu Item Detail"}
       currentUser={currentUser}
       headerAction={
