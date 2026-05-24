@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Soup, Tags } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import {
@@ -133,16 +134,35 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
       topbarTitle={branch?.name ?? currentUser?.fullName ?? "Owner Portal"}
       currentUser={currentUser}
       headerAction={
-        <Button variant="outline" onClick={() => router.push(PATH.owner.branches)}>
-          Back to branches
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={() => router.push(PATH.owner.branches)}>
+            Back to branches
+          </Button>
+          {branchId ? (
+            <>
+              <Button variant="outline" onClick={() => router.push(PATH.owner.branchCategories(branchId))}>
+                <Tags className="size-4" />
+                Categories
+              </Button>
+              <Button onClick={() => router.push(PATH.owner.branchMenuItems(branchId))}>
+                <Soup className="size-4" />
+                Menu Items
+              </Button>
+            </>
+          ) : null}
+        </div>
       }
       stats={
         mode === "edit" ? (
           <>
             <PortalStatCard label="Branch" value={branch?.name ?? "-"} helper={branch?.slug ? `/${branch.slug}` : "Slug pending"} />
             <PortalStatCard label="Status" value={branch ? getBranchStatusLabel(branch) : "-"} helper={branch?.managerName ?? "No manager assigned"} />
-            <PortalStatCard label="Contact" value={branch?.email ?? "-"} helper={branch?.phone ?? "No phone on file"} />
+            <PortalStatCard
+              label="Contact"
+              value={branch?.email ?? "-"}
+              helper={branch?.phone ?? "No phone on file"}
+              valueClassName="break-all text-2xl xl:text-3xl"
+            />
             <PortalStatCard label="Hours" value={branch?.openTime ?? "-"} helper={branch?.closeTime ?? "No closing time"} />
           </>
         ) : undefined

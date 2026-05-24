@@ -11,7 +11,12 @@ const HIDE_PUBLIC_CHROME_PREFIXES = [
   PATH.owner.users,
   PATH.owner.restaurant,
   PATH.owner.branches,
+  PATH.owner.menuItems,
   PATH.manager.users,
+  PATH.manager.branches,
+  PATH.manager.menuItems,
+  PATH.me.branches,
+  PATH.me.menuItemDetail,
   PATH.dashboards.owner,
   PATH.dashboards.manager,
 ];

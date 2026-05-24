@@ -8,9 +8,9 @@ const ROLE_REDIRECTS = {
   ADMIN: PATH.dashboards.admin,
   OWNER: PATH.owner.users,
   MANAGER: PATH.manager.users,
-  BRANCH_MANAGER: PATH.manager.users,
-  STAFF: PATH.dashboards.staff,
-  KITCHEN: PATH.dashboards.kitchen,
+  BRANCH_MANAGER: PATH.me.branches,
+  STAFF: PATH.me.branches,
+  KITCHEN: PATH.me.branches,
 } as const;
 
 const isBrowser = () => typeof window !== "undefined";
