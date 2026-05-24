@@ -120,7 +120,7 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
       } catch {
         if (mounted) {
           setStatus("error");
-          showNotify({ type: "warning", message: "Khong the ket noi cap nhat truc tiep cua don hang." });
+          showNotify({ type: "warning", message: "Không thể kết nối cập nhật trực tiếp của đơn hàng." });
         }
       }
     };

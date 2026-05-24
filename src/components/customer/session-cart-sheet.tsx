@@ -46,7 +46,7 @@ export const SessionCartSheet = ({
         className="data-[state=open]:slide-in-from-bottom-10 data-[state=closed]:slide-out-to-bottom-10 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 top-auto bottom-0 left-1/2 z-[90] flex h-[68dvh] max-h-[720px] max-w-md translate-y-0 flex-col gap-0 rounded-t-[2rem] rounded-b-none border-x-0 border-b-0 bg-white p-0 shadow-2xl duration-300"
       >
         <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-gray-200" />
-        <DialogHeader className="flex-row items-start justify-between gap-3 px-5 pt-4 pb-3 text-left">
+        <DialogHeader className="flex-row items-start justify-between gap-3 border-b border-orange-50 px-5 pt-4 pb-3 text-left">
           <div>
             <DialogTitle className="text-xl font-black">Giỏ hàng của bạn</DialogTitle>
             <DialogDescription className="mt-1">
@@ -70,7 +70,7 @@ export const SessionCartSheet = ({
           ) : (
             <div className="space-y-4">
               {cart.items.map((item) => (
-                <article key={item.menuItemId} className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+                <article key={item.menuItemId} className="rounded-2xl border border-orange-100/70 bg-white p-3 shadow-sm">
                   <div className="flex gap-3">
                     <Link
                       href={PATH.customer.sessionMenuItem(sessionCode, item.menuItemId)}
@@ -132,7 +132,7 @@ export const SessionCartSheet = ({
 
         <div className="border-t border-gray-100 bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-500">Tổng cộng</span>
+            <span className="text-sm font-semibold text-gray-500">Tạm tính</span>
             <span className="text-primary-container text-xl font-black">{formatCurrency(cart.totalAmount)}</span>
           </div>
           <div className="flex gap-3">
@@ -153,7 +153,7 @@ export const SessionCartSheet = ({
                   onOpenChange(false);
                 }}
               >
-                Xác nhận đơn
+                Tiếp tục đặt món
               </Link>
             </Button>
           </div>

@@ -83,9 +83,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
   };
 
   return (
-    <main className="fixed inset-0 z-[60] overflow-y-auto bg-[#f8f9fa] font-sans text-gray-900">
+    <main className="fixed inset-0 z-[60] overflow-y-auto bg-gradient-to-b from-orange-50/70 via-[#f8f9fa] to-[#f8f9fa] font-sans text-gray-900">
       <div className="mx-auto min-h-full w-full max-w-md pb-28">
-        <header className="sticky top-0 z-30 flex items-center justify-between bg-white px-4 py-3 shadow-sm">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-orange-50 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md">
           <Logo size={16} textSize="text-xl" />
           <div className="text-primary-container flex items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-bold">
             <Utensils className="size-4" />
@@ -132,7 +132,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
         {item ? (
           <>
             <section className="mt-3 px-4">
-              <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-3xl border border-orange-100/80 bg-white shadow-md shadow-orange-100/40">
                 <div className="relative h-64 w-full bg-gray-100">
                   <Image
                     src={item.imageUrl || FALLBACK_IMAGE}
@@ -173,7 +173,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
             </section>
 
             <section className="mt-4 px-4">
-              <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <div className="rounded-2xl border border-orange-100/80 bg-white p-4 shadow-sm">
                 <label htmlFor="menu-item-note" className="flex items-center gap-2 text-sm font-bold">
                   <StickyNote className="text-primary-container size-4" />
                   Ghi chú cho món

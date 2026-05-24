@@ -63,7 +63,7 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
     setFormError("");
 
     if (cart.items.length === 0) {
-      setFormError("Gio hang dang trong. Vui long chon mon truoc khi gui don.");
+      setFormError("Giỏ hàng đang trống. Vui lòng chọn món trước khi gửi đơn.");
       return;
     }
 
@@ -86,18 +86,18 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
       await clearCart();
       router.replace(PATH.customer.sessionOrder(normalizedSessionCode, response.result.orderId));
     } catch {
-      setFormError("Khong the gui don luc nay. Vui long kiem tra gio hang va thu lai.");
+      setFormError("Không thể gửi đơn lúc này. Vui lòng kiểm tra giỏ hàng và thử lại.");
     }
   };
 
   return (
-    <main className="fixed inset-0 z-[60] overflow-y-auto bg-[#f8f9fa] font-sans text-gray-900">
+    <main className="fixed inset-0 z-[60] overflow-y-auto bg-gradient-to-b from-orange-50/70 via-[#f8f9fa] to-[#f8f9fa] font-sans text-gray-900">
       <div className="mx-auto min-h-full w-full max-w-md pb-32">
-        <header className="sticky top-0 z-20 flex items-center justify-between bg-white px-4 py-3 shadow-sm">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-orange-50 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md">
           <Logo size={16} textSize="text-xl" />
           <div className="text-primary-container flex items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-bold">
             <Utensils className="size-4" />
-            {session ? `Ban ${session.tableNumber}` : normalizedSessionCode}
+            {session ? `Bàn ${session.tableNumber}` : normalizedSessionCode}
           </div>
         </header>
 
@@ -106,26 +106,30 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
             <Button asChild variant="ghost" className="-ml-4 px-4">
               <Link href={PATH.customer.sessionMenu(normalizedSessionCode)}>
                 <ArrowLeft className="size-4" />
-                Quay lai menu
+                Quay lại thực đơn
               </Link>
             </Button>
-            <h1 className="mt-3 text-3xl font-black tracking-tight">Xac nhan don mon</h1>
-            <p className="mt-2 text-sm font-medium text-gray-500">
-              {session?.branchName ?? "ScanNow"} - Ban {session?.tableNumber ?? "-"}
-            </p>
+            <div className="mt-3 rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-orange-200/70">
+              <p className="text-xs font-bold tracking-wider text-orange-100 uppercase">Bước 2/3</p>
+              <h1 className="mt-2 text-2xl font-black tracking-tight">Xác nhận đơn món</h1>
+              <p className="mt-2 text-sm font-medium text-orange-50">
+                {session?.branchName ?? "ScanNow"} · Bàn {session?.tableNumber ?? "-"}
+              </p>
+            </div>
           </section>
 
           <section className="mt-6 space-y-3 px-4">
+            {cart.items.length > 0 ? <h2 className="text-lg font-bold text-gray-900">Món đã chọn</h2> : null}
             {cart.items.length === 0 ? (
               <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
                 <ShoppingBag className="mx-auto size-10 text-gray-400" />
-                <h2 className="mt-3 text-lg font-bold">Gio hang dang trong</h2>
-                <p className="mt-2 text-sm text-gray-500">Them mon tu menu de gui yeu cau den nhan vien.</p>
+                <h2 className="mt-3 text-lg font-bold">Giỏ hàng đang trống</h2>
+                <p className="mt-2 text-sm text-gray-500">Thêm món từ thực đơn để gửi yêu cầu đến nhân viên.</p>
               </div>
             ) : null}
 
             {cart.items.map((item) => (
-              <article key={item.menuItemId} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <article key={item.menuItemId} className="rounded-2xl border border-orange-100/70 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="font-bold">{item.menuItemName}</h2>
@@ -140,8 +144,8 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
                 <Textarea
                   value={item.specialRequest ?? ""}
                   onChange={(event) => void updateSpecialRequest(item.menuItemId, event.target.value)}
-                  placeholder="Ghi chu cho mon nay (vi du: it cay, khong hanh)"
-                  className="mt-3 min-h-16 resize-none rounded-xl"
+                  placeholder="Ghi chú cho món này, ví dụ: ít cay, không hành..."
+                  className="mt-3 min-h-16 resize-none rounded-xl bg-gray-50"
                   disabled={isUpdating}
                 />
               </article>
@@ -149,26 +153,27 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
           </section>
 
           <section className="mt-6 space-y-4 px-4">
-            <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <h2 className="text-lg font-bold">Thong tin don</h2>
+            <div className="rounded-2xl border border-orange-100/70 bg-white p-4 shadow-sm">
+              <h2 className="text-lg font-bold">Thông tin đơn hàng</h2>
+              <p className="mt-1 text-sm text-gray-500">Thông tin liên hệ là tùy chọn để nhân viên hỗ trợ thuận tiện hơn.</p>
               <div className="mt-4 space-y-3">
                 <Input
                   value={customerName}
                   onChange={(event) => setCustomerName(event.target.value)}
-                  placeholder="Ten khach (tuy chon)"
+                  placeholder="Tên khách (tùy chọn)"
                   className="h-12 rounded-xl"
                 />
                 <Input
                   value={customerPhone}
                   onChange={(event) => setCustomerPhone(event.target.value)}
-                  placeholder="So dien thoai (tuy chon)"
+                  placeholder="Số điện thoại (tùy chọn)"
                   inputMode="tel"
                   className="h-12 rounded-xl"
                 />
                 <Textarea
                   value={customerNote}
                   onChange={(event) => setCustomerNote(event.target.value)}
-                  placeholder="Ghi chu chung cho don"
+                  placeholder="Ghi chú chung cho đơn hàng"
                   className="min-h-20 resize-none rounded-xl"
                 />
               </div>
@@ -179,12 +184,12 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
           <footer className="fixed right-0 bottom-0 left-0 z-[70] border-t border-gray-100 bg-white/95 p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md">
             <div className="mx-auto flex max-w-md items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-bold tracking-wider text-gray-400 uppercase">{totalQuantity} mon</p>
+                <p className="text-xs font-bold tracking-wider text-gray-400 uppercase">{totalQuantity} món · Tổng cộng</p>
                 <p className="text-primary-container text-lg font-black">{formatCurrency(cart.totalAmount)}</p>
               </div>
               <Button type="submit" className="h-12 rounded-2xl px-6" disabled={cannotSubmit}>
                 {placeOrderMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-                Gui don
+                Gửi đơn món
               </Button>
             </div>
           </footer>

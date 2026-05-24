@@ -103,7 +103,7 @@ export const useSharedCart = (sessionCode: string) => {
       } catch {
         if (mounted) {
           setStatus("error");
-          showNotify({ type: "error", message: "Unable to connect shared cart." });
+          showNotify({ type: "error", message: "Không thể kết nối giỏ dùng chung." });
         }
       }
     };
@@ -134,7 +134,7 @@ export const useSharedCart = (sessionCode: string) => {
       const connection = connectionRef.current;
 
       if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-        showNotify({ type: "warning", message: "Shared cart is reconnecting. Please try again." });
+        showNotify({ type: "warning", message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại." });
         return;
       }
 
@@ -142,7 +142,7 @@ export const useSharedCart = (sessionCode: string) => {
         setIsUpdating(true);
         await connection.invoke("UpdateCart", normalizedSessionCode, normalizedCart);
       } catch {
-        showNotify({ type: "error", message: "Unable to update shared cart." });
+        showNotify({ type: "error", message: "Không thể cập nhật giỏ dùng chung." });
       } finally {
         setIsUpdating(false);
       }
@@ -156,7 +156,7 @@ export const useSharedCart = (sessionCode: string) => {
     const connection = connectionRef.current;
 
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      showNotify({ type: "warning", message: "Shared cart is reconnecting. Please try again." });
+      showNotify({ type: "warning", message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại." });
       return;
     }
 
@@ -164,7 +164,7 @@ export const useSharedCart = (sessionCode: string) => {
       setIsUpdating(true);
       await connection.invoke("ClearCart", normalizedSessionCode);
     } catch {
-      showNotify({ type: "error", message: "Unable to clear shared cart." });
+      showNotify({ type: "error", message: "Không thể xóa giỏ dùng chung." });
     } finally {
       setIsUpdating(false);
     }

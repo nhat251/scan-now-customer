@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowUpDown, Loader2, Minus, Plus, ShoppingBag, Store, Utensils } from "lucide-react";
+import { AlertCircle, ArrowUpDown, Loader2, Minus, Plus, ShoppingBag, Sparkles, Store, Utensils } from "lucide-react";
 
 import { Logo } from "@/components/atoms/logo";
 import { SessionCartSheet } from "@/components/customer/session-cart-sheet";
@@ -45,10 +45,10 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80";
 
 const SORT_OPTIONS = [
-  { label: "Recommended", value: "displayOrder:asc" },
-  { label: "Price low to high", value: "price:asc" },
-  { label: "Price high to low", value: "price:desc" },
-  { label: "Name A-Z", value: "name:asc" },
+  { label: "Đề xuất", value: "displayOrder:asc" },
+  { label: "Giá tăng dần", value: "price:asc" },
+  { label: "Giá giảm dần", value: "price:desc" },
+  { label: "Tên A-Z", value: "name:asc" },
 ];
 
 export const SessionMenuPage = ({ sessionCode }: Props) => {
@@ -168,9 +168,9 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
   };
 
   return (
-    <main className="fixed inset-0 z-[60] overflow-y-auto bg-[#f8f9fa] font-sans text-gray-900">
+    <main className="fixed inset-0 z-[60] overflow-y-auto bg-gradient-to-b from-orange-50/70 via-[#f8f9fa] to-[#f8f9fa] font-sans text-gray-900">
       <div className="mx-auto min-h-full w-full max-w-md pb-24">
-        <header className="sticky top-0 z-30 flex items-center justify-between bg-white px-4 py-3 shadow-sm">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-orange-50 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md">
           <Logo size={16} textSize="text-xl" />
           <div className="text-primary-container flex items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-bold">
             <Utensils className="size-4" />
@@ -178,9 +178,24 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
           </div>
         </header>
 
+        {session ? (
+          <section className="px-4 pt-4">
+            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-orange-200/70">
+              <p className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-orange-100 uppercase">
+                <Sparkles className="size-4" />
+                Thực đơn tại bàn {session.tableNumber}
+              </p>
+              <h1 className="mt-2 text-2xl font-black">{session.branchName}</h1>
+              <p className="mt-2 max-w-xs text-sm leading-5 text-orange-50">
+                Chọn món yêu thích, thêm ghi chú theo khẩu vị và gửi đơn ngay tại bàn.
+              </p>
+            </div>
+          </section>
+        ) : null}
+
         {!sessionMenuQuery.isLoading && !sessionMenuQuery.isError && mustTryItems.length > 0 ? (
-          <section className="mt-4 px-4">
-            <h2 className="mb-3 text-lg font-bold text-gray-800">Món ngon phải thử</h2>
+          <section className="mt-5 px-4">
+            <h2 className="mb-3 text-lg font-bold text-gray-800">Gợi ý dành cho bạn</h2>
             <div className="scrollbar-hide flex gap-4 overflow-x-auto pb-2">
               {mustTryItems.map((item) => (
                 <Link
@@ -209,10 +224,10 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
         <section className="mt-6 px-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-bold text-gray-800">Món ăn</h1>
+              <h2 className="truncate text-xl font-bold text-gray-800">Khám phá món ngon</h2>
               {session ? (
                 <p className="truncate text-xs font-semibold text-gray-500">
-                  {session.branchName} · Session {normalizedSessionCode}
+                  Mã phiên: {normalizedSessionCode}
                 </p>
               ) : null}
             </div>
@@ -262,12 +277,12 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
           {sessionMenuQuery.isError ? (
             <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
               <AlertCircle className="text-destructive mx-auto size-10" />
-              <h2 className="mt-3 text-xl font-bold">Menu unavailable</h2>
+              <h2 className="mt-3 text-xl font-bold">Không thể tải thực đơn</h2>
               <p className="mt-2 text-sm text-gray-500">
-                {getCustomerApiErrorMessage(sessionMenuQuery.error, "Session not found or expired")}
+                {getCustomerApiErrorMessage(sessionMenuQuery.error, "Phiên dùng bữa không tồn tại hoặc đã hết hạn.")}
               </p>
               <Button className="mt-5" onClick={() => sessionMenuQuery.refetch()} disabled={sessionMenuQuery.isRefetching}>
-                Try again
+                Thử lại
               </Button>
             </div>
           ) : null}
@@ -275,8 +290,8 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
           {!sessionMenuQuery.isLoading && !sessionMenuQuery.isError && menuGroups.length === 0 ? (
             <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
               <ShoppingBag className="mx-auto size-10 text-gray-400" />
-              <h2 className="mt-3 text-xl font-bold">No menu items</h2>
-              <p className="mt-2 text-sm text-gray-500">Try another category or sort option.</p>
+              <h2 className="mt-3 text-xl font-bold">Chưa có món phù hợp</h2>
+              <p className="mt-2 text-sm text-gray-500">Hãy thử danh mục hoặc cách sắp xếp khác.</p>
             </div>
           ) : null}
 
@@ -326,7 +341,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
                             type="button"
                             onClick={() => updateQuantity(item, -1)}
                             className="text-primary-container flex size-8 items-center justify-center rounded-full border border-orange-100 bg-orange-50 transition-colors hover:bg-orange-100"
-                            aria-label={`Remove ${item.name}`}
+                            aria-label={`Giảm số lượng ${item.name}`}
                           >
                             <Minus className="size-5" strokeWidth={2.5} />
                           </button>
@@ -335,7 +350,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
                             type="button"
                             onClick={() => updateQuantity(item, 1)}
                             className="bg-primary-container hover:bg-primary flex size-8 items-center justify-center rounded-full text-white transition-colors"
-                            aria-label={`Add ${item.name}`}
+                            aria-label={`Tăng số lượng ${item.name}`}
                           >
                             <Plus className="size-5" strokeWidth={2.5} />
                           </button>
@@ -346,7 +361,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
                           onClick={() => updateQuantity(item, 1)}
                           disabled={!item.isAvailable}
                           className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:bg-gray-100 disabled:text-gray-400"
-                          aria-label={`Add ${item.name}`}
+                          aria-label={`Thêm ${item.name} vào giỏ`}
                         >
                           <Plus className="size-5" strokeWidth={2.5} />
                         </button>
@@ -368,10 +383,10 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
             <p className="text-primary-container text-sm font-bold">{formatCurrency(subtotal)}</p>
             <p className="text-[11px] font-semibold text-gray-400">
               {cartStatus === "connected"
-                ? "Gio chung da ket noi"
+                ? "Giỏ dùng chung đã kết nối"
                 : cartStatus === "reconnecting" || cartStatus === "connecting"
-                  ? "Dang ket noi gio chung"
-                  : "Gio chung ngoai tuyen"}
+                  ? "Đang kết nối giỏ dùng chung"
+                  : "Giỏ dùng chung đang ngoại tuyến"}
             </p>
           </div>
           <Button
@@ -384,7 +399,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
             }
           >
             <ShoppingBag className="size-5" />
-            {totalItems > 0 ? "Xem gio" : trackedOrderId ? "Theo doi don" : "Gio hang"}
+            {totalItems > 0 ? "Xem giỏ" : trackedOrderId ? "Theo dõi đơn" : "Giỏ hàng"}
           </Button>
         </div>
       </footer>
