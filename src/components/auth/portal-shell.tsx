@@ -48,18 +48,28 @@ export const PortalStatCard = ({
   label,
   value,
   helper,
+  valueClassName,
+  helperClassName,
 }: {
   label: string;
   value: string;
   helper?: string;
+  valueClassName?: string;
+  helperClassName?: string;
 }) => {
   return (
-    <div className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
+    <div className="bg-card border-border/60 min-w-0 rounded-xl border p-5 shadow-sm">
       <p className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
-      {helper ? <p className="text-muted-foreground mt-2 text-sm">{helper}</p> : null}
+      <p className={cn("mt-3 min-w-0 text-3xl font-bold tracking-tight break-words", valueClassName)}>
+        {value}
+      </p>
+      {helper ? (
+        <p className={cn("text-muted-foreground mt-2 min-w-0 text-sm break-words", helperClassName)}>
+          {helper}
+        </p>
+      ) : null}
     </div>
   );
 };

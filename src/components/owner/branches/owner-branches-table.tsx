@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { ArrowDownAZ, ArrowUpAZ, ChevronsUpDown,Eye, MoreHorizontal, Power, PowerOff } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, ChevronsUpDown, Eye, MoreHorizontal, Power, PowerOff, Soup, Tags } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -155,6 +155,14 @@ export const OwnerBranchesTable = ({
                         <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchDetail(branch.branchId))}>
                           <Eye />
                           View branch
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchCategories(branch.branchId))}>
+                          <Tags />
+                          Categories
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchMenuItems(branch.branchId))}>
+                          <Soup />
+                          Menu items
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
