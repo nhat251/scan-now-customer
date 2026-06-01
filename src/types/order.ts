@@ -181,6 +181,7 @@ export type CheckoutResponse = {
   accountName: string | null;
   amount: number | null;
   description: string | null;
+  paymentExpiresAt: string | null;
 };
 
 export type PaymentStatusResponse = {

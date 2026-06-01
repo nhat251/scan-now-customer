@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, ChevronLeft, LogOut, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
@@ -29,6 +29,8 @@ type PortalShellProps = {
   currentUser?: Pick<AuthUser, "fullName" | "role" | "avatarUrl"> | null;
   headerAction?: React.ReactNode;
   stats?: React.ReactNode;
+  branchName?: string;
+  branchId?: string;
 };
 
 const getInitials = (name?: string | null) => {
@@ -85,6 +87,8 @@ export const PortalShell = ({
   currentUser,
   headerAction,
   stats,
+  branchName,
+  branchId,
 }: PortalShellProps) => {
   const router = useRouter();
   const logoutMutation = useLogoutMutation();
@@ -102,10 +106,29 @@ export const PortalShell = ({
   return (
     <div className="bg-background text-foreground min-h-screen">
       <aside className="bg-card border-border/60 fixed top-0 left-0 hidden h-screen w-64 flex-col border-r lg:flex">
-        <div className="px-6 pt-8 pb-10">
+        <div className="px-6 pt-8 pb-6">
           <h2 className="text-primary text-3xl font-black tracking-tight">Scan Now</h2>
           <p className="text-muted-foreground mt-1 text-sm">{portalLabel}</p>
         </div>
+
+        {branchName ? (
+          <div className="border-border/60 from-primary/5 to-primary/10 mx-3 mb-2 rounded-xl border bg-gradient-to-br px-4 py-3">
+            <p className="text-muted-foreground text-[10px] font-bold tracking-[0.2em] uppercase">Current branch</p>
+            <div className="mt-1 flex items-center gap-2">
+              <Store className="text-primary size-4 shrink-0" />
+              <p className="truncate text-sm font-bold">{branchName}</p>
+            </div>
+            {branchId ? (
+              <Link
+                href={PATH.owner.branchDetail(branchId)}
+                className="text-primary/80 hover:text-primary mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold transition-colors"
+              >
+                <ChevronLeft className="size-3" />
+                Branch details
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
 
         <nav className="flex-1 space-y-1 px-3">
           {navItems.map((item) => (

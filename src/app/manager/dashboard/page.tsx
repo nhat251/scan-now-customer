@@ -1,14 +1,11 @@
-import { DashboardShell } from "@/components/auth/dashboard-shell";
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ReportDashboardPage } from "@/components/reports/report-dashboard-page";
 
 const ManagerDashboardPage = () => {
   return (
-    <DashboardShell
-      allowedRole="BRANCH_MANAGER"
-      description="This placeholder confirms that manager-only protected routing and logout are wired end-to-end."
-      title="Manager dashboard"
-    >
-      <p className="text-muted-foreground text-sm">Manager users are redirected here after login and kept here after session bootstrap.</p>
-    </DashboardShell>
+    <ProtectedRoute allowedRoles={["BRANCH_MANAGER"]}>
+      <ReportDashboardPage portal="manager" />
+    </ProtectedRoute>
   );
 };
 

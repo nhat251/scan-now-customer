@@ -246,6 +246,8 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
       navItems={getTablePortalNavItems(portal, branchId)}
       topbarTitle={table?.branchName ?? currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
+      branchName={table?.branchName}
+      branchId={branchId}
       headerAction={
         <Button asChild variant="soft">
           <Link href={getOwnerTableListPath(branchId, portal)}>

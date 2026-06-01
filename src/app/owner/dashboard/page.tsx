@@ -1,14 +1,11 @@
-import { DashboardShell } from "@/components/auth/dashboard-shell";
+import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ReportDashboardPage } from "@/components/reports/report-dashboard-page";
 
 const OwnerDashboardPage = () => {
   return (
-    <DashboardShell
-      allowedRole="OWNER"
-      description="This placeholder confirms that owner-only protected routing and logout are wired end-to-end."
-      title="Owner dashboard"
-    >
-      <p className="text-muted-foreground text-sm">Owner users are redirected here after login and kept here after session bootstrap.</p>
-    </DashboardShell>
+    <ProtectedRoute allowedRoles={["OWNER"]}>
+      <ReportDashboardPage portal="owner" />
+    </ProtectedRoute>
   );
 };
 

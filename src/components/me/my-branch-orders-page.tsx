@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, ClipboardList, RefreshCw, Soup, Table2 } from "lucide-react";
 
@@ -11,6 +11,7 @@ import { PATH } from "@/constants/path";
 import { useConfirmWaiterOrderMutation, useMarkWaiterItemsServedMutation } from "@/hooks/mutations/useOrderMutations";
 import { useMyBranchDetailQuery } from "@/hooks/queries/useMeQueries";
 import { usePendingWaiterOrdersQuery, useReadyToServeItemsQuery } from "@/hooks/queries/useOrderQueries";
+import { useBranchOrderUpdates } from "@/hooks/useBranchOrderUpdates";
 import { useUserStore } from "@/stores/user";
 
 import {
@@ -40,6 +41,15 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
   const confirmMutation = useConfirmWaiterOrderMutation();
   const serveMutation = useMarkWaiterItemsServedMutation();
   const [selectedReadyIds, setSelectedReadyIds] = useState<string[]>([]);
+  const handleBranchOrderUpdated = useCallback(() => {
+    void pendingQuery.refetch();
+    void readyQuery.refetch();
+  }, [pendingQuery, readyQuery]);
+
+  useBranchOrderUpdates(branchId, {
+    enabled: canSeeOrders,
+    onOrderUpdated: handleBranchOrderUpdated,
+  });
 
   const pendingOrders = useMemo(() => pendingQuery.data ?? [], [pendingQuery.data]);
   const readyGroups = useMemo(() => readyQuery.data ?? [], [readyQuery.data]);

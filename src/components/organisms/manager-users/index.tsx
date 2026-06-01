@@ -40,7 +40,7 @@ import type {
 } from "@/types/user-management";
 import { useQueryClient } from "@tanstack/react-query";
 
-const ROLE_OPTIONS = ["STAFF", "KITCHEN"] as const;
+const ROLE_OPTIONS = ["STAFF", "KITCHEN", "CASHIER"] as const;
 
 const EMPTY_FORM: ManagerUserFormValues = {
   fullName: "",

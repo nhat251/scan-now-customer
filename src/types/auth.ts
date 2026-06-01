@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "OWNER" | "MANAGER" | "BRANCH_MANAGER" | "STAFF" | "KITCHEN" | (string & {});
+export type UserRole = "ADMIN" | "OWNER" | "MANAGER" | "BRANCH_MANAGER" | "STAFF" | "KITCHEN" | "CASHIER" | (string & {});
 
 export type AuthUser = {
   id: string;

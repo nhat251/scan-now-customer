@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, BellRing, Check, ChefHat, Clock3, RefreshCw, Soup } from "lucide-react";
 
@@ -15,6 +15,7 @@ import {
 } from "@/hooks/mutations/useOrderMutations";
 import { useMyBranchDetailQuery } from "@/hooks/queries/useMeQueries";
 import { useGroupedKitchenItemsQuery, usePendingKitchenOrdersQuery } from "@/hooks/queries/useOrderQueries";
+import { useBranchOrderUpdates } from "@/hooks/useBranchOrderUpdates";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
@@ -96,6 +97,15 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
   const confirmOrderMutation = useConfirmKitchenOrderMutation();
   const confirmItemsMutation = useConfirmKitchenItemsMutation();
   const markReadyMutation = useMarkKitchenItemsReadyMutation();
+  const handleBranchOrderUpdated = useCallback(() => {
+    void pendingQuery.refetch();
+    void kitchenQuery.refetch();
+  }, [kitchenQuery, pendingQuery]);
+
+  useBranchOrderUpdates(branchId, {
+    enabled: canSeeKitchen,
+    onOrderUpdated: handleBranchOrderUpdated,
+  });
   const pendingOrders = useMemo(() => pendingQuery.data ?? [], [pendingQuery.data]);
   const groups = useMemo(() => kitchenQuery.data ?? [], [kitchenQuery.data]);
   const pendingItemIds = useMemo(

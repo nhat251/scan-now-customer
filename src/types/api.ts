@@ -7,9 +7,11 @@ export type ApiResponse<T> = {
 
 export type ApiErrorResponse = {
   code?: number;
+  detail?: string;
   message?: string;
   result?: unknown;
   statusCode?: number;
+  title?: string;
 };
 
 export type PagedResult<T> = {

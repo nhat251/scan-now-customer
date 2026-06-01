@@ -15,6 +15,7 @@ import {
   useRegenerateOwnerTableQrMutation,
   useSetOwnerTableActiveMutation,
 } from "@/hooks/mutations/useOwnerTableMutations";
+import { useOwnerBranchDetailQuery } from "@/hooks/queries/useOwnerBranchDetailQuery";
 import { useOwnerBranchTablesQuery } from "@/hooks/queries/useOwnerTableQueries";
 import { useDebounce } from "@/hooks/useDebounce";
 import { showNotify } from "@/stores/global";
@@ -83,11 +84,13 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
     [activeFilter, capacity, pageNumber, pageSize, search, sortBy, sortDirection, status]
   );
   const tablesQuery = useOwnerBranchTablesQuery(branchId, query);
+  const branchDetailQuery = useOwnerBranchDetailQuery(branchId);
   const activeMutation = useSetOwnerTableActiveMutation();
   const regenerateMutation = useRegenerateOwnerTableQrMutation();
   const downloadMutation = useDownloadOwnerTableQrMutation();
 
   const tables = tablesQuery.data?.items ?? [];
+  const branchName = branchDetailQuery.data?.name ?? (tables.length > 0 ? tables[0].branchName : undefined);
   const totalItems = tablesQuery.data?.totalItems ?? 0;
   const totalPages = Math.max(tablesQuery.data?.totalPages ?? 1, 1);
   const activeCount = tables.filter((table) => table.isActive).length;
@@ -124,8 +127,10 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getTablePortalNavItems(portal, branchId)}
-      topbarTitle={currentUser?.fullName ?? copy.topbar}
+      topbarTitle={branchName ?? currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
+      branchName={branchName}
+      branchId={branchId}
       headerAction={
         <Button asChild>
           <Link href={getOwnerTableCreatePath(branchId, portal)}>

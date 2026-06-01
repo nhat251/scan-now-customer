@@ -12,6 +12,11 @@ class Path {
     manager: "/manager/dashboard" as const,
     staff: "/staff/dashboard" as const,
     kitchen: "/kitchen/dashboard" as const,
+    cashier: "/cashier/dashboard" as const,
+  };
+
+  cashier = {
+    dashboard: "/cashier/dashboard" as const,
   };
 
   owner = {

@@ -5,9 +5,10 @@ import Link from "next/link";
 import { Check, CheckCircle2, Clock3, ConciergeBell, CookingPot, CreditCard, Loader2, RefreshCw, UtensilsCrossed, XCircle } from "lucide-react";
 
 import { Logo } from "@/components/atoms/logo";
+import { PayOsQrPanel } from "@/components/payment/payos-qr-panel";
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
-import { useCreatePublicCheckoutMutation } from "@/hooks/mutations/useOrderMutations";
+import { useCancelPublicPaymentMutation, useCreatePublicCheckoutMutation } from "@/hooks/mutations/useOrderMutations";
 import { usePublicOrderDetailQuery, usePublicPaymentStatusQuery } from "@/hooks/queries/useOrderQueries";
 import { useOrderUpdates } from "@/hooks/useOrderUpdates";
 import { cn } from "@/lib/utils";
@@ -164,6 +165,7 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
   const { status: liveStatus, latestOrder } = useOrderUpdates(normalizedSessionCode, orderId);
   const orderQuery = usePublicOrderDetailQuery(normalizedSessionCode, orderId, liveStatus !== "connected");
   const checkoutMutation = useCreatePublicCheckoutMutation();
+  const cancelPaymentMutation = useCancelPublicPaymentMutation();
   const order = liveStatus === "connected" && latestOrder ? latestOrder : orderQuery.data ?? latestOrder;
   const paymentStatusQuery = usePublicPaymentStatusQuery(
     normalizedSessionCode,
@@ -189,10 +191,13 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
     });
 
     setCheckout(response.result);
+  };
 
-    if (response.result.checkoutUrl) {
-      window.open(response.result.checkoutUrl, "_blank", "noopener,noreferrer");
-    }
+  const cancelPayOSPayment = async () => {
+    await cancelPaymentMutation.mutateAsync({ sessionCode: normalizedSessionCode });
+    setCheckout(null);
+    hasRefetchedCompletedPayment.current = false;
+    await refetchOrder();
   };
 
   return (
@@ -372,30 +377,31 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
                     </p>
                   ) : (
                     <>
-                      <p className="mt-2 text-sm text-gray-500">Mở cổng thanh toán PayOS và quay lại đây để xem trạng thái.</p>
+                      <p className="mt-2 text-sm text-gray-500">Quét QR PayOS bên dưới và giữ nguyên trang này để hệ thống cập nhật trạng thái.</p>
                       <Button
                         className="mt-4 w-full rounded-xl"
                         onClick={requestPayOSPayment}
                         disabled={checkoutMutation.isPending}
                       >
                         <CreditCard className="size-4" />
-                        {checkout ? "Mở lại thanh toán PayOS" : "Thanh toán PayOS"}
+                        {checkout ? "Hiển thị lại QR PayOS" : "Thanh toán PayOS"}
                       </Button>
-                      {checkout?.checkoutUrl ? (
-                        <a
-                          href={checkout.checkoutUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary mt-4 block text-center text-sm font-semibold underline"
-                        >
-                          Mở liên kết thanh toán
-                        </a>
-                      ) : null}
-                      {paymentStatusQuery.isFetching ? (
-                        <p className="mt-4 flex items-center gap-2 text-sm text-gray-500">
-                          <Loader2 className="size-4 animate-spin" />
-                          Đang kiểm tra thanh toán...
-                        </p>
+                      {checkout ? (
+                        <div className="mt-4">
+                          <PayOsQrPanel
+                            qrCode={checkout.qrCode}
+                            checkoutUrl={checkout.checkoutUrl}
+                            amount={checkout.amount}
+                            description={checkout.description}
+                            accountName={checkout.accountName}
+                            accountNumber={checkout.accountNumber}
+                            bin={checkout.bin}
+                            expiresAt={checkout.paymentExpiresAt}
+                            isChecking={paymentStatusQuery.isFetching}
+                            onCancel={cancelPayOSPayment}
+                            cancelDisabled={cancelPaymentMutation.isPending}
+                          />
+                        </div>
                       ) : null}
                     </>
                   )}

@@ -133,6 +133,8 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
       navItems={getOwnerPortalNavItems("branches")}
       topbarTitle={branch?.name ?? currentUser?.fullName ?? "Owner Portal"}
       currentUser={currentUser}
+      branchName={branch?.name}
+      branchId={branchId}
       headerAction={
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" onClick={() => router.push(PATH.owner.branches)}>

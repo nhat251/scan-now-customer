@@ -104,6 +104,7 @@ export const getManageMenuNavItems = (
 ): PortalNavItem[] => {
   if (portal === "manager") {
     return [
+      { label: "Dashboard", href: PATH.dashboards.manager, icon: <LayoutDashboard className="size-4" />, active: active === "dashboard" },
       { label: "Staff Management", href: PATH.manager.users, icon: <Users className="size-4" />, active: active === "users" },
       ...(branchId
         ? [

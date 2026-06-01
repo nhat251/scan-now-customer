@@ -32,4 +32,9 @@ export const QUERY_KEY = {
   WAITER_READY_ITEMS: "waiter-ready-items",
   KITCHEN_PENDING_ORDERS: "kitchen-pending-orders",
   KITCHEN_GROUPED_ITEMS: "kitchen-grouped-items",
+  CASHIER_ORDERS: "cashier-orders",
+  CASHIER_ORDER: "cashier-order",
+  REPORT_OVERVIEW: "report-overview",
+  BRANCH_PAYMENT_CONFIG: "branch-payment-config",
+  PAPER_VOUCHERS: "paper-vouchers",
 };

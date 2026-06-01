@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Calendar,
   ChevronLeft,
@@ -21,7 +21,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tag } from "@/components/ui/tag";
+import { useOwnerBranchDetailQuery } from "@/hooks/queries/useOwnerBranchDetailQuery";
 import { useOwnerBranchOrdersQuery } from "@/hooks/queries/useOwnerTableQueries";
+import { useBranchOrderUpdates } from "@/hooks/useBranchOrderUpdates";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/stores/user";
@@ -165,6 +167,15 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
     [fromDate, pageNumber, pageSize, paymentMethod, paymentStatus, search, sortBy, sortDirection, status, tableNumber, toDate]
   );
   const ordersQuery = useOwnerBranchOrdersQuery(branchId, query);
+  const branchDetailQuery = useOwnerBranchDetailQuery(branchId);
+  const handleBranchOrderUpdated = useCallback(() => {
+    void ordersQuery.refetch();
+  }, [ordersQuery]);
+
+  useBranchOrderUpdates(branchId, {
+    onOrderUpdated: handleBranchOrderUpdated,
+  });
+  const branchName = branchDetailQuery.data?.name;
   const result = ordersQuery.data;
   const orders = result?.orders.items ?? [];
   const totalPages = Math.max(result?.orders.totalPages ?? 1, 1);
@@ -182,8 +193,10 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal as ManagePortal, "orders", branchId)}
-      topbarTitle={currentUser?.fullName ?? copy.topbar}
+      topbarTitle={branchName ?? currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
+      branchName={branchName}
+      branchId={branchId}
       stats={
         <>
           <PortalStatCard label="Invoices" value={String(result?.totalOrders ?? 0)} helper="Matching filters" />

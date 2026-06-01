@@ -106,10 +106,13 @@ export type OwnerTableOrderHistoryResponse = {
   subTotal: number;
   vatAmount: number;
   serviceChargeAmount: number;
+  discountAmount: number;
   totalAmount: number;
   status: OrderStatus;
   paymentMethod: string | null;
   paymentStatus: string | null;
+  amountReceived: number | null;
+  changeAmount: number | null;
   paidAt: string | null;
   createdAt: string;
   updatedAt: string | null;

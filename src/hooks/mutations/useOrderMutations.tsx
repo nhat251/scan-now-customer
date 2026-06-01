@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useMutation from "@/hooks/useMutation";
 import {
+  cancelPublicPayment,
   confirmKitchenItems,
   confirmKitchenOrder,
   confirmWaiterOrder,
@@ -12,7 +13,7 @@ import {
   placePublicOrder,
 } from "@/services/order";
 import { showNotify } from "@/stores/global";
-import type { ApiErrorResponse,ApiResponse } from "@/types/api";
+import type { ApiErrorResponse, ApiResponse } from "@/types/api";
 import type {
   CheckoutResponse,
   ConfirmKitchenItemsResponse,
@@ -20,6 +21,7 @@ import type {
   CreateCheckoutRequest,
   CustomerOrderResponse,
   MarkItemsServedResponse,
+  PaymentStatusResponse,
   PlaceOrderRequest,
   UpdateKitchenItemsResponse,
   UpdateOrderItemsStatusRequest,
@@ -46,12 +48,16 @@ type CheckoutPayload = {
   request: CreateCheckoutRequest;
 };
 
+type CancelPaymentPayload = {
+  sessionCode: string;
+};
+
 const getOrderErrorMessage = (error: unknown, fallback: string) => {
   if (!isAxiosError<ApiErrorResponse>(error)) {
     return fallback;
   }
 
-  return error.response?.data?.message ?? fallback;
+  return error.response?.data?.message ?? error.response?.data?.detail ?? error.response?.data?.title ?? fallback;
 };
 
 export const usePlacePublicOrderMutation = () => {
@@ -92,6 +98,22 @@ export const useConfirmWaiterOrderMutation = () => {
     },
     onError: (error) =>
       showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to confirm this order.") }),
+  });
+};
+
+export const useCancelPublicPaymentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<CancelPaymentPayload, ApiResponse<PaymentStatusResponse>>({
+    mutationFn: ({ sessionCode }) => cancelPublicPayment(sessionCode),
+    hasLoading: true,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PUBLIC_ORDER] });
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PUBLIC_PAYMENT_STATUS] });
+      showNotify({ type: "success", message: "Payment QR cancelled." });
+    },
+    onError: (error) =>
+      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to cancel payment QR.") }),
   });
 };
 

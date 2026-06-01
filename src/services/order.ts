@@ -53,6 +53,14 @@ export const getPublicPaymentStatus = async (sessionCode: string) => {
   );
 };
 
+export const cancelPublicPayment = async (sessionCode: string) => {
+  const response = await axiosBasic.post<ApiResponse<PaymentStatusResponse>>(
+    `/api/public/sessions/${sessionCode}/payment-cancel`
+  );
+
+  return response.data;
+};
+
 export const getPendingWaiterOrders = async (branchId: string) => {
   return await axiosBasic.get<ApiResponse<PendingOrderResponse[]>>("/api/waiter/orders/pending-confirmation", {
     params: { branchId },
