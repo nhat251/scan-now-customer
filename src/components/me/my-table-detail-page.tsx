@@ -9,6 +9,7 @@ import {
   Clock,
   DoorOpen,
   Hash,
+  ReceiptText,
   Table2,
   XCircle,
 } from "lucide-react";
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
 import { useCloseMyTableSessionMutation, useOpenMyTableSessionMutation } from "@/hooks/mutations/useMyTableMutations";
-import { useMyTableQuery } from "@/hooks/queries/useMeQueries";
+import { useMyTableActiveOrdersQuery, useMyTableQuery } from "@/hooks/queries/useMeQueries";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
@@ -28,6 +29,7 @@ import {
   canHandleKitchenOrders,
   canHandleWaiterOrders,
   canManageTableSessions,
+  formatCurrency,
   formatDateTime,
   getActiveLabel,
   getApiErrorMessage,
@@ -61,6 +63,7 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
   const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
   const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
   const tableQuery = useMyTableQuery(tableId, canSeeTables);
+  const activeOrdersQuery = useMyTableActiveOrdersQuery(tableId, canSeeTables);
   const openMutation = useOpenMyTableSessionMutation();
   const closeMutation = useCloseMyTableSessionMutation();
   const [openedSession, setOpenedSession] = useState<OpenTableSessionResponse | null>(null);
@@ -245,7 +248,7 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                     </span>
                   }
                 />
-                <InfoRow label="Opened At" value={formatDateTime(table.currentSession.openedAt)} />
+                <InfoRow label="Opened At" value={formatDateTime(table.currentSession.openedAt ?? table.currentSession.createdAt)} />
                 <InfoRow label="Expires At" value={formatDateTime(table.currentSession.expiresAt)} />
                 <InfoRow label="Is Active" value={getActiveLabel(table.currentSession.isActive)} />
               </dl>
@@ -259,6 +262,82 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
               </div>
             )}
           </aside>
+        </section>
+      ) : null}
+
+      {table ? (
+        <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-xl font-bold">
+                <ReceiptText className="text-primary size-5" />
+                Current Table Orders & Invoice
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Staff and kitchen can view orders tied to the active dining session only.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => activeOrdersQuery.refetch()} disabled={activeOrdersQuery.isFetching}>
+              Refresh
+            </Button>
+          </div>
+
+          {activeOrdersQuery.isLoading ? (
+            <div className="mt-5 flex items-center gap-3">
+              <Spinner className="text-primary size-5" />
+              <span className="text-sm font-medium">Loading current orders...</span>
+            </div>
+          ) : null}
+
+          {activeOrdersQuery.isError ? (
+            <div className="border-destructive/40 bg-destructive/10 text-destructive mt-5 rounded-xl border p-4 text-sm">
+              {getApiErrorMessage(activeOrdersQuery.error, "Unable to load current table orders.")}
+            </div>
+          ) : null}
+
+          {!activeOrdersQuery.isLoading && !activeOrdersQuery.isError && (activeOrdersQuery.data?.length ?? 0) === 0 ? (
+            <div className="bg-surface-container-low mt-5 rounded-xl p-5 text-sm">
+              <h3 className="font-bold">No active order for this table</h3>
+              <p className="text-muted-foreground mt-1">Orders will appear here while the table session is still open.</p>
+            </div>
+          ) : null}
+
+          <div className="mt-5 space-y-4">
+            {(activeOrdersQuery.data ?? []).map((order) => (
+              <article key={order.orderId} className="border-border/60 rounded-xl border p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-muted-foreground text-xs font-semibold tracking-[0.16em] uppercase">
+                      {formatDateTime(order.createdAt)}
+                    </p>
+                    <h3 className="mt-1 text-base font-bold">{order.orderNumber}</h3>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Session {order.sessionCode ?? "-"} - {order.status}
+                    </p>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-primary text-lg font-black">{formatCurrency(order.totalAmount)}</p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {order.paymentStatus ? `${order.paymentMethod ?? "Payment"} - ${order.paymentStatus}` : "No payment"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {order.items.map((item) => (
+                    <div key={item.orderItemId} className="flex justify-between gap-3 border-b pb-3 last:border-b-0 last:pb-0">
+                      <div>
+                        <p className="text-sm font-semibold">{item.menuItemName} x{item.quantity}</p>
+                        {item.note ? <p className="text-muted-foreground mt-1 text-xs">Note: {item.note}</p> : null}
+                        <p className="text-muted-foreground mt-1 text-xs">{item.status}</p>
+                      </div>
+                      <p className="shrink-0 text-sm font-bold">{formatCurrency(item.subTotal)}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
       ) : null}
     </PortalShell>

@@ -3,17 +3,19 @@ import { isAxiosError } from "axios";
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useMutation from "@/hooks/useMutation";
 import {
+  confirmKitchenItems,
+  confirmKitchenOrder,
   confirmWaiterOrder,
   createPublicCheckout,
   markKitchenItemsReady,
   markWaiterItemsServed,
   placePublicOrder,
-  startCookingItems,
 } from "@/services/order";
 import { showNotify } from "@/stores/global";
 import type { ApiErrorResponse,ApiResponse } from "@/types/api";
 import type {
   CheckoutResponse,
+  ConfirmKitchenItemsResponse,
   ConfirmOrderResponse,
   CreateCheckoutRequest,
   CustomerOrderResponse,
@@ -93,6 +95,36 @@ export const useConfirmWaiterOrderMutation = () => {
   });
 };
 
+export const useConfirmKitchenOrderMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<BranchOrderPayload, ApiResponse<ConfirmOrderResponse>>({
+    mutationFn: confirmKitchenOrder,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_PENDING_ORDERS] });
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
+      showNotify({ type: "success", message: "Order confirmed and added to kitchen queue." });
+    },
+    onError: (error) =>
+      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to confirm this order.") }),
+  });
+};
+
+export const useConfirmKitchenItemsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<BranchItemsPayload, ApiResponse<ConfirmKitchenItemsResponse>>({
+    mutationFn: confirmKitchenItems,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_PENDING_ORDERS] });
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
+      showNotify({ type: "success", message: "Selected dishes confirmed." });
+    },
+    onError: (error) =>
+      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to confirm selected dishes.") }),
+  });
+};
+
 export const useMarkWaiterItemsServedMutation = () => {
   const queryClient = useQueryClient();
 
@@ -104,20 +136,6 @@ export const useMarkWaiterItemsServedMutation = () => {
     },
     onError: (error) =>
       showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to mark selected dishes served.") }),
-  });
-};
-
-export const useStartCookingItemsMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<BranchItemsPayload, ApiResponse<UpdateKitchenItemsResponse>>({
-    mutationFn: startCookingItems,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
-      showNotify({ type: "success", message: "Selected dishes are now cooking." });
-    },
-    onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to start selected dishes.") }),
   });
 };
 

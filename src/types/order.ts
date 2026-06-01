@@ -19,6 +19,7 @@ export type CustomerOrderItemResponse = {
   quantity: number;
   subTotal: number;
   note: string | null;
+  status: OrderItemStatus;
   estimatedCookingMinutes: number;
 };
 
@@ -65,6 +66,7 @@ export type PendingOrderItemResponse = {
   subTotal: number;
   note: string | null;
   status: OrderItemStatus;
+  createdAt: string;
 };
 
 export type PendingOrderResponse = {
@@ -154,6 +156,11 @@ export type UpdateOrderItemsStatusRequest = {
 
 export type UpdateKitchenItemsResponse = {
   itemsUpdated: number;
+  affectedOrderIds: string[];
+};
+
+export type ConfirmKitchenItemsResponse = {
+  itemsConfirmed: number;
   affectedOrderIds: string[];
 };
 

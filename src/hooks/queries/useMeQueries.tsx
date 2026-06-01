@@ -7,9 +7,11 @@ import {
   getMyBranchTables,
   getMyMenuItem,
   getMyTable,
+  getMyTableActiveOrders,
 } from "@/services/me";
 import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
+  MyActiveTableOrderResponse,
   MyBranchResponse,
   MyMenuCategoryResponse,
   MyMenuItemResponse,
@@ -109,5 +111,18 @@ export const useMyTableQuery = (
     queryFn: () => getMyTable(tableId ?? ""),
     select: (res) => res.data.result,
     enabled: enabled && Boolean(tableId),
+  });
+};
+
+export const useMyTableActiveOrdersQuery = (
+  tableId?: string,
+  enabled = true
+): UseQueryResult<MyActiveTableOrderResponse[], Error> => {
+  return useQuery<ApiResponse<MyActiveTableOrderResponse[]>, MyActiveTableOrderResponse[]>({
+    queryKey: [QUERY_KEY.MY_TABLE_ACTIVE_ORDERS, tableId ?? ""],
+    queryFn: () => getMyTableActiveOrders(tableId ?? ""),
+    select: (res) => res.data.result,
+    enabled: enabled && Boolean(tableId),
+    refetchInterval: 10000,
   });
 };

@@ -22,18 +22,18 @@ type Props = {
 
 const CUSTOMER_STATUS: Record<OrderStatus, { label: string; message: string; tone: string }> = {
   PendingConfirmation: {
-    label: "Chờ xác nhận",
-    message: "Nhân viên sẽ kiểm tra và xác nhận đơn của bạn.",
+    label: "Chờ bếp xác nhận",
+    message: "Bếp sẽ nhận món và xác nhận đơn của bạn.",
     tone: "bg-warning text-warning-foreground",
   },
   Confirmed: {
-    label: "Đã xác nhận",
-    message: "Đơn đã được chuyển đến bếp.",
+    label: "Bếp đã nhận",
+    message: "Bếp đã nhận đơn và đang chuẩn bị món.",
     tone: "bg-primary/10 text-primary",
   },
   Preparing: {
-    label: "Đang chuẩn bị",
-    message: "Bếp đang chuẩn bị món ăn của bạn.",
+    label: "Bếp đã nhận",
+    message: "Bếp đã nhận đơn và đang chuẩn bị món.",
     tone: "bg-primary/10 text-primary",
   },
   PartiallyReady: {
@@ -75,8 +75,8 @@ const ORDER_TIMELINE = [
     icon: Check,
   },
   {
-    label: "Chờ xác nhận",
-    description: "Nhà hàng đang kiểm tra đơn của bạn.",
+    label: "Chờ bếp xác nhận",
+    description: "Bếp đang nhận món trong đơn của bạn.",
     icon: Clock3,
   },
   {
@@ -90,6 +90,33 @@ const ORDER_TIMELINE = [
     icon: ConciergeBell,
   },
 ] as const;
+
+const CUSTOMER_ITEM_STATUS: Record<string, { label: string; tone: string }> = {
+  Pending: {
+    label: "Chờ bếp xác nhận",
+    tone: "bg-warning/20 text-warning-foreground",
+  },
+  Confirmed: {
+    label: "Bếp đã nhận / đang làm",
+    tone: "bg-primary/10 text-primary",
+  },
+  Cooking: {
+    label: "Bếp đã nhận / đang làm",
+    tone: "bg-primary/10 text-primary",
+  },
+  Ready: {
+    label: "Sẵn sàng phục vụ",
+    tone: "bg-success text-success-foreground",
+  },
+  Served: {
+    label: "Đã phục vụ",
+    tone: "bg-success text-success-foreground",
+  },
+  Cancelled: {
+    label: "Đã hủy",
+    tone: "bg-destructive/10 text-destructive",
+  },
+};
 
 const TIMELINE_CURRENT_INDEX: Record<OrderStatus, number | null> = {
   PendingConfirmation: 1,
@@ -289,20 +316,29 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
             <section className="mt-5 px-4">
               <div className="rounded-3xl border border-orange-100/70 bg-white p-5 shadow-md shadow-orange-100/30">
                 <h2 className="text-lg font-bold">Món đã đặt</h2>
-                <p className="mt-1 text-xs text-gray-500">Trạng thái được hiển thị theo tiến trình chung của đơn.</p>
+                <p className="mt-1 text-xs text-gray-500">Mỗi món được cập nhật riêng theo xác nhận từ bếp.</p>
                 <div className="mt-4 space-y-4">
-                  {order.items.map((item) => (
-                    <div key={item.orderItemId} className="flex justify-between gap-3 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                      <div>
-                        <p className="font-semibold">{item.menuItemName}</p>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {item.quantity} x {formatCurrency(item.unitPrice)}
-                        </p>
-                        {item.note ? <p className="mt-1 text-xs text-gray-500">Ghi chú: {item.note}</p> : null}
+                  {order.items.map((item) => {
+                    const itemStatus = CUSTOMER_ITEM_STATUS[item.status] ?? CUSTOMER_ITEM_STATUS.Pending;
+
+                    return (
+                      <div key={item.orderItemId} className="flex justify-between gap-3 border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold">{item.menuItemName}</p>
+                            <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-bold", itemStatus.tone)}>
+                              {itemStatus.label}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {item.quantity} x {formatCurrency(item.unitPrice)}
+                          </p>
+                          {item.note ? <p className="mt-1 text-xs text-gray-500">Ghi chú: {item.note}</p> : null}
+                        </div>
+                        <p className="shrink-0 font-bold">{formatCurrency(item.subTotal)}</p>
                       </div>
-                      <p className="shrink-0 font-bold">{formatCurrency(item.subTotal)}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <dl className="mt-5 space-y-2 border-t border-gray-100 pt-4 text-sm">
                   <div className="flex justify-between">

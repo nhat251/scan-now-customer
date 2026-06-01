@@ -6,7 +6,7 @@ import { PATH } from "@/constants/path";
 import type { MyBranchResponse, MyMenuItemResponse, MyTableStatus } from "@/types/me";
 
 export const STAFF_MENU_ROLES = ["STAFF", "KITCHEN"] as const;
-export const STAFF_TABLE_ROLES = ["STAFF"] as const;
+export const STAFF_TABLE_ROLES = ["STAFF", "KITCHEN"] as const;
 export const WAITER_ORDER_ROLES = ["STAFF", "BRANCH_MANAGER"] as const;
 export const KITCHEN_ORDER_ROLES = ["KITCHEN", "BRANCH_MANAGER"] as const;
 export const MY_BRANCH_ROLES = ["BRANCH_MANAGER", "STAFF", "KITCHEN"] as const;

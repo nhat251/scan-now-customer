@@ -7,8 +7,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   PackageX,
   Search,
@@ -17,6 +15,7 @@ import {
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
+import { FooterPagination } from "@/components/ui/footer-pagination";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
@@ -425,28 +424,18 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
       </section>
 
       {!menuQuery.isLoading && !menuQuery.isError && groups.length > 0 ? (
-        <div className="bg-card border-border/60 flex flex-col gap-3 rounded-xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Page {Math.min(pageNumber, totalPages)} of {totalPages} - {menuQuery.data?.totalItems ?? 0} categories
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={pageNumber <= 1 || menuQuery.isFetching}
-              onClick={() => setPageNumber((current) => Math.max(current - 1, 1))}
-            >
-              <ChevronLeft className="size-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={pageNumber >= totalPages || menuQuery.isFetching}
-              onClick={() => setPageNumber((current) => Math.min(current + 1, totalPages))}
-            >
-              Next
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
+        <div className="bg-card border-border/60 overflow-hidden rounded-xl border shadow-sm">
+          <FooterPagination
+            page={pageNumber}
+            totalPages={totalPages}
+            pageSize={8}
+            pageSizeOptions={[8]}
+            totalItems={menuQuery.data?.totalItems ?? 0}
+            itemLabel="categories"
+            disabled={menuQuery.isFetching}
+            onPageChange={setPageNumber}
+            onPageSizeChange={() => setPageNumber(1)}
+          />
         </div>
       ) : null}
     </PortalShell>

@@ -2,6 +2,7 @@ import { axiosBasic } from "@/services/axiosBasic";
 import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
   BulkAvailabilityRequest,
+  MyActiveTableOrderResponse,
   MyBranchResponse,
   MyMenuCategoryResponse,
   MyMenuItemResponse,
@@ -62,6 +63,10 @@ export const getMyBranchTables = async (branchId: string, query: MyTablesQuery) 
 
 export const getMyTable = async (tableId: string) => {
   return await axiosBasic.get<ApiResponse<MyTableResponse>>(`/api/me/tables/${tableId}`);
+};
+
+export const getMyTableActiveOrders = async (tableId: string) => {
+  return await axiosBasic.get<ApiResponse<MyActiveTableOrderResponse[]>>(`/api/me/tables/${tableId}/orders`);
 };
 
 export const openMyTableSession = async ({ branchId, tableId }: { branchId: string; tableId: string }) => {

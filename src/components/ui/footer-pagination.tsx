@@ -15,12 +15,31 @@ const getPageSizeLabel = (pageSize: number) => {
   return `${pageSize} / page`;
 };
 
+const getVisiblePages = (page: number, totalPages: number) => {
+  const pages = new Set<number>([1, totalPages, page, page - 1, page + 1]);
+
+  if (page <= 3) {
+    pages.add(2);
+    pages.add(3);
+  }
+
+  if (page >= totalPages - 2) {
+    pages.add(totalPages - 1);
+    pages.add(totalPages - 2);
+  }
+
+  return Array.from(pages)
+    .filter((value) => value >= 1 && value <= totalPages)
+    .sort((a, b) => a - b);
+};
+
 type FooterPaginationProps = {
   page: number;
   totalPages: number;
   pageSize: number;
   pageSizeOptions: readonly number[];
   totalItems?: number;
+  itemLabel?: string;
   disabled?: boolean;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -32,6 +51,7 @@ export const FooterPagination = ({
   pageSize,
   pageSizeOptions,
   totalItems,
+  itemLabel = "items",
   disabled = false,
   onPageChange,
   onPageSizeChange,
@@ -40,8 +60,9 @@ export const FooterPagination = ({
   const safePage = Math.min(Math.max(page, 1), safeTotalPages);
   const canGoPrevious = !disabled && safePage > 1;
   const canGoNext = !disabled && safePage < safeTotalPages;
+  const visiblePages = getVisiblePages(safePage, safeTotalPages);
   const summary =
-    totalItems === undefined ? `Page ${safePage} of ${safeTotalPages}` : `Page ${safePage} of ${safeTotalPages} · ${totalItems} users`;
+    totalItems === undefined ? `Page ${safePage} of ${safeTotalPages}` : `Page ${safePage} of ${safeTotalPages} - ${totalItems} ${itemLabel}`;
 
   const goToPreviousPage = () => {
     onPageChange(safePage - 1);
@@ -80,6 +101,27 @@ export const FooterPagination = ({
           <ChevronLeft className="size-4" />
           Previous
         </Button>
+        <div className="hidden items-center gap-1 sm:flex">
+          {visiblePages.map((pageNumber, index) => {
+            const previousPage = visiblePages[index - 1];
+            const shouldShowGap = previousPage !== undefined && pageNumber - previousPage > 1;
+
+            return (
+              <span key={pageNumber} className="flex items-center gap-1">
+                {shouldShowGap ? <span className="text-muted-foreground px-1 text-sm">...</span> : null}
+                <Button
+                  variant={pageNumber === safePage ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => onPageChange(pageNumber)}
+                  disabled={disabled || pageNumber === safePage}
+                  aria-label={`Go to page ${pageNumber}`}
+                >
+                  {pageNumber}
+                </Button>
+              </span>
+            );
+          })}
+        </div>
         <Button variant="outline" onClick={goToNextPage} disabled={!canGoNext}>
           Next
           <ChevronRight className="size-4" />

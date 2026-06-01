@@ -1,3 +1,4 @@
+import type { OwnerTableOrderHistoryResponse } from "@/types/owner-table";
 import type { BranchResponse } from "@/types/user-management";
 
 export type MyBranchResponse = BranchResponse;
@@ -52,6 +53,7 @@ export type MyTableSessionResponse = {
   sessionId: string;
   sessionCode: string;
   openedAt?: string | null;
+  createdAt?: string | null;
   expiresAt: string;
   isActive: boolean;
 };
@@ -68,6 +70,8 @@ export type MyTableResponse = {
   updatedAt?: string | null;
   currentSession: MyTableSessionResponse | null;
 };
+
+export type MyActiveTableOrderResponse = OwnerTableOrderHistoryResponse;
 
 export type MyTablesQuery = {
   pageNumber?: number;

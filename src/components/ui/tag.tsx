@@ -12,9 +12,9 @@ type TagProps = {
 
 const TAG_VARIANT_CLASSNAME: Record<NonNullable<TagProps["variant"]>, string> = {
   default: "text-foreground bg-accent-foreground dark:border-muted-foreground",
-  success: "border-success/30 bg-success/15 text-success",
-  warning: "border-warning/30 bg-warning/15 text-warning",
-  destructive: "border-destructive/30 bg-destructive/15 text-destructive",
+  success: "border-success/40 bg-success/20 text-success-foreground",
+  warning: "border-warning/40 bg-warning/20 text-warning-foreground",
+  destructive: "border-destructive/40 bg-destructive/20 text-destructive-foreground",
 };
 
 export function Tag({ tagString, variant = "default" }: TagProps) {

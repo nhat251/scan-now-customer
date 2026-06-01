@@ -2,6 +2,7 @@ import { axiosBasic } from "@/services/axiosBasic";
 import type { ApiResponse } from "@/types/api";
 import type {
   CheckoutResponse,
+  ConfirmKitchenItemsResponse,
   ConfirmOrderResponse,
   CreateCheckoutRequest,
   CustomerOrderResponse,
@@ -58,10 +59,42 @@ export const getPendingWaiterOrders = async (branchId: string) => {
   });
 };
 
+export const getPendingKitchenOrders = async (branchId: string) => {
+  return await axiosBasic.get<ApiResponse<PendingOrderResponse[]>>("/api/kitchen/orders/pending-confirmation", {
+    params: { branchId },
+  });
+};
+
 export const confirmWaiterOrder = async ({ branchId, orderId }: { branchId: string; orderId: string }) => {
   const response = await axiosBasic.post<ApiResponse<ConfirmOrderResponse>>(
     `/api/waiter/orders/${orderId}/confirm`,
     undefined,
+    { params: { branchId } }
+  );
+
+  return response.data;
+};
+
+export const confirmKitchenOrder = async ({ branchId, orderId }: { branchId: string; orderId: string }) => {
+  const response = await axiosBasic.post<ApiResponse<ConfirmOrderResponse>>(
+    `/api/kitchen/orders/${orderId}/confirm`,
+    undefined,
+    { params: { branchId } }
+  );
+
+  return response.data;
+};
+
+export const confirmKitchenItems = async ({
+  branchId,
+  request,
+}: {
+  branchId: string;
+  request: UpdateOrderItemsStatusRequest;
+}) => {
+  const response = await axiosBasic.post<ApiResponse<ConfirmKitchenItemsResponse>>(
+    "/api/kitchen/items/confirm",
+    request,
     { params: { branchId } }
   );
 
@@ -95,27 +128,11 @@ export const getGroupedKitchenItems = async ({
   status,
 }: {
   branchId: string;
-  status?: "Confirmed" | "Cooking";
+  status?: "Confirmed";
 }) => {
   return await axiosBasic.get<ApiResponse<GroupedKitchenItem[]>>("/api/kitchen/items/grouped", {
     params: { branchId, status },
   });
-};
-
-export const startCookingItems = async ({
-  branchId,
-  request,
-}: {
-  branchId: string;
-  request: UpdateOrderItemsStatusRequest;
-}) => {
-  const response = await axiosBasic.post<ApiResponse<UpdateKitchenItemsResponse>>(
-    "/api/kitchen/items/start-cooking",
-    request,
-    { params: { branchId } }
-  );
-
-  return response.data;
 };
 
 export const markKitchenItemsReady = async ({

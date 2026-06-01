@@ -5,8 +5,6 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   DoorOpen,
   Eye,
@@ -18,6 +16,7 @@ import {
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
+import { FooterPagination } from "@/components/ui/footer-pagination";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
@@ -365,28 +364,18 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
       </section>
 
       {!tablesQuery.isLoading && !tablesQuery.isError && tables.length > 0 ? (
-        <div className="bg-card border-border/60 flex flex-col gap-3 rounded-xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Page {Math.min(pageNumber, totalPages)} of {totalPages} - {tablesQuery.data?.totalItems ?? 0} tables
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={pageNumber <= 1 || tablesQuery.isFetching}
-              onClick={() => setPageNumber((current) => Math.max(current - 1, 1))}
-            >
-              <ChevronLeft className="size-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={pageNumber >= totalPages || tablesQuery.isFetching}
-              onClick={() => setPageNumber((current) => Math.min(current + 1, totalPages))}
-            >
-              Next
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
+        <div className="bg-card border-border/60 overflow-hidden rounded-xl border shadow-sm">
+          <FooterPagination
+            page={pageNumber}
+            totalPages={totalPages}
+            pageSize={12}
+            pageSizeOptions={[12]}
+            totalItems={tablesQuery.data?.totalItems ?? 0}
+            itemLabel="tables"
+            disabled={tablesQuery.isFetching}
+            onPageChange={setPageNumber}
+            onPageSizeChange={() => setPageNumber(1)}
+          />
         </div>
       ) : null}
     </PortalShell>

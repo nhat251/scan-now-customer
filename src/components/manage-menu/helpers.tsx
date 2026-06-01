@@ -99,7 +99,7 @@ export const getPortalCopy = (portal: ManagePortal) => {
 
 export const getManageMenuNavItems = (
   portal: ManagePortal,
-  active: "dashboard" | "branches" | "categories" | "menu-items" | "tables" | "users" | "settings",
+  active: "dashboard" | "branches" | "categories" | "menu-items" | "tables" | "orders" | "users" | "settings",
   branchId?: string
 ): PortalNavItem[] => {
   if (portal === "manager") {
@@ -125,9 +125,14 @@ export const getManageMenuNavItems = (
               icon: <Table2 className="size-4" />,
               active: active === "tables",
             },
+            {
+              label: "Orders & Invoices",
+              href: PATH.manager.branchOrders(branchId),
+              icon: <ListOrdered className="size-4" />,
+              active: active === "orders",
+            },
           ]
         : []),
-      { label: "Orders", href: PATH.manager.orders, icon: <ListOrdered className="size-4" /> },
       { label: "Settings", href: PATH.manager.settings, icon: <Settings className="size-4" />, active: active === "settings" },
     ];
   }
@@ -155,6 +160,12 @@ export const getManageMenuNavItems = (
             href: PATH.owner.branchTables(branchId),
             icon: <Table2 className="size-4" />,
             active: active === "tables",
+          },
+          {
+            label: "Orders & Invoices",
+            href: PATH.owner.branchOrders(branchId),
+            icon: <ListOrdered className="size-4" />,
+            active: active === "orders",
           },
         ]
       : []),
