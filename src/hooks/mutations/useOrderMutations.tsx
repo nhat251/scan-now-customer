@@ -2,12 +2,14 @@ import { isAxiosError } from "axios";
 
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useMutation from "@/hooks/useMutation";
+import type { CreateWaiterOrderRequest } from "@/services/order";
 import {
   cancelPublicPayment,
   confirmKitchenItems,
   confirmKitchenOrder,
   confirmWaiterOrder,
   createPublicCheckout,
+  createWaiterOrder,
   markKitchenItemsReady,
   markWaiterItemsServed,
   placePublicOrder,
@@ -158,6 +160,24 @@ export const useMarkWaiterItemsServedMutation = () => {
     },
     onError: (error) =>
       showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to mark selected dishes served.") }),
+  });
+};
+
+export const useCreateWaiterOrderMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { branchId: string; request: CreateWaiterOrderRequest },
+    ApiResponse<CustomerOrderResponse>
+  >({
+    mutationFn: createWaiterOrder,
+    hasLoading: true,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.WAITER_PENDING_ORDERS] });
+      showNotify({ type: "success", message: "Order created successfully!" });
+    },
+    onError: (error) =>
+      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to create this order.") }),
   });
 };
 

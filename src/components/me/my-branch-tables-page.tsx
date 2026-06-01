@@ -100,7 +100,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
   const tableQueryParams = useMemo<MyTablesQuery>(
     () => ({
       pageNumber,
-      pageSize: 12,
+      pageSize: 10,
       search: search || undefined,
       status: statusFilter === "all" ? undefined : statusFilter,
       isActive: getActiveQueryValue(activeFilter),
@@ -368,8 +368,9 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
           <FooterPagination
             page={pageNumber}
             totalPages={totalPages}
-            pageSize={12}
-            pageSizeOptions={[12]}
+            pageSize={10}
+            pageSizeOptions={[10]}
+            mode="numbers"
             totalItems={tablesQuery.data?.totalItems ?? 0}
             itemLabel="tables"
             disabled={tablesQuery.isFetching}

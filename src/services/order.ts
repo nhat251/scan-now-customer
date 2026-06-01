@@ -158,3 +158,32 @@ export const markKitchenItemsReady = async ({
 
   return response.data;
 };
+
+export type CreateWaiterOrderItemRequest = {
+  menuItemId: string;
+  quantity: number;
+  note?: string | null;
+};
+
+export type CreateWaiterOrderRequest = {
+  tableId: string;
+  customerName?: string | null;
+  customerNote?: string | null;
+  items: CreateWaiterOrderItemRequest[];
+};
+
+export const createWaiterOrder = async ({
+  branchId,
+  request,
+}: {
+  branchId: string;
+  request: CreateWaiterOrderRequest;
+}) => {
+  const response = await axiosBasic.post<ApiResponse<CustomerOrderResponse>>(
+    `/api/waiter/orders`,
+    request,
+    { params: { branchId } }
+  );
+
+  return response.data;
+};

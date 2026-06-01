@@ -17,8 +17,13 @@ const HIDE_PUBLIC_CHROME_PREFIXES = [
   PATH.manager.menuItems,
   PATH.me.branches,
   PATH.me.menuItemDetail,
+  PATH.dashboards.admin,
   PATH.dashboards.owner,
   PATH.dashboards.manager,
+  PATH.dashboards.staff,
+  PATH.dashboards.kitchen,
+  PATH.dashboards.cashier,
+  PATH.cashier.dashboard,
 ];
 const HIDE_PUBLIC_CHROME_PATHS = [PATH.auth.login];
 

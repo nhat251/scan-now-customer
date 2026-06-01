@@ -84,7 +84,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
   const menuQueryParams = useMemo<MyMenuQuery>(
     () => ({
       pageNumber,
-      pageSize: 8,
+      pageSize: 10,
       search: search || undefined,
       isAvailable: getAvailabilityQueryValue(availabilityFilter),
       categoryId: categoryId === "all" ? undefined : categoryId,
@@ -428,8 +428,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
           <FooterPagination
             page={pageNumber}
             totalPages={totalPages}
-            pageSize={8}
-            pageSizeOptions={[8]}
+            pageSize={10}
+            pageSizeOptions={[10]}
+            mode="numbers"
             totalItems={menuQuery.data?.totalItems ?? 0}
             itemLabel="categories"
             disabled={menuQuery.isFetching}
