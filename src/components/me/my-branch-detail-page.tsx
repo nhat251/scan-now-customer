@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ChefHat, ClipboardList, Clock, Mail, MapPin, Phone, Soup, Table2, Tags } from "lucide-react";
 
-import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
+import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
@@ -24,6 +24,7 @@ import {
   getMyPortalNavItems,
   isForbiddenError,
 } from "./helpers";
+import { MeRoleShell as PortalShell } from "./me-role-shell";
 
 type MyBranchDetailPageProps = {
   branchId: string;
@@ -48,15 +49,16 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
   const branch = branchQuery.data;
 
   const errorTitle = isForbiddenError(branchQuery.error)
-    ? "You do not have permission to access this branch"
-    : "Unable to load branch";
+    ? "Bạn không có quyền truy cập chi nhánh này"
+    : "Không tải được chi nhánh";
 
   return (
     <PortalShell
-      title={branch?.name ?? "Branch Detail"}
-      description="Read-only branch and restaurant information assigned to your account."
-      portalLabel="Branch Workspace"
-      portalName="My Branch Portal"
+      title={branch?.name ?? "Chi tiết chi nhánh"}
+      description="Thông tin chi nhánh và nhà hàng được gán cho tài khoản của bạn."
+      portalLabel="Khu vực chi nhánh"
+      portalName="Cổng chi nhánh"
+      branchId={branchId}
       navItems={getMyPortalNavItems({
         active: "branch-detail",
         branchId,
@@ -65,21 +67,21 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
         canSeeOrders,
         canSeeKitchen,
       })}
-      topbarTitle={branch?.name ?? currentUser?.fullName ?? "My Branch Portal"}
+      topbarTitle={branch?.name ?? currentUser?.fullName ?? "Cổng chi nhánh"}
       currentUser={currentUser}
       headerAction={
         <div className="flex flex-wrap gap-3">
           <Button asChild variant="outline">
             <Link href={PATH.me.branches}>
               <ArrowLeft className="size-4" />
-              My Branches
+              Chi nhánh của tôi
             </Link>
           </Button>
           {canSeeMenu ? (
             <Button asChild>
               <Link href={PATH.me.branchMenu(branchId)}>
                 <Soup className="size-4" />
-                Menu Availability
+                Menu
               </Link>
             </Button>
           ) : null}
@@ -87,7 +89,7 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
             <Button asChild>
               <Link href={PATH.me.branchTables(branchId)}>
                 <Table2 className="size-4" />
-                Table Sessions
+                Sơ đồ bàn
               </Link>
             </Button>
           ) : null}
@@ -95,7 +97,7 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
             <Button asChild>
               <Link href={PATH.me.branchOrders(branchId)}>
                 <ClipboardList className="size-4" />
-                Order Service
+                Đơn hàng
               </Link>
             </Button>
           ) : null}
@@ -103,7 +105,7 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
             <Button asChild>
               <Link href={PATH.me.branchKitchen(branchId)}>
                 <ChefHat className="size-4" />
-                Kitchen Queue
+                Bếp
               </Link>
             </Button>
           ) : null}
@@ -112,19 +114,19 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
               <Button asChild variant="outline">
                 <Link href={PATH.manager.branchCategories(branchId)}>
                   <Tags className="size-4" />
-                  Manage Categories
+                  Quản lý danh mục
                 </Link>
               </Button>
               <Button asChild>
                 <Link href={PATH.manager.branchMenuItems(branchId)}>
                   <Soup className="size-4" />
-                  Manage Menu
+                  Quản lý menu
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href={PATH.manager.branchTables(branchId)}>
                   <Table2 className="size-4" />
-                  Tables & QR
+                  Bàn & QR
                 </Link>
               </Button>
             </>
@@ -133,13 +135,13 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
       }
       stats={
         <>
-          <PortalStatCard label="Status" value={getBranchStatusLabel(branch)} helper="Read-only branch status" />
-          <PortalStatCard label="Restaurant ID" value={branch?.restaurantId ?? "-"} helper="Linked restaurant" />
-          <PortalStatCard label="Manager" value={branch?.managerName ?? "-"} helper="Assigned branch manager" />
+          <PortalStatCard label="Trạng thái" value={getBranchStatusLabel(branch)} helper="Trạng thái chi nhánh" />
+          <PortalStatCard label="Mã nhà hàng" value={branch?.restaurantId ?? "-"} helper="Nhà hàng liên kết" />
+          <PortalStatCard label="Quản lý" value={branch?.managerName ?? "-"} helper="Quản lý chi nhánh" />
           <PortalStatCard
-            label="Hours"
+            label="Giờ mở cửa"
             value={formatTime(branch?.openTime)}
-            helper={`Close time ${formatTime(branch?.closeTime)}`}
+            helper={`Đóng cửa ${formatTime(branch?.closeTime)}`}
           />
         </>
       }
@@ -147,7 +149,7 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
       {branchQuery.isLoading ? (
         <div className="bg-card border-border/60 flex items-center gap-3 rounded-xl border p-6 shadow-sm">
           <Spinner className="text-primary size-5" />
-          <span className="text-sm font-medium">Loading branch information...</span>
+          <span className="text-sm font-medium">Đang tải thông tin chi nhánh...</span>
         </div>
       ) : null}
 
@@ -156,15 +158,15 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
           <h2 className="text-lg font-semibold">{errorTitle}</h2>
           <p className="mt-2 text-sm">
             {isForbiddenError(branchQuery.error)
-              ? "You do not have permission to access this branch"
-              : getApiErrorMessage(branchQuery.error, "Please try refreshing this branch.")}
+              ? "Bạn không có quyền truy cập chi nhánh này"
+              : getApiErrorMessage(branchQuery.error, "Vui lòng thử tải lại chi nhánh.")}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button onClick={() => branchQuery.refetch()} disabled={branchQuery.isRefetching}>
-              Retry
+              Thử lại
             </Button>
             <Button variant="outline" onClick={() => router.push(PATH.me.branches)}>
-              Back to branches
+              Quay lại chi nhánh
             </Button>
           </div>
         </div>
@@ -173,38 +175,38 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
       {branch ? (
         <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <div className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
-            <h2 className="text-xl font-bold">Branch Information</h2>
+            <h2 className="text-xl font-bold">Thông tin chi nhánh</h2>
             <dl className="mt-4">
-              <InfoRow label="Branch Name" value={branch.name} />
-              <InfoRow label="Restaurant ID" value={branch.restaurantId} />
-              <InfoRow label="Manager Name" value={branch.managerName || "-"} />
-              <InfoRow label="Address" value={branch.address || "-"} />
-              <InfoRow label="Phone" value={branch.phone || "-"} />
+              <InfoRow label="Tên chi nhánh" value={branch.name} />
+              <InfoRow label="Mã nhà hàng" value={branch.restaurantId} />
+              <InfoRow label="Quản lý" value={branch.managerName || "-"} />
+              <InfoRow label="Địa chỉ" value={branch.address || "-"} />
+              <InfoRow label="Số điện thoại" value={branch.phone || "-"} />
               <InfoRow label="Email" value={branch.email || "-"} />
-              <InfoRow label="Open Time" value={formatTime(branch.openTime)} />
-              <InfoRow label="Close Time" value={formatTime(branch.closeTime)} />
-              <InfoRow label="VAT Percent" value={formatPercent(branch.vatPercent)} />
-              <InfoRow label="Service Charge Percent" value={formatPercent(branch.serviceChargePercent)} />
-              <InfoRow label="Service Charge Fixed" value={formatFixedAmount(branch.serviceChargeFixed)} />
-              <InfoRow label="Status" value={getBranchStatusLabel(branch)} />
-              <InfoRow label="Permission" value="Read Only" />
+              <InfoRow label="Giờ mở cửa" value={formatTime(branch.openTime)} />
+              <InfoRow label="Giờ đóng cửa" value={formatTime(branch.closeTime)} />
+              <InfoRow label="VAT" value={formatPercent(branch.vatPercent)} />
+              <InfoRow label="Phí dịch vụ (%)" value={formatPercent(branch.serviceChargePercent)} />
+              <InfoRow label="Phí dịch vụ cố định" value={formatFixedAmount(branch.serviceChargeFixed)} />
+              <InfoRow label="Trạng thái" value={getBranchStatusLabel(branch)} />
+              <InfoRow label="Quyền" value="Chỉ xem" />
             </dl>
           </div>
 
           <aside className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
-            <h2 className="text-xl font-bold">Contact Snapshot</h2>
+            <h2 className="text-xl font-bold">Thông tin liên hệ</h2>
             <div className="mt-5 space-y-4 text-sm">
               <p className="text-muted-foreground flex gap-3">
                 <MapPin className="text-primary mt-0.5 size-4 shrink-0" />
-                <span>{branch.address || "No address provided"}</span>
+                <span>{branch.address || "Chưa có địa chỉ"}</span>
               </p>
               <p className="text-muted-foreground flex gap-3">
                 <Phone className="text-primary mt-0.5 size-4 shrink-0" />
-                <span>{branch.phone || "No phone provided"}</span>
+                <span>{branch.phone || "Chưa có số điện thoại"}</span>
               </p>
               <p className="text-muted-foreground flex gap-3">
                 <Mail className="text-primary mt-0.5 size-4 shrink-0" />
-                <span>{branch.email || "No email provided"}</span>
+                <span>{branch.email || "Chưa có email"}</span>
               </p>
               <p className="text-muted-foreground flex gap-3">
                 <Clock className="text-primary mt-0.5 size-4 shrink-0" />

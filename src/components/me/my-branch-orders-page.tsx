@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, ClipboardList, RefreshCw, Soup, Table2 } from "lucide-react";
 
-import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
+import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
@@ -24,6 +24,7 @@ import {
   getApiErrorMessage,
   getMyPortalNavItems,
 } from "./helpers";
+import { MeRoleShell as PortalShell } from "./me-role-shell";
 
 type Props = {
   branchId: string;
@@ -101,10 +102,11 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
 
   return (
     <PortalShell
-      title="Order Service"
-      description="Confirm newly submitted orders and serve dishes after the kitchen marks them ready."
-      portalLabel="Branch Workspace"
-      portalName="My Branch Portal"
+      title="Đơn hàng"
+      description="Xác nhận đơn mới và phục vụ món sau khi bếp báo đã sẵn sàng."
+      portalLabel="Khu vực chi nhánh"
+      portalName="Cổng chi nhánh"
+      branchId={branchId}
       navItems={getMyPortalNavItems({
         active: "orders",
         branchId,
@@ -113,14 +115,14 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
         canSeeOrders,
         canSeeKitchen,
       })}
-      topbarTitle={branchQuery.data?.name ?? currentUser?.fullName ?? "Order Service"}
+      topbarTitle={branchQuery.data?.name ?? currentUser?.fullName ?? "Đơn hàng"}
       currentUser={currentUser}
       headerAction={
         <div className="flex flex-wrap gap-3">
           <Button asChild variant="outline">
             <Link href={PATH.me.branchDetail(branchId)}>
               <ArrowLeft className="size-4" />
-              Branch Detail
+              Chi tiết chi nhánh
             </Link>
           </Button>
           <Button
@@ -132,48 +134,48 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
             disabled={pendingQuery.isFetching || readyQuery.isFetching}
           >
             <RefreshCw className="size-4" />
-            Refresh
+            Tải lại
           </Button>
         </div>
       }
       stats={
         <>
-          <PortalStatCard label="Pending Orders" value={String(pendingOrders.length)} helper="Awaiting confirmation" />
-          <PortalStatCard label="Ready Tables" value={String(readyGroups.length)} helper="Tables waiting for service" />
-          <PortalStatCard label="Ready Portions" value={String(readyPortions)} helper="Ready dishes to deliver" />
-          <PortalStatCard label="Selected" value={String(selectedReadyIds.length)} helper="Items to mark served" />
+          <PortalStatCard label="Chờ xác nhận" value={String(pendingOrders.length)} helper="Đơn khách vừa gửi" />
+          <PortalStatCard label="Bàn chờ phục vụ" value={String(readyGroups.length)} helper="Có món đã sẵn sàng" />
+          <PortalStatCard label="Phần món sẵn sàng" value={String(readyPortions)} helper="Món cần mang ra bàn" />
+          <PortalStatCard label="Đã chọn" value={String(selectedReadyIds.length)} helper="Món sẽ đánh dấu đã phục vụ" />
         </>
       }
     >
       {isLoading ? (
         <div className="bg-card border-border/60 flex items-center gap-3 rounded-xl border p-6 shadow-sm">
           <Spinner className="text-primary size-5" />
-          <span className="text-sm font-medium">Loading service queue...</span>
+          <span className="text-sm font-medium">Đang tải hàng đợi phục vụ...</span>
         </div>
       ) : null}
 
       {queryError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6">
-          <h2 className="text-lg font-semibold">Unable to load order service queue</h2>
-          <p className="mt-2 text-sm">{getApiErrorMessage(queryError, "Please retry this branch queue.")}</p>
+          <h2 className="text-lg font-semibold">Không tải được hàng đợi phục vụ</h2>
+          <p className="mt-2 text-sm">{getApiErrorMessage(queryError, "Vui lòng thử lại hàng đợi của chi nhánh này.")}</p>
         </div>
       ) : null}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold">Pending Confirmation</h2>
-            <p className="text-muted-foreground mt-1 text-sm">Verify dishes and notes before sending them to kitchen.</p>
+            <h2 className="text-2xl font-bold">Chờ xác nhận</h2>
+            <p className="text-muted-foreground mt-1 text-sm">Kiểm tra món và ghi chú trước khi gửi xuống bếp.</p>
           </div>
           <span className="bg-warning text-warning-foreground rounded-full px-3 py-1 text-sm font-semibold">
-            {pendingOrders.length} pending
+            {pendingOrders.length} đơn chờ
           </span>
         </div>
 
         {!pendingQuery.isLoading && pendingOrders.length === 0 ? (
           <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
             <ClipboardList className="text-muted-foreground mx-auto size-10" />
-            <p className="text-muted-foreground mt-3 text-sm">No customer orders are waiting for confirmation.</p>
+            <p className="text-muted-foreground mt-3 text-sm">Chưa có đơn khách nào chờ xác nhận.</p>
           </div>
         ) : null}
 
@@ -183,7 +185,7 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
-                    {order.tableNumber ?? "Takeaway"}
+                    {order.tableNumber ?? "Mang đi"}
                   </p>
                   <h3 className="mt-1 text-lg font-bold">{order.orderNumber}</h3>
                   <p className="text-muted-foreground mt-1 text-xs">{formatDateTime(order.createdAt)}</p>
@@ -193,7 +195,7 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
 
               {order.customerNote ? (
                 <p className="bg-warning/50 text-warning-foreground mt-4 rounded-lg px-3 py-2 text-sm">
-                  Order note: {order.customerNote}
+                  Ghi chú đơn: {order.customerNote}
                 </p>
               ) : null}
 
@@ -202,7 +204,7 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
                   <div key={item.orderItemId} className="flex justify-between gap-4 border-b pb-3 last:border-0 last:pb-0">
                     <div>
                       <p className="text-sm font-semibold">{item.menuItemName}</p>
-                      {item.note ? <p className="text-muted-foreground mt-1 text-xs">Note: {item.note}</p> : null}
+                      {item.note ? <p className="text-muted-foreground mt-1 text-xs">Ghi chú: {item.note}</p> : null}
                     </div>
                     <span className="shrink-0 text-sm font-semibold">x{item.quantity}</span>
                   </div>
@@ -215,7 +217,7 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
                 disabled={confirmMutation.isPending}
               >
                 <Check className="size-4" />
-                Confirm Order
+                Xác nhận đơn
               </Button>
             </article>
           ))}
@@ -225,16 +227,16 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Ready To Serve</h2>
-            <p className="text-muted-foreground mt-1 text-sm">Select only dishes delivered to the table, then mark served.</p>
+            <h2 className="text-2xl font-bold">Sẵn sàng phục vụ</h2>
+            <p className="text-muted-foreground mt-1 text-sm">Chọn đúng món đã mang ra bàn rồi đánh dấu đã phục vụ.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={toggleAllReady} disabled={readyItemIds.length === 0}>
-              {selectedReadyIds.length === readyItemIds.length && readyItemIds.length > 0 ? "Clear selection" : "Select all"}
+              {selectedReadyIds.length === readyItemIds.length && readyItemIds.length > 0 ? "Bỏ chọn" : "Chọn tất cả"}
             </Button>
             <Button variant="success" onClick={() => void handleMarkServed()} disabled={!selectedReadyIds.length || serveMutation.isPending}>
               <Soup className="size-4" />
-              Mark Served ({selectedReadyIds.length})
+              Đã phục vụ ({selectedReadyIds.length})
             </Button>
           </div>
         </div>
@@ -242,14 +244,14 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
         {!readyQuery.isLoading && readyGroups.length === 0 ? (
           <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
             <Table2 className="text-muted-foreground mx-auto size-10" />
-            <p className="text-muted-foreground mt-3 text-sm">No dishes are currently ready for service.</p>
+            <p className="text-muted-foreground mt-3 text-sm">Hiện chưa có món nào sẵn sàng phục vụ.</p>
           </div>
         ) : null}
 
         <div className="grid gap-4 xl:grid-cols-2">
           {readyGroups.map((table) => (
             <article key={table.tableId ?? table.tableNumber ?? "unassigned"} className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
-              <h3 className="text-xl font-bold">{table.tableNumber ?? "Unassigned table"}</h3>
+              <h3 className="text-xl font-bold">{table.tableNumber ?? "Chưa gán bàn"}</h3>
               <div className="mt-4 space-y-4">
                 {table.orders.map((order) => (
                   <div key={order.orderId} className="border-border/60 rounded-lg border p-3">
@@ -265,8 +267,8 @@ export const MyBranchOrdersPage = ({ branchId }: Props) => {
                           />
                           <span className="min-w-0 flex-1 text-sm">
                             <span className="font-semibold">{item.menuItemName} x{item.quantity}</span>
-                            {item.note ? <span className="text-muted-foreground block">Note: {item.note}</span> : null}
-                            <span className="text-muted-foreground block text-xs">Ready {formatDateTime(item.readyAt)}</span>
+                            {item.note ? <span className="text-muted-foreground block">Ghi chú: {item.note}</span> : null}
+                            <span className="text-muted-foreground block text-xs">Sẵn sàng lúc {formatDateTime(item.readyAt)}</span>
                           </span>
                         </label>
                       ))}

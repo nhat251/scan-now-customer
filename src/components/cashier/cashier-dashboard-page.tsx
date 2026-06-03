@@ -908,22 +908,36 @@ export const CashierDashboardPage = () => {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8e4dc] bg-white/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-5">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-[#e8e4dc] bg-white/90 backdrop-blur-md md:hidden">
+        <div className="flex h-[72px] items-center justify-around px-2">
           {NAV_ITEMS.map((item) => {
             const active = currentView === item.key;
-            return (
+            const isCreate = item.key === "create";
+            return isCreate ? (
+              <div key={item.key} className="relative -top-3">
+                <button
+                  type="button"
+                  onClick={() => setView(item.key)}
+                  className="bg-primary shadow-primary/30 flex size-14 items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-95"
+                >
+                  {item.icon}
+                </button>
+                <span className="font-display text-text-muted absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-medium"></span>
+              </div>
+            ) : (
               <button
                 key={item.key}
                 type="button"
                 onClick={() => setView(item.key)}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-2 py-3 text-[11px] font-semibold transition-colors",
-                  active ? "text-primary" : "text-stone-500",
+                  "group flex flex-col items-center gap-1 transition-colors",
+                  active ? "text-primary" : "hover:text-primary text-stone-500",
                 )}
               >
                 {item.icon}
-                <span>{item.mobileLabel}</span>
+                <span className={cn("text-[10px]", active ? "font-bold" : "font-medium")}>
+                  {item.mobileLabel}
+                </span>
               </button>
             );
           })}

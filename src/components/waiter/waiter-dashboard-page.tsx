@@ -65,7 +65,7 @@ const EMPTY_MENU_CATEGORIES: MyMenuCategoryResponse[] = [];
 const getOrderStatusMeta = (status: string) => {
   const map: Record<string, { label: string; className: string }> = {
     PendingConfirmation: { label: "Cho xac nhan", className: "bg-amber-100 text-amber-700" },
-    Confirmed: { label: "Da xac nhan", className: "bg-blue-100 text-blue-700" },
+    Confirmed: { label: "Da xac nhan", className: "bg-primary-container/20 text-primary-container" },
     Preparing: { label: "Dang lam", className: "bg-orange-100 text-orange-700" },
     PartiallyReady: { label: "Len 1 phan", className: "bg-lime-100 text-lime-700" },
     ReadyToServe: { label: "San sang", className: "bg-emerald-100 text-emerald-700" },
@@ -377,7 +377,7 @@ export const WaiterDashboardPage = () => {
           <header className="sticky top-0 z-40 h-[60px] shrink-0 border-b border-[#e8e4dc] bg-white">
             <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center gap-3 px-4">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="text-lg font-black tracking-tight text-blue-600">ScanNow</span>
+                <span className="text-primary-container text-lg font-black tracking-tight">ScanNow</span>
               </div>
               <h1 className="text-center text-base font-black">
                 {currentView === "orders" && "Don hang"}
@@ -419,7 +419,7 @@ export const WaiterDashboardPage = () => {
                     </option>
                   ))}
                 </select>
-                <div className="max-w-[40%] truncate rounded-2xl bg-blue-50 px-3 py-2 text-[11px] font-bold tracking-[0.18em] text-blue-700 uppercase">
+                <div className="bg-primary-container/10 text-primary-container max-w-[40%] truncate rounded-2xl px-3 py-2 text-[11px] font-bold tracking-[0.18em] uppercase">
                   {currentUser?.fullName ?? "Staff"}
                 </div>
               </div>
@@ -517,7 +517,7 @@ export const WaiterDashboardPage = () => {
                   onClick={() => setCurrentView(item.key)}
                   className={cn(
                     "flex min-w-[68px] flex-col items-center gap-1 py-2 text-[10px] transition-colors",
-                    active ? "text-blue-600" : "text-stone-400",
+                    active ? "text-primary-container" : "text-stone-400",
                   )}
                 >
                   {item.icon}
@@ -530,7 +530,7 @@ export const WaiterDashboardPage = () => {
               <button
                 type="button"
                 onClick={() => setCurrentView("create-order")}
-                className="flex size-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+                className="bg-primary-container shadow-primary-container/30 flex size-14 items-center justify-center rounded-full text-white shadow-lg active:scale-[0.98]"
               >
                 <PlusCircle className="size-7" />
               </button>
@@ -545,7 +545,7 @@ export const WaiterDashboardPage = () => {
                   onClick={() => setCurrentView(item.key)}
                   className={cn(
                     "flex min-w-[68px] flex-col items-center gap-1 py-2 text-[10px] transition-colors",
-                    active ? "text-blue-600" : "text-stone-400",
+                    active ? "text-primary-container" : "text-stone-400",
                   )}
                 >
                   {item.icon}
@@ -616,7 +616,7 @@ function OrdersView({
                   onClick={() => onFilterChange(item.key)}
                   className={cn(
                     "shrink-0 rounded-full px-4 py-2 text-xs font-bold",
-                    orderFilter === item.key ? "bg-blue-600 text-white" : "bg-stone-100 text-stone-600",
+                    orderFilter === item.key ? "bg-primary-container text-white" : "bg-stone-100 text-stone-600",
                   )}
                 >
                   {item.label}
@@ -639,7 +639,7 @@ function OrdersView({
           <div className="space-y-[10px] px-4">
             {isLoading ? (
               <div className="flex items-center gap-3 text-sm">
-                <Loader2 className="size-4 animate-spin text-blue-600" />
+                <Loader2 className="text-primary-container size-4 animate-spin" />
                 <span>Loading orders...</span>
               </div>
             ) : null}
@@ -660,12 +660,12 @@ function OrdersView({
                   onClick={() => onSelectOrder(order.orderId)}
                   className={cn(
                     "w-full rounded-[22px] border bg-white p-4 text-left shadow-sm transition-all active:scale-[0.99]",
-                    active ? "border-blue-200 bg-blue-50/70" : "border-[#e8e4dc]",
+                    active ? "border-primary-container/20 bg-primary-container/10/70" : "border-[#e8e4dc]",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-11 items-center justify-center rounded-[14px] bg-blue-50 text-lg font-black text-blue-600">
+                      <div className="bg-primary-container/10 text-primary-container flex size-11 items-center justify-center rounded-[14px] text-lg font-black">
                         {order.tableNumber ?? "TA"}
                       </div>
                       <div>
@@ -766,7 +766,7 @@ function OrderDetailSheetContent({
             <button
               type="button"
               onClick={onAddItems}
-              className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700"
+              className="border-primary-container/20 bg-primary-container/10 text-primary-container rounded-xl border px-3 py-2 text-xs font-bold"
             >
               Them mon
             </button>
@@ -805,7 +805,7 @@ function OrderDetailSheetContent({
             type="button"
             onClick={() => onConfirm(order.orderId)}
             disabled={confirmPending}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white disabled:opacity-50"
+            className="bg-primary-container flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white disabled:opacity-50"
           >
             {confirmPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCheck className="size-4" />}
             Xac nhan don hang
@@ -876,7 +876,7 @@ function TableMapView({
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div className="flex items-center gap-3 text-sm">
-              <Loader2 className="size-4 animate-spin text-blue-600" />
+              <Loader2 className="text-primary-container size-4 animate-spin" />
               <span>Loading tables...</span>
             </div>
           ) : null}
@@ -956,7 +956,7 @@ function TableMapView({
                       onCreateOrder(selectedTable.tableId);
                       onSelectTable(null);
                     }}
-                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white"
+                    className="bg-primary-container flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold text-white"
                   >
                     <PlusCircle className="size-4" />
                     Them mon
@@ -994,7 +994,7 @@ function TableMapView({
                     onCreateOrder(selectedTable.tableId);
                     onSelectTable(null);
                   }}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white"
+                  className="bg-primary-container flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white"
                 >
                   <PlusCircle className="size-4" />
                   Mo ban / Tao don
@@ -1079,7 +1079,7 @@ function CreateOrderView({
             className="mx-4 mt-4 flex w-[calc(100%-2rem)] items-center justify-between rounded-[22px] border border-[#e8e4dc] bg-white px-4 py-4 text-left shadow-sm active:scale-[0.99]"
           >
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <div className="bg-primary-container/10 text-primary-container flex size-10 items-center justify-center rounded-2xl">
                 <Table2 className="size-5" />
               </div>
               <div>
@@ -1110,7 +1110,7 @@ function CreateOrderView({
               onClick={() => onCategoryChange("all")}
               className={cn(
                 "shrink-0 rounded-full px-4 py-2 text-xs font-bold",
-                activeCategory === "all" ? "bg-blue-600 text-white" : "bg-white text-stone-600",
+                activeCategory === "all" ? "bg-primary-container text-white" : "bg-white text-stone-600",
               )}
             >
               Tat ca
@@ -1122,7 +1122,7 @@ function CreateOrderView({
                 onClick={() => onCategoryChange(category.id)}
                 className={cn(
                   "shrink-0 rounded-full px-4 py-2 text-xs font-bold",
-                  activeCategory === category.id ? "bg-blue-600 text-white" : "bg-white text-stone-600",
+                  activeCategory === category.id ? "bg-primary-container text-white" : "bg-white text-stone-600",
                 )}
               >
                 {category.name}
@@ -1132,9 +1132,9 @@ function CreateOrderView({
 
           <div className="space-y-3 px-4 pt-4">
             {selectedTable ? (
-              <div className="rounded-[22px] border border-blue-100 bg-blue-50 px-4 py-3">
-                <p className="text-[11px] font-bold tracking-[0.18em] text-blue-700 uppercase">Ban dang chon</p>
-                <p className="mt-1 text-sm font-bold text-blue-900">
+              <div className="border-primary-container/15 bg-primary-container/10 rounded-[22px] border px-4 py-3">
+                <p className="text-primary-container text-[11px] font-bold tracking-[0.18em] uppercase">Ban dang chon</p>
+                <p className="text-primary-container mt-1 text-sm font-bold">
                   {selectedTableLabel}
                   {selectedTableOrders.length > 0 ? " · Dang phuc vu" : " · San sang tao don"}
                 </p>
@@ -1174,19 +1174,19 @@ function CreateOrderView({
                         </span>
 
                         {cartItem ? (
-                          <div className="flex items-center rounded-2xl bg-blue-50 px-2 py-2">
+                          <div className="bg-primary-container/10 flex items-center rounded-2xl px-2 py-2">
                             <button
                               type="button"
                               onClick={() => onUpdateQty(item.menuItemId, -1)}
-                              className="flex size-9 items-center justify-center rounded-xl bg-white text-blue-600"
+                              className="text-primary-container flex size-9 items-center justify-center rounded-xl bg-white"
                             >
                               -
                             </button>
-                            <span className="w-10 text-center text-sm font-black text-blue-700">{cartItem.qty}</span>
+                            <span className="text-primary-container w-10 text-center text-sm font-black">{cartItem.qty}</span>
                             <button
                               type="button"
                               onClick={() => onUpdateQty(item.menuItemId, 1)}
-                              className="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-white"
+                              className="bg-primary-container flex size-9 items-center justify-center rounded-xl text-white"
                             >
                               +
                             </button>
@@ -1196,7 +1196,7 @@ function CreateOrderView({
                             type="button"
                             onClick={() => onAddToCart(item)}
                             disabled={!item.isAvailable}
-                            className="flex h-10 items-center justify-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 text-sm font-bold text-blue-700 disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400"
+                            className="border-primary-container/20 bg-primary-container/10 text-primary-container flex h-10 items-center justify-center gap-2 rounded-full border px-4 text-sm font-bold disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400"
                           >
                             <PlusCircle className="size-4" />
                             Add
@@ -1216,7 +1216,7 @@ function CreateOrderView({
         <button
           type="button"
           onClick={() => setCartSheetOpen(true)}
-          className="fixed bottom-[88px] left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-[468px] -translate-x-1/2 items-center justify-between rounded-[22px] bg-blue-600 px-5 py-4 text-white shadow-2xl shadow-blue-600/25 active:scale-[0.99]"
+          className="bg-primary-container shadow-primary-container/25 fixed bottom-[88px] left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-[468px] -translate-x-1/2 items-center justify-between rounded-[22px] px-5 py-4 text-white shadow-2xl active:scale-[0.99]"
         >
           <div className="flex items-center gap-3">
             <div className="flex size-8 items-center justify-center rounded-xl bg-white/20 text-sm font-black">
@@ -1264,7 +1264,7 @@ function CreateOrderView({
                       className={cn(
                         "flex h-14 flex-col items-center justify-center rounded-2xl border-2 text-center transition-all",
                         table.tableId === selectedTable?.tableId
-                          ? "border-blue-600 bg-blue-600 text-white"
+                          ? "border-primary-container bg-primary-container text-white"
                           : selectable
                             ? "border-[#e8e4dc] bg-white text-stone-900"
                             : "border-stone-100 bg-stone-50 text-stone-300",
@@ -1316,7 +1316,7 @@ function CreateOrderView({
                       <button
                         type="button"
                         onClick={() => onUpdateQty(item.menuItem.menuItemId, -1)}
-                        className="flex size-8 items-center justify-center rounded-xl bg-white text-blue-600"
+                        className="text-primary-container flex size-8 items-center justify-center rounded-xl bg-white"
                       >
                         -
                       </button>
@@ -1324,7 +1324,7 @@ function CreateOrderView({
                       <button
                         type="button"
                         onClick={() => onUpdateQty(item.menuItem.menuItemId, 1)}
-                        className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-white"
+                        className="bg-primary-container flex size-8 items-center justify-center rounded-xl text-white"
                       >
                         +
                       </button>
@@ -1359,7 +1359,7 @@ function CreateOrderView({
                     setCartSheetOpen(false);
                   }}
                   disabled={!selectedTable || cartItems.length === 0 || isSubmitting}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 text-sm font-bold text-white disabled:opacity-50"
+                  className="bg-primary-container flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold text-white disabled:opacity-50"
                 >
                   {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                   {selectedTableOrders.length > 0 ? "Them mon vao ban" : "Gui don hang"}
@@ -1408,7 +1408,7 @@ function MenuView({
           onClick={() => onCategoryChange("all")}
           className={cn(
             "shrink-0 rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
-            activeCategory === "all" ? "bg-blue-600 text-white" : "bg-[#f1efe9] text-stone-600",
+            activeCategory === "all" ? "bg-primary-container text-white" : "bg-[#f1efe9] text-stone-600",
           )}
         >
           Tat ca
@@ -1420,7 +1420,7 @@ function MenuView({
             onClick={() => onCategoryChange(category.id)}
             className={cn(
               "shrink-0 rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
-              activeCategory === category.id ? "bg-blue-600 text-white" : "bg-[#f1efe9] text-stone-600",
+              activeCategory === category.id ? "bg-primary-container text-white" : "bg-[#f1efe9] text-stone-600",
             )}
           >
             {category.name}
@@ -1485,12 +1485,12 @@ function ProfileView({
     <div className="h-full overflow-y-auto p-6 pb-28">
       <Card className="rounded-[28px] p-6">
         <div className="flex items-center gap-4">
-          <div className="flex size-20 items-center justify-center rounded-full border-4 border-blue-50 bg-blue-100 text-blue-600">
+          <div className="border-primary-container/10 bg-primary-container/20 text-primary-container flex size-20 items-center justify-center rounded-full border-4">
             <UserCircle2 className="size-12" />
           </div>
           <div className="min-w-0">
             <h2 className="truncate text-2xl font-black">{currentUser?.fullName ?? "Nhan vien"}</h2>
-            <p className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">
+            <p className="bg-primary-container/10 text-primary-container mt-1 inline-block rounded-full px-2 py-1 text-[11px] font-bold">
               {currentUser?.role ?? "STAFF"}
             </p>
           </div>
@@ -1501,7 +1501,7 @@ function ProfileView({
       <div className="mt-4 grid grid-cols-2 gap-4">
         <Card className="rounded-[28px] p-4 text-center">
           <p className="text-[11px] font-bold tracking-[0.18em] text-stone-500 uppercase">Branch</p>
-          <p className="mt-2 text-lg font-black text-blue-600">{branchName}</p>
+          <p className="text-primary-container mt-2 text-lg font-black">{branchName}</p>
         </Card>
         <Card className="rounded-[28px] p-4 text-center">
           <p className="text-[11px] font-bold tracking-[0.18em] text-stone-500 uppercase">Vai tro</p>

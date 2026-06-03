@@ -42,6 +42,8 @@ type FooterPaginationProps = {
   totalItems?: number;
   itemLabel?: string;
   disabled?: boolean;
+  compact?: boolean;
+  hideWhenSinglePage?: boolean;
   mode?: "default" | "numbers";
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -55,6 +57,8 @@ export const FooterPagination = ({
   totalItems,
   itemLabel = "items",
   disabled = false,
+  compact = false,
+  hideWhenSinglePage = false,
   mode = "default",
   onPageChange,
   onPageSizeChange,
@@ -69,6 +73,10 @@ export const FooterPagination = ({
   const summary =
     totalItems === undefined ? `Page ${safePage} of ${safeTotalPages}` : `Page ${safePage} of ${safeTotalPages} - ${totalItems} ${itemLabel}`;
 
+  if (hideWhenSinglePage && safeTotalPages <= 1) {
+    return null;
+  }
+
   const goToPreviousPage = () => {
     onPageChange(safePage - 1);
   };
@@ -81,7 +89,9 @@ export const FooterPagination = ({
     <div
       className={
         numberMode
-          ? "flex items-center justify-center px-4 py-5"
+          ? compact
+            ? "flex items-center justify-center px-2 py-2"
+            : "flex items-center justify-center px-4 py-5"
           : "border-border/60 flex flex-col gap-3 border-t px-6 py-4 md:flex-row md:items-center md:justify-between"
       }
     >
@@ -113,21 +123,24 @@ export const FooterPagination = ({
         </div>
       ) : null}
 
-      <div className={numberMode ? "flex flex-wrap items-center justify-center gap-3" : "flex flex-wrap items-center gap-2"}>
+      <div className={numberMode ? cn("flex flex-wrap items-center justify-center", compact ? "gap-1.5" : "gap-3") : "flex flex-wrap items-center gap-2"}>
         <Button
           variant="outline"
           onClick={goToPreviousPage}
           disabled={!canGoPrevious}
           className={
             numberMode
-              ? "h-12 min-w-[120px] rounded-full border-[#d9b39e] bg-white px-5 text-[15px] font-semibold text-[#cf8a61] disabled:opacity-40"
+              ? cn(
+                  "rounded-full border-[#d9b39e] bg-white font-semibold text-[#cf8a61] disabled:opacity-40",
+                  compact ? "size-9 px-0 text-sm" : "h-12 min-w-[120px] px-5 text-[15px]"
+                )
               : undefined
           }
         >
           <ChevronLeft className="size-4" />
           {!numberMode ? "Previous" : null}
         </Button>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={cn("flex flex-wrap items-center", compact ? "gap-1.5" : "gap-2")}>
           {visiblePages.map((pageNumber, index) => {
             const previousPage = visiblePages[index - 1];
             const shouldShowGap = previousPage !== undefined && pageNumber - previousPage > 1;
@@ -141,7 +154,8 @@ export const FooterPagination = ({
                   className={
                     numberMode
                       ? cn(
-                          "h-12 min-w-12 rounded-full px-0 text-[15px] font-bold",
+                          "rounded-full px-0 font-bold",
+                          compact ? "size-9 min-w-9 text-sm" : "h-12 min-w-12 text-[15px]",
                           pageNumber === safePage
                             ? "border-0 bg-[#ffb07a] text-white shadow-none hover:bg-[#ffb07a]"
                             : "border-[#ead9cf] bg-white text-[#9d715b] hover:bg-[#fff7f1]",
@@ -164,7 +178,10 @@ export const FooterPagination = ({
           disabled={!canGoNext}
           className={
             numberMode
-              ? "h-12 min-w-[120px] rounded-full border-[#d9b39e] bg-white px-5 text-[15px] font-semibold text-[#cf8a61] disabled:opacity-40"
+              ? cn(
+                  "rounded-full border-[#d9b39e] bg-white font-semibold text-[#cf8a61] disabled:opacity-40",
+                  compact ? "size-9 px-0 text-sm" : "h-12 min-w-[120px] px-5 text-[15px]"
+                )
               : undefined
           }
         >
