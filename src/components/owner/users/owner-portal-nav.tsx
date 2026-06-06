@@ -8,31 +8,31 @@ export type OwnerPortalSection = "dashboard" | "restaurant" | "branches" | "user
 export const getOwnerPortalNavItems = (activeSection: OwnerPortalSection): PortalNavItem[] => {
   return [
     {
-      label: "Dashboard",
+      label: "Tổng quan",
       href: PATH.dashboards.owner,
       icon: <LayoutDashboard className="size-4" />,
       active: activeSection === "dashboard",
     },
     {
-      label: "My Restaurant",
+      label: "Nhà hàng",
       href: PATH.owner.restaurant,
       icon: <Store className="size-4" />,
       active: activeSection === "restaurant",
     },
     {
-      label: "Branches",
+      label: "Chi nhánh",
       href: PATH.owner.branches,
       icon: <Store className="size-4" />,
       active: activeSection === "branches",
     },
     {
-      label: "User Management",
+      label: "Nhân sự",
       href: PATH.owner.users,
       icon: <Users className="size-4" />,
       active: activeSection === "users",
     },
     {
-      label: "Settings",
+      label: "Cài đặt",
       href: PATH.owner.settings,
       icon: <Settings className="size-4" />,
       active: activeSection === "settings",

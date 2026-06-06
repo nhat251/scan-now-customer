@@ -86,7 +86,7 @@ export const OwnerUsersPage = () => {
 
   const branchManagerCount = (users ?? []).filter((user) => user.role === "BRANCH_MANAGER").length;
   const activeUserCount = (users ?? []).filter((user) => user.isActive && !user.isBanned).length;
-  const restaurantName = users?.[0]?.restaurantName ?? "Owner Portal";
+  const restaurantName = users?.[0]?.restaurantName ?? "Cổng chủ quán";
 
   const resetForm = () => {
     setFormValues(EMPTY_FORM);
@@ -144,23 +144,23 @@ export const OwnerUsersPage = () => {
     const nextErrors: Partial<Record<keyof UserFormValues, string>> = {};
 
     if (!formValues.fullName.trim()) {
-      nextErrors.fullName = "Full name is required.";
+      nextErrors.fullName = "Họ tên là bắt buộc.";
     }
 
     if (!formValues.username.trim()) {
-      nextErrors.username = "Username is required.";
+      nextErrors.username = "Tên đăng nhập là bắt buộc.";
     }
 
     if (!formValues.email.trim()) {
-      nextErrors.email = "Email is required.";
+      nextErrors.email = "Email là bắt buộc.";
     }
 
     if (dialogMode === "create" && !formValues.password.trim()) {
-      nextErrors.password = "Password is required.";
+      nextErrors.password = "Mật khẩu là bắt buộc.";
     }
 
     if (!formValues.branchIds.length) {
-      nextErrors.branchIds = "Select at least one branch.";
+      nextErrors.branchIds = "Chọn ít nhất một chi nhánh.";
     }
 
     setFormErrors(nextErrors);
@@ -191,7 +191,7 @@ export const OwnerUsersPage = () => {
     if (!editingUser) {
       showNotify({
         type: "error",
-        message: "Unable to update this user because the selected record is missing. Please reopen the dialog and try again.",
+        message: "Không thể cập nhật nhân sự vì thiếu dữ liệu đã chọn. Vui lòng mở lại hộp thoại và thử lại.",
         duration: 4000,
       });
       closeDialog();
@@ -235,16 +235,16 @@ export const OwnerUsersPage = () => {
   if (errorState) {
     return (
       <PortalShell
-        title="User Management"
-        description="Manage and monitor staff access across all branches."
-        portalLabel="Management Suite"
-        portalName="Owner Portal"
+        title="Nhân sự"
+        description="Quản lý quyền truy cập của nhân viên trên toàn bộ chi nhánh."
+        portalLabel="Bộ quản lý"
+        portalName="Cổng chủ quán"
         navItems={getOwnerPortalNavItems("users")}
         topbarTitle={restaurantName}
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Owner portal</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">{errorState.heading}</h2>
           <p className="text-muted-foreground mt-3 text-sm md:text-base">{errorState.description}</p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -269,25 +269,25 @@ export const OwnerUsersPage = () => {
 
   return (
     <PortalShell
-      title="User Management"
-      description="Manage and monitor staff access across all branches."
-      portalLabel="Management Suite"
-      portalName="Owner Portal"
+      title="Nhân sự"
+      description="Quản lý quyền truy cập của nhân viên trên toàn bộ chi nhánh."
+      portalLabel="Bộ quản lý"
+      portalName="Cổng chủ quán"
       navItems={getOwnerPortalNavItems("users")}
       topbarTitle={restaurantName}
       currentUser={currentUser}
       headerAction={
         <Button size="lg" className="h-12 px-8" onClick={openCreateDialog}>
           <Plus />
-          Create User
+          Tạo nhân sự
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Total Staff" value={String(totalItems)} helper="Users returned from backend" />
-          <PortalStatCard label="Branch Managers" value={String(branchManagerCount)} helper="Branch managers in current scope" />
-          <PortalStatCard label="Branches Managed" value={String(branches.length)} helper="Branches returned from backend" />
-          <PortalStatCard label="Active Today" value={String(activeUserCount)} helper="Active and not banned accounts" />
+          <PortalStatCard label="Tổng nhân sự" value={String(totalItems)} helper="Số tài khoản trong hệ thống" />
+          <PortalStatCard label="Quản lý chi nhánh" value={String(branchManagerCount)} helper="Quản lý trong phạm vi hiện tại" />
+          <PortalStatCard label="Chi nhánh quản lý" value={String(branches.length)} helper="Chi nhánh trả về từ hệ thống" />
+          <PortalStatCard label="Đang hoạt động" value={String(activeUserCount)} helper="Tài khoản hoạt động và không bị khóa" />
         </>
       }
     >

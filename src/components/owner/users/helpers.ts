@@ -4,21 +4,21 @@ import { getRoleLabel } from "@/constants/roleLabels";
 import type { BranchResponse, OwnerScopedUserResponse, UserStatusFilter } from "@/types/user-management";
 
 export const STATUS_FILTER_OPTIONS: Array<{ label: string; value: UserStatusFilter }> = [
-  { label: "All statuses", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Banned", value: "banned" },
+  { label: "Tất cả trạng thái", value: "all" },
+  { label: "Hoạt động", value: "active" },
+  { label: "Tạm tắt", value: "inactive" },
+  { label: "Bị khóa", value: "banned" },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 export const SORT_OPTIONS = [
-  { label: "Newest first", sortBy: "createdAt", sortDirection: "desc" as const },
-  { label: "Oldest first", sortBy: "createdAt", sortDirection: "asc" as const },
-  { label: "Name A-Z", sortBy: "fullName", sortDirection: "asc" as const },
-  { label: "Name Z-A", sortBy: "fullName", sortDirection: "desc" as const },
-  { label: "Role A-Z", sortBy: "role", sortDirection: "asc" as const },
-  { label: "Role Z-A", sortBy: "role", sortDirection: "desc" as const },
+  { label: "Mới nhất trước", sortBy: "createdAt", sortDirection: "desc" as const },
+  { label: "Cũ nhất trước", sortBy: "createdAt", sortDirection: "asc" as const },
+  { label: "Tên A-Z", sortBy: "fullName", sortDirection: "asc" as const },
+  { label: "Tên Z-A", sortBy: "fullName", sortDirection: "desc" as const },
+  { label: "Vai trò A-Z", sortBy: "role", sortDirection: "asc" as const },
+  { label: "Vai trò Z-A", sortBy: "role", sortDirection: "desc" as const },
 ];
 
 export const statusFilterToQuery = (status: UserStatusFilter) => {
@@ -48,33 +48,33 @@ export const getInitials = (name: string) => {
 
 export const getStatusBadge = (user: OwnerScopedUserResponse) => {
   if (user.isBanned) {
-    return "Banned";
+    return "Bị khóa";
   }
 
-  return user.isActive ? "Active" : "Inactive";
+  return user.isActive ? "Hoạt động" : "Tạm tắt";
 };
 
 export const getSortOptionLabel = (sortBy: string, sortDirection: "asc" | "desc") => {
   return (
     SORT_OPTIONS.find((option) => option.sortBy === sortBy && option.sortDirection === sortDirection)?.label ??
-    "Sort"
+    "Sắp xếp"
   );
 };
 
 export const getRoleFilterLabel = (role: string) => {
-  return role === "all" ? "All roles" : getRoleLabel(role);
+  return role === "all" ? "Tất cả vai trò" : getRoleLabel(role);
 };
 
 export const getBranchFilterLabel = (branchId: string, branches: BranchResponse[]) => {
   if (branchId === "all") {
-    return "All branches";
+    return "Tất cả chi nhánh";
   }
 
-  return branches.find((branch) => branch.branchId === branchId)?.name ?? "Select branch";
+  return branches.find((branch) => branch.branchId === branchId)?.name ?? "Chọn chi nhánh";
 };
 
 export const getStatusFilterLabel = (status: UserStatusFilter) => {
-  return STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "All statuses";
+  return STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "Tất cả trạng thái";
 };
 
 export const isAuthorizationError = (error: unknown) => {
@@ -90,7 +90,7 @@ export const getQueryErrorMessage = (error: unknown) => {
     return error.message;
   }
 
-  return "Oops, an error occurred!";
+  return "Đã có lỗi xảy ra.";
 };
 
 export const getOwnerPortalErrorState = (usersError: unknown, branchesError: unknown) => {
@@ -98,19 +98,19 @@ export const getOwnerPortalErrorState = (usersError: unknown, branchesError: unk
 
   if (hasAccessFailure) {
     return {
-      heading: "Your access could not be verified",
-      description: "Your session may be expired or you may no longer have permission to view this restaurant.",
-      primaryActionLabel: "Go to login",
-      retryLabel: "Try again",
+      heading: "Không xác minh được quyền truy cập",
+      description: "Phiên đăng nhập có thể đã hết hạn hoặc bạn không còn quyền xem nhà hàng này.",
+      primaryActionLabel: "Về trang đăng nhập",
+      retryLabel: "Thử lại",
       shouldRouteToLogin: true,
     };
   }
 
   return {
-    heading: "We could not load your restaurant data",
-    description: `Please try again. ${getQueryErrorMessage(usersError) || getQueryErrorMessage(branchesError)}`,
-    primaryActionLabel: "Stay on page",
-    retryLabel: "Try again",
+    heading: "Không tải được dữ liệu nhân sự",
+    description: `Vui lòng thử lại. ${getQueryErrorMessage(usersError) || getQueryErrorMessage(branchesError)}`,
+    primaryActionLabel: "Ở lại trang",
+    retryLabel: "Thử lại",
     shouldRouteToLogin: false,
   };
 };

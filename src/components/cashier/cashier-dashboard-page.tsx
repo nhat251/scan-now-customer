@@ -61,16 +61,39 @@ const NAV_ITEMS: Array<{
   mobileLabel: string;
   icon: ReactNode;
 }> = [
-  { key: "orders", label: "Quan ly don", mobileLabel: "Don", icon: <ReceiptText className="size-5" /> },
-  { key: "tables", label: "So do ban", mobileLabel: "Ban", icon: <Grid2x2 className="size-5" /> },
-  { key: "create", label: "Tao don moi", mobileLabel: "Tao", icon: <PlusCircle className="size-5" /> },
-  { key: "history", label: "Lich su GD", mobileLabel: "Su", icon: <History className="size-5" /> },
-  { key: "report", label: "Bao cao", mobileLabel: "Bao cao", icon: <MonitorDot className="size-5" /> },
+  { key: "orders", label: "Quản lý đơn", mobileLabel: "Đơn", icon: <ReceiptText className="size-5" /> },
+  { key: "tables", label: "Sơ đồ bàn", mobileLabel: "Bàn", icon: <Grid2x2 className="size-5" /> },
+  { key: "create", label: "Tạo đơn mới", mobileLabel: "Tạo", icon: <PlusCircle className="size-5" /> },
+  { key: "history", label: "Lịch sử GD", mobileLabel: "Lịch sử", icon: <History className="size-5" /> },
+  { key: "report", label: "Báo cáo", mobileLabel: "Báo cáo", icon: <MonitorDot className="size-5" /> },
 ];
 
 const EMPTY_ORDERS: OwnerTableOrderHistoryResponse[] = [];
 const EMPTY_TABLES: MyTableResponse[] = [];
 const EMPTY_MENU_CATEGORIES: MyMenuCategoryResponse[] = [];
+
+const getPaymentMethodName = (method?: string | null) => {
+  const map: Record<string, string> = {
+    CASH: "Tiền mặt",
+    PAYOS: "PayOS",
+    BANK_TRANSFER: "Chuyển khoản",
+    MOMO: "MoMo",
+    VNPAY: "VNPay",
+  };
+
+  return method ? map[method] ?? method : "Thanh toán";
+};
+
+const getPaymentStatusName = (status?: string | null) => {
+  const map: Record<string, string> = {
+    SUCCESS: "Thành công",
+    PENDING: "Đang chờ",
+    FAILED: "Thất bại",
+    CANCELLED: "Đã hủy",
+  };
+
+  return status ? map[status] ?? status : "Chưa thanh toán";
+};
 
 const getOrderStatusMeta = (status: string) => {
   const map: Record<string, { label: string; className: string }> = {
@@ -95,30 +118,32 @@ const getPaymentMeta = (order?: OwnerTableOrderHistoryResponse | null) => {
 
   if (order.paymentStatus === "SUCCESS") {
     return {
-      label: `${order.paymentMethod ?? "Payment"} - Thanh cong`,
+      label: `${getPaymentMethodName(order.paymentMethod)} - Thành công`,
       className: "bg-emerald-100 text-emerald-700",
     };
   }
 
   if (order.paymentStatus === "PENDING") {
     return {
-      label: `${order.paymentMethod ?? "Payment"} - Dang cho`,
+      label: `${getPaymentMethodName(order.paymentMethod)} - Đang chờ`,
       className: "bg-amber-100 text-amber-700",
     };
   }
 
   return {
-    label: `${order.paymentMethod ?? "Payment"} - ${order.paymentStatus}`,
+    label: `${getPaymentMethodName(order.paymentMethod)} - ${getPaymentStatusName(order.paymentStatus)}`,
     className: "bg-rose-100 text-rose-700",
   };
 };
 
 const getPaymentLabel = (order?: OwnerTableOrderHistoryResponse | null) => {
   if (!order?.paymentStatus) {
-    return "No payment";
+    return "Chưa thanh toán";
   }
 
-  return order.paymentMethod ? `${order.paymentMethod} - ${order.paymentStatus}` : order.paymentStatus;
+  return order.paymentMethod
+    ? `${getPaymentMethodName(order.paymentMethod)} - ${getPaymentStatusName(order.paymentStatus)}`
+    : getPaymentStatusName(order.paymentStatus);
 };
 
 const getTableState = (table: MyTableResponse) => {
@@ -161,7 +186,7 @@ const printReceipt = (order: OwnerTableOrderHistoryResponse, payOsPayment?: Cash
   receipt.document.write(`
     <html>
       <head>
-        <title>Receipt ${order.orderNumber}</title>
+        <title>Hóa đơn ${order.orderNumber}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
           h1 { font-size: 20px; margin: 0 0 8px; }
@@ -172,21 +197,21 @@ const printReceipt = (order: OwnerTableOrderHistoryResponse, payOsPayment?: Cash
         </style>
       </head>
       <body>
-        <h1>ScanNow Receipt</h1>
-        <p>Order: ${order.orderNumber}</p>
-        <p>Table: ${order.tableNumber ?? "-"}</p>
-        <p>Session: ${order.sessionCode ?? "-"}</p>
-        <p>Date: ${formatDateTime(order.createdAt)}</p>
+        <h1>Hóa đơn ScanNow</h1>
+        <p>Mã đơn: ${order.orderNumber}</p>
+        <p>Bàn: ${order.tableNumber ?? "-"}</p>
+        <p>Phiên: ${order.sessionCode ?? "-"}</p>
+        <p>Thời gian: ${formatDateTime(order.createdAt)}</p>
         <table>${rows}</table>
-        <p>Subtotal: ${formatCurrency(order.subTotal)}</p>
+        <p>Tạm tính: ${formatCurrency(order.subTotal)}</p>
         <p>VAT: ${formatCurrency(order.vatAmount)}</p>
-        <p>Service charge: ${formatCurrency(order.serviceChargeAmount)}</p>
-        ${order.discountAmount > 0 ? `<p>Discount: -${formatCurrency(order.discountAmount)}</p>` : ""}
-        <div class="total"><span>Total</span><span>${formatCurrency(order.totalAmount)}</span></div>
-        <p>Payment: ${getPaymentLabel(order)}</p>
+        <p>Phí phục vụ: ${formatCurrency(order.serviceChargeAmount)}</p>
+        ${order.discountAmount > 0 ? `<p>Giảm giá: -${formatCurrency(order.discountAmount)}</p>` : ""}
+        <div class="total"><span>Tổng cộng</span><span>${formatCurrency(order.totalAmount)}</span></div>
+        <p>Thanh toán: ${getPaymentLabel(order)}</p>
         ${
           order.paymentMethod === "CASH" && order.paymentStatus === "SUCCESS"
-            ? `<p>Cash received: ${formatCurrency(order.amountReceived ?? order.totalAmount)}</p><p>Change: ${formatCurrency(order.changeAmount ?? 0)}</p>`
+            ? `<p>Tiền khách đưa: ${formatCurrency(order.amountReceived ?? order.totalAmount)}</p><p>Tiền thừa: ${formatCurrency(order.changeAmount ?? 0)}</p>`
             : ""
         }
         ${
@@ -614,7 +639,7 @@ export const CashierDashboardPage = () => {
                 </div>
                 <div className="hidden lg:block">
                   <p className="text-lg font-black tracking-tight">ScanNow</p>
-                  <p className="text-primary text-[11px] font-bold tracking-[0.24em] uppercase">Cashier</p>
+                  <p className="text-primary text-[11px] font-bold tracking-[0.24em] uppercase">Thu ngân</p>
                 </div>
               </div>
 
@@ -640,7 +665,7 @@ export const CashierDashboardPage = () => {
             </div>
 
             <div className="rounded-2xl border border-[#e8e4dc] bg-stone-50 px-3 py-3">
-              <p className="truncate text-sm font-bold">{currentUser?.fullName ?? "Cashier"}</p>
+              <p className="truncate text-sm font-bold">{currentUser?.fullName ?? "Thu ngân"}</p>
               <p className="mt-1 text-[11px] font-semibold tracking-[0.18em] text-stone-500 uppercase">
                 {getBranchName(activeBranchId, branches)}
               </p>
@@ -652,7 +677,7 @@ export const CashierDashboardPage = () => {
           <header className="sticky top-0 z-30 border-b border-[#e8e4dc] bg-white/95 backdrop-blur">
             <div className="flex flex-col gap-4 px-4 py-4 md:px-6 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-[11px] font-bold tracking-[0.22em] text-stone-500 uppercase">Cashier workspace</p>
+                <p className="text-[11px] font-bold tracking-[0.22em] text-stone-500 uppercase">Khu vực thu ngân</p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight">{renderHeaderTitle()}</h1>
                 <p className="mt-1 text-sm text-stone-500">
                   {getBranchName(activeBranchId, branches)} · {clock.toLocaleDateString("vi-VN")}
@@ -671,7 +696,7 @@ export const CashierDashboardPage = () => {
                 <div className="rounded-2xl border border-[#e8e4dc] bg-white px-4 py-2 text-right shadow-sm">
                   <p className="font-mono text-sm font-bold">{clock.toLocaleTimeString("vi-VN")}</p>
                   <p className="text-[11px] font-semibold tracking-[0.18em] text-stone-500 uppercase">
-                    {currentUser?.fullName ?? "Cashier"}
+                    {currentUser?.fullName ?? "Thu ngân"}
                   </p>
                 </div>
               </div>
@@ -735,7 +760,7 @@ export const CashierDashboardPage = () => {
                       value={String(visibleOrders.length)}
                       helper="Theo bo loc hien tai"
                     />
-                    <MetricCard label="Can thu" value={String(needPaymentCount)} helper="Don chua thanh toan" />
+                    <MetricCard label="Cần thu" value={String(needPaymentCount)} helper="Đơn chưa thanh toán" />
                     <MetricCard
                       label="Tong tien"
                       value={formatCurrency(visibleTotal)}
@@ -765,8 +790,8 @@ export const CashierDashboardPage = () => {
                     </select>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <MetricCard label="Can thu" value={String(needPaymentCount)} helper="Order chua thu tien" />
-                      <MetricCard label="Active" value={String(activeOrders.length)} helper="Order dang mo" />
+                      <MetricCard label="Cần thu" value={String(needPaymentCount)} helper="Đơn chưa thu tiền" />
+                      <MetricCard label="Đang mở" value={String(activeOrders.length)} helper="Đơn đang phục vụ" />
                     </div>
 
                     <Button
@@ -947,25 +972,25 @@ export const CashierDashboardPage = () => {
       <Dialog open={cashDialogOpen} onOpenChange={setCashDialogOpen}>
         <DialogContent size="md">
           <DialogHeader>
-            <DialogTitle>Cash payment</DialogTitle>
-            <DialogDescription>Enter the amount received from the customer before completing payment.</DialogDescription>
+            <DialogTitle>Thanh toán tiền mặt</DialogTitle>
+            <DialogDescription>Nhập số tiền khách đưa trước khi hoàn tất thanh toán.</DialogDescription>
           </DialogHeader>
           {selectedOrder ? (
             <div className="space-y-4">
               <div className="rounded-xl bg-stone-50 p-4 text-sm">
                 <div className="flex justify-between py-1">
-                  <span>Order total</span>
+                  <span>Tổng đơn</span>
                   <strong>{formatCurrency(selectedOrder.totalAmount)}</strong>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span>Change</span>
+                  <span>Tiền thừa</span>
                   <strong className={cashChange < 0 ? "text-red-600" : "text-emerald-700"}>
                     {formatCurrency(Math.max(cashChange, 0))}
                   </strong>
                 </div>
               </div>
               <label className="block space-y-2">
-                <span className="text-sm font-semibold">Amount received</span>
+                <span className="text-sm font-semibold">Tiền khách đưa</span>
                 <Input
                   type="number"
                   min={0}
@@ -977,17 +1002,17 @@ export const CashierDashboardPage = () => {
                 />
               </label>
               {amountReceivedInput && !canConfirmCash ? (
-                <p className="text-sm text-red-600">Amount received must be at least the order total.</p>
+                <p className="text-sm text-red-600">Tiền khách đưa phải lớn hơn hoặc bằng tổng đơn.</p>
               ) : null}
             </div>
           ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setCashDialogOpen(false)} disabled={checkoutMutation.isPending}>
-              Cancel
+              Hủy
             </Button>
             <Button onClick={confirmCashPayment} disabled={!canConfirmCash || checkoutMutation.isPending}>
               <Wallet className="size-4" />
-              Confirm cash
+              Xác nhận tiền mặt
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1035,25 +1060,25 @@ function OrdersListPanel({
     <SectionCard className="flex min-h-[520px] flex-col overflow-hidden">
       <div className="border-b border-[#e8e4dc] bg-stone-50/70 px-4 py-4">
         <p className="text-sm font-black">Danh sach don</p>
-        <p className="mt-1 text-xs text-stone-500">Chon order de xem chi tiet va thanh toan.</p>
+        <p className="mt-1 text-xs text-stone-500">Chọn đơn để xem chi tiết và thanh toán.</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex items-center gap-3 px-3 py-5 text-sm">
             <Spinner className="size-5 text-blue-600" />
-            <span>Loading cashier orders...</span>
+            <span>Đang tải đơn thu ngân...</span>
           </div>
         ) : null}
 
         {isError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {getOwnerTableErrorMessage(error, "Unable to load cashier orders.")}
+            {getOwnerTableErrorMessage(error, "Không thể tải đơn thu ngân.")}
           </div>
         ) : null}
 
         {!isLoading && !isError && orders.length === 0 ? (
-          <EmptyState title="Khong co order phu hop" detail="Thu doi bo loc hoac branch." />
+          <EmptyState title="Không có đơn phù hợp" detail="Thử đổi bộ lọc hoặc chi nhánh." />
         ) : null}
 
         <div className="space-y-2">
@@ -1082,7 +1107,7 @@ function OrdersListPanel({
                       <span className="text-xs font-semibold text-stone-400">{order.orderNumber}</span>
                     </div>
                     <p className="mt-1 text-xs text-stone-500">
-                      {order.sessionCode ?? "No session"} · {minutes}m
+                      {order.sessionCode ?? "Chưa có phiên"} · {minutes} phút
                     </p>
                   </div>
                   <CashierPill label={statusMeta.label} className={statusMeta.className} />
@@ -1121,7 +1146,7 @@ function OrderDetailPanel({
   if (!order) {
     return (
       <SectionCard>
-        <EmptyState title="Chua chon order" detail="Chon mot order o cot ben trai de xem chi tiet." />
+        <EmptyState title="Chưa chọn đơn" detail="Chọn một đơn ở cột bên trái để xem chi tiết." />
       </SectionCard>
     );
   }
@@ -1134,11 +1159,11 @@ function OrderDetailPanel({
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-black tracking-tight">{order.tableNumber ?? "Takeaway"}</h2>
+              <h2 className="text-2xl font-black tracking-tight">{order.tableNumber ?? "Mang đi"}</h2>
               <CashierPill label={statusMeta.label} className={statusMeta.className} />
             </div>
             <p className="mt-1 text-sm text-stone-500">
-              {order.orderNumber} · Session {order.sessionCode ?? "-"} · {formatDateTime(order.createdAt)}
+              {order.orderNumber} · Phiên {order.sessionCode ?? "-"} · {formatDateTime(order.createdAt)}
             </p>
           </div>
 
@@ -1146,12 +1171,12 @@ function OrderDetailPanel({
             {order.tableId ? (
               <Button type="button" variant="outline" className="rounded-xl" onClick={onAddItems}>
                 <PlusCircle className="size-4" />
-                Add items
+                Thêm món
               </Button>
             ) : null}
             <Button type="button" variant="outline" className="rounded-xl" onClick={onOpenTableOrder}>
               <Table2 className="size-4" />
-              Tables
+              Sơ đồ bàn
             </Button>
           </div>
         </div>
@@ -1165,7 +1190,7 @@ function OrderDetailPanel({
                 <div>
                   <p className="text-sm font-bold">{item.menuItemName}</p>
                   <p className="mt-1 text-xs text-stone-500">
-                    Qty {item.quantity} · {formatCurrency(item.unitPrice)}
+                    SL {item.quantity} · {formatCurrency(item.unitPrice)}
                   </p>
                   {item.note ? <p className="mt-2 text-xs text-orange-600 italic">{item.note}</p> : null}
                 </div>
@@ -1177,7 +1202,7 @@ function OrderDetailPanel({
 
         {order.customerName || order.customerNote ? (
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            {order.customerName ? <p className="font-bold">Customer: {order.customerName}</p> : null}
+            {order.customerName ? <p className="font-bold">Khách hàng: {order.customerName}</p> : null}
             {order.customerNote ? <p className="mt-1">{order.customerNote}</p> : null}
           </div>
         ) : null}
@@ -1185,11 +1210,11 @@ function OrderDetailPanel({
 
       <div className="border-t border-[#e8e4dc] bg-white px-5 py-4">
         <div className="space-y-2 text-sm">
-          <SummaryRow label="Subtotal" value={formatCurrency(order.subTotal)} />
+          <SummaryRow label="Tạm tính" value={formatCurrency(order.subTotal)} />
           <SummaryRow label="VAT" value={formatCurrency(order.vatAmount)} />
-          <SummaryRow label="Service" value={formatCurrency(order.serviceChargeAmount)} />
+          <SummaryRow label="Phí phục vụ" value={formatCurrency(order.serviceChargeAmount)} />
           {order.discountAmount > 0 ? (
-            <SummaryRow label="Discount" value={`-${formatCurrency(order.discountAmount)}`} valueClassName="text-emerald-700" />
+            <SummaryRow label="Giảm giá" value={`-${formatCurrency(order.discountAmount)}`} valueClassName="text-emerald-700" />
           ) : null}
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-dashed border-[#e8e4dc] pt-3">
@@ -1229,7 +1254,7 @@ function PaymentPanel({
   if (!order) {
     return (
       <SectionCard>
-        <EmptyState title="Chua co thanh toan" detail="Chon order de xu ly cash hoac PayOS." />
+        <EmptyState title="Chưa có thanh toán" detail="Chọn đơn để xử lý tiền mặt hoặc PayOS." />
       </SectionCard>
     );
   }
@@ -1239,26 +1264,26 @@ function PaymentPanel({
   return (
     <SectionCard className="flex min-h-[520px] flex-col overflow-hidden">
       <div className="border-b border-[#e8e4dc] px-5 py-4">
-        <p className="text-xl font-black">Thanh toan</p>
+          <p className="text-xl font-black">Thanh toán</p>
         <p className="mt-1 text-sm text-stone-500">
-          {order.orderNumber} · Table {order.tableNumber ?? "-"}
+          {order.orderNumber} · Bàn {order.tableNumber ?? "-"}
         </p>
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
         <div className="rounded-2xl border border-[#e8e4dc] bg-stone-50 p-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-stone-500">Payment state</span>
+            <span className="text-sm font-semibold text-stone-500">Trạng thái thanh toán</span>
             <CashierPill label={paymentMeta.label} className={paymentMeta.className} />
           </div>
           <div className="mt-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold tracking-[0.18em] text-stone-500 uppercase">Tong thu</p>
+              <p className="text-xs font-bold tracking-[0.18em] text-stone-500 uppercase">Tổng thu</p>
               <p className="mt-1 text-3xl font-black text-orange-600">{formatCurrency(order.totalAmount)}</p>
             </div>
             <Button type="button" variant="soft" className="rounded-xl" onClick={onPrint}>
               <Printer className="size-4" />
-              Print
+              In hóa đơn
             </Button>
           </div>
         </div>
@@ -1266,10 +1291,10 @@ function PaymentPanel({
         {order.paymentMethod === "CASH" && order.paymentStatus === "SUCCESS" ? (
           <div className="rounded-2xl border border-[#e8e4dc] bg-white p-4 text-sm">
             <SummaryRow
-              label="Cash received"
+              label="Tiền khách đưa"
               value={formatCurrency(order.amountReceived ?? order.totalAmount)}
             />
-            <SummaryRow label="Change" value={formatCurrency(order.changeAmount ?? 0)} />
+            <SummaryRow label="Tiền thừa" value={formatCurrency(order.changeAmount ?? 0)} />
           </div>
         ) : null}
 
@@ -1278,7 +1303,7 @@ function PaymentPanel({
             <Input
               value={voucherCode}
               onChange={(event) => onVoucherChange(event.target.value)}
-              placeholder="Voucher code (optional)"
+              placeholder="Mã voucher (không bắt buộc)"
               className="h-11 rounded-xl border-[#e8e4dc]"
             />
             <div className="grid gap-3 sm:grid-cols-2">
@@ -1289,7 +1314,7 @@ function PaymentPanel({
                 className="flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Wallet className="size-4" />
-                Cash
+                Tiền mặt
               </button>
               <button
                 type="button"
@@ -1298,12 +1323,12 @@ function PaymentPanel({
                 className="flex h-12 items-center justify-center gap-2 rounded-xl border border-[#e8e4dc] bg-white px-4 text-sm font-bold text-stone-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isCheckingOut ? <Loader2 className="size-4 animate-spin" /> : <CreditCard className="size-4" />}
-                {hasPendingPayOs ? "Show PayOS QR" : "PayOS"}
+                {hasPendingPayOs ? "Hiện QR PayOS" : "PayOS"}
               </button>
             </div>
             {hasPendingPayOs ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                Don nay dang co PayOS pending. Muon doi sang cash thi huy QR truoc.
+                Đơn này đang có thanh toán PayOS chờ xử lý. Muốn đổi sang tiền mặt thì hủy QR trước.
               </div>
             ) : null}
           </div>
@@ -1372,7 +1397,7 @@ function TablesPanel({
           {isLoading ? (
             <div className="flex items-center gap-3 text-sm">
               <Spinner className="size-5 text-blue-600" />
-              <span>Loading tables...</span>
+              <span>Đang tải bàn...</span>
             </div>
           ) : null}
 
@@ -1421,8 +1446,8 @@ function TablesPanel({
           <div className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-[420px] rounded-[28px] border border-[#e8e4dc] bg-white p-5 shadow-2xl md:bottom-8">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-black">Ban {selectedTable.tableNumber}</h3>
-                <p className="mt-1 text-sm text-stone-500">{selectedTable.capacity} cho</p>
+                <h3 className="text-2xl font-black">Bàn {selectedTable.tableNumber}</h3>
+                <p className="mt-1 text-sm text-stone-500">{selectedTable.capacity} chỗ</p>
               </div>
               <button
                 type="button"
@@ -1563,7 +1588,7 @@ function CreateOrderPanel({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xl font-black">Tao don thu cong</p>
-              <p className="mt-1 text-sm text-stone-500">Cashier co the tao hoac them mon cho ban dang phuc vu.</p>
+              <p className="mt-1 text-sm text-stone-500">Thu ngân có thể tạo đơn hoặc thêm món cho bàn đang phục vụ.</p>
             </div>
             <select
               value={selectedTable?.tableId ?? ""}
@@ -1575,7 +1600,7 @@ function CreateOrderPanel({
                 .filter((table) => table.status !== "DISABLED")
                 .map((table) => (
                   <option key={table.tableId} value={table.tableId}>
-                    Ban {table.tableNumber} · {table.currentSession ? "Dang phuc vu" : "Trong"}
+                    Bàn {table.tableNumber} · {table.currentSession ? "Đang phục vụ" : "Trống"}
                   </option>
                 ))}
             </select>
@@ -1672,13 +1697,13 @@ function CreateOrderPanel({
         <div className="border-b border-[#e8e4dc] px-5 py-4">
           <p className="text-xl font-black">Cart</p>
           <p className="mt-1 text-sm text-stone-500">
-            {selectedTable ? `Ban ${selectedTable.tableNumber}` : "Chon ban de tao don"}
+            {selectedTable ? `Bàn ${selectedTable.tableNumber}` : "Chọn bàn để tạo đơn"}
           </p>
         </div>
 
         {selectedTableOrders.length > 0 ? (
           <div className="border-b border-[#e8e4dc] bg-stone-50 px-5 py-3 text-sm text-stone-600">
-            <p className="font-semibold">Ban nay dang co {selectedTableOrders.length} active order.</p>
+            <p className="font-semibold">Bàn này đang có {selectedTableOrders.length} đơn đang mở.</p>
             <p className="mt-1 text-xs">Mon moi se duoc them vao order dang hoat dong theo backend hien tai.</p>
           </div>
         ) : null}
@@ -1725,13 +1750,13 @@ function CreateOrderPanel({
             <Input
               value={customerName}
               onChange={(event) => onCustomerNameChange(event.target.value)}
-              placeholder="Customer name (optional)"
+              placeholder="Tên khách hàng (không bắt buộc)"
               className="h-11 rounded-xl border-[#e8e4dc]"
             />
             <Input
               value={customerNote}
               onChange={(event) => onCustomerNoteChange(event.target.value)}
-              placeholder="Customer note (optional)"
+              placeholder="Ghi chú khách hàng (không bắt buộc)"
               className="h-11 rounded-xl border-[#e8e4dc]"
             />
             <div className="flex items-center justify-between border-t border-dashed border-[#e8e4dc] pt-3">
@@ -1745,7 +1770,7 @@ function CreateOrderPanel({
               className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
-              {selectedTableOrders.length > 0 ? "Them mon vao ban" : "Tao don moi"}
+              {selectedTableOrders.length > 0 ? "Thêm món vào bàn" : "Tạo đơn mới"}
             </button>
           </div>
         </div>
@@ -1788,13 +1813,13 @@ function HistoryPanel({
         <div className="border-b border-[#e8e4dc] px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xl font-black">Receipt history</p>
-              <p className="mt-1 text-sm text-stone-500">Chi tiet giao dich da thu tien.</p>
+              <p className="text-xl font-black">Lịch sử hóa đơn</p>
+              <p className="mt-1 text-sm text-stone-500">Chi tiết giao dịch đã thu tiền.</p>
             </div>
             {selectedOrder ? (
               <Button type="button" variant="soft" className="rounded-xl" onClick={onPrint}>
                 <Printer className="size-4" />
-                Reprint
+                In lại
               </Button>
             ) : null}
           </div>
@@ -1807,7 +1832,7 @@ function HistoryPanel({
                 <div>
                   <p className="text-lg font-black">{selectedOrder.orderNumber}</p>
                   <p className="mt-1 text-sm text-stone-500">
-                    Table {selectedOrder.tableNumber ?? "-"} · {formatDateTime(selectedOrder.paidAt ?? selectedOrder.createdAt)}
+                    Bàn {selectedOrder.tableNumber ?? "-"} · {formatDateTime(selectedOrder.paidAt ?? selectedOrder.createdAt)}
                   </p>
                 </div>
                 <CashierPill
@@ -1822,7 +1847,7 @@ function HistoryPanel({
                 <div key={item.orderItemId} className="flex items-start justify-between rounded-2xl border border-[#ebe7df] bg-white p-4">
                   <div>
                     <p className="text-sm font-bold">{item.menuItemName}</p>
-                    <p className="mt-1 text-xs text-stone-500">Qty {item.quantity}</p>
+                    <p className="mt-1 text-xs text-stone-500">SL {item.quantity}</p>
                   </div>
                   <p className="text-sm font-black">{formatCurrency(item.subTotal)}</p>
                 </div>
@@ -1858,24 +1883,24 @@ function ReportPanel({
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Da thu" value={formatCurrency(revenue)} helper="Tong don thanh cong" />
-        <MetricCard label="Dang cho" value={formatCurrency(pendingRevenue)} helper="Don chua thu xong" />
-        <MetricCard label="Paid orders" value={String(paidCount)} helper="Tong giao dich da thu" />
-        <MetricCard label="Avg ticket" value={formatCurrency(averageTicket)} helper="Gia tri trung binh" />
+        <MetricCard label="Đã thu" value={formatCurrency(revenue)} helper="Tổng đơn thành công" />
+        <MetricCard label="Đang chờ" value={formatCurrency(pendingRevenue)} helper="Đơn chưa thu xong" />
+        <MetricCard label="Đơn đã thu" value={String(paidCount)} helper="Tổng giao dịch đã thu" />
+        <MetricCard label="Trung bình/đơn" value={formatCurrency(averageTicket)} helper="Giá trị trung bình" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <SectionCard className="overflow-hidden">
           <div className="border-b border-[#e8e4dc] px-5 py-4">
-            <p className="text-xl font-black">Recent activity</p>
-            <p className="mt-1 text-sm text-stone-500">100 don gan nhat theo branch hien tai.</p>
+            <p className="text-xl font-black">Hoạt động gần đây</p>
+            <p className="mt-1 text-sm text-stone-500">100 đơn gần nhất theo chi nhánh hiện tại.</p>
           </div>
 
           <div className="overflow-x-auto">
             {isLoading ? (
               <div className="flex items-center gap-3 p-5 text-sm">
                 <Spinner className="size-5 text-blue-600" />
-                <span>Loading report...</span>
+                <span>Đang tải báo cáo...</span>
               </div>
             ) : null}
 
@@ -1883,10 +1908,10 @@ function ReportPanel({
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-stone-50 text-xs font-bold tracking-[0.18em] text-stone-500 uppercase">
                   <tr>
-                    <th className="px-5 py-4">Order</th>
-                    <th className="px-5 py-4">Table</th>
-                    <th className="px-5 py-4">Payment</th>
-                    <th className="px-5 py-4 text-right">Total</th>
+                    <th className="px-5 py-4">Đơn</th>
+                    <th className="px-5 py-4">Bàn</th>
+                    <th className="px-5 py-4">Thanh toán</th>
+                    <th className="px-5 py-4 text-right">Tổng tiền</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1913,9 +1938,9 @@ function ReportPanel({
         </SectionCard>
 
         <SectionCard className="p-5">
-          <p className="text-xl font-black">Payment mix</p>
+          <p className="text-xl font-black">Cơ cấu thanh toán</p>
           <div className="mt-5 space-y-4">
-            <MixRow label="Cash" value={cashCount} total={paidCount} className="bg-blue-500" />
+            <MixRow label="Tiền mặt" value={cashCount} total={paidCount} className="bg-blue-500" />
             <MixRow label="PayOS" value={payOsCount} total={paidCount} className="bg-orange-500" />
           </div>
         </SectionCard>

@@ -90,9 +90,9 @@ export const getPortalCopy = (portal: ManagePortal) => {
   }
 
   return {
-    label: "Management Suite",
-    name: "Owner Portal",
-    topbar: "Owner Portal",
+    label: "Bộ quản lý",
+    name: "Cổng chủ quán",
+    topbar: "Cổng chủ quán",
     role: "OWNER" as const,
   };
 };
@@ -143,34 +143,34 @@ export const getManageMenuNavItems = (
   }
 
   return [
-    { label: "Dashboard", href: PATH.dashboards.owner, icon: <LayoutDashboard className="size-4" />, active: active === "dashboard" },
-    { label: "My Restaurant", href: PATH.owner.restaurant, icon: <Store className="size-4" /> },
-    { label: "Branches", href: PATH.owner.branches, icon: <Store className="size-4" />, active: active === "branches" },
+    { label: "Tổng quan", href: PATH.dashboards.owner, icon: <LayoutDashboard className="size-4" />, active: active === "dashboard" },
+    { label: "Nhà hàng", href: PATH.owner.restaurant, icon: <Store className="size-4" /> },
+    { label: "Chi nhánh", href: PATH.owner.branches, icon: <Store className="size-4" />, active: active === "branches" },
     ...(branchId
       ? [
           {
-            label: "Categories",
+            label: "Danh mục",
             href: PATH.owner.branchCategories(branchId),
             icon: <Tags className="size-4" />,
             active: active === "categories",
             section: "branch" as const,
           },
           {
-            label: "Menu Items",
+            label: "Món ăn",
             href: PATH.owner.branchMenuItems(branchId),
             icon: <Soup className="size-4" />,
             active: active === "menu-items",
             section: "branch" as const,
           },
           {
-            label: "Tables & QR",
+            label: "Sơ đồ bàn & QR",
             href: PATH.owner.branchTables(branchId),
             icon: <Table2 className="size-4" />,
             active: active === "tables",
             section: "branch" as const,
           },
           {
-            label: "Orders & Invoices",
+            label: "Đơn hàng & hóa đơn",
             href: PATH.owner.branchOrders(branchId),
             icon: <ListOrdered className="size-4" />,
             active: active === "orders",
@@ -178,8 +178,8 @@ export const getManageMenuNavItems = (
           },
         ]
       : []),
-    { label: "User Management", href: PATH.owner.users, icon: <Users className="size-4" />, active: active === "users" },
-    { label: "Settings", href: PATH.owner.settings, icon: <Settings className="size-4" />, active: active === "settings" },
+    { label: "Nhân sự", href: PATH.owner.users, icon: <Users className="size-4" />, active: active === "users" },
+    { label: "Cài đặt", href: PATH.owner.settings, icon: <Settings className="size-4" />, active: active === "settings" },
   ];
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CreditCard, Gift, RefreshCw, Save } from "lucide-react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { CalendarDays, Clock3, CreditCard, Gift, QrCode, RefreshCw, Save, TicketPercent, WalletCards } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
@@ -16,7 +16,7 @@ import { useOwnerBranchListQuery } from "@/hooks/queries/useOwnerBranchListQuery
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
-import type { DiscountType, PaperVoucherRequest, PaymentMethod, UpsertBranchPaymentConfigRequest } from "@/types/branch-settings";
+import type { DiscountType, PaperVoucherRequest, PaperVoucherResponse, PaymentMethod, UpsertBranchPaymentConfigRequest } from "@/types/branch-settings";
 import type { BranchResponse } from "@/types/user-management";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -36,6 +36,40 @@ const emptyVoucher: PaperVoucherRequest = {
   validFrom: null,
   validUntil: null,
   isActive: true,
+};
+
+const toDateStart = (value?: string | null) => value ? `${value}T00:00:00` : null;
+const toDateEnd = (value?: string | null) => value ? `${value}T23:59:59.999` : null;
+
+const toVoucherPayload = (value: PaperVoucherRequest): PaperVoucherRequest => ({
+  ...value,
+  code: value.code.trim().toUpperCase(),
+  name: value.name.trim(),
+  description: value.description?.trim() || null,
+  validFrom: toDateStart(value.validFrom),
+  validUntil: toDateEnd(value.validUntil),
+});
+
+const formatDate = (value?: string | null) => {
+  if (!value) {
+    return "Không giới hạn";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Không hợp lệ";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
+const formatVoucherDiscount = (voucher: Pick<PaperVoucherResponse, "discountType" | "discountValue">) => {
+  return voucher.discountType === "PERCENT" ? `${voucher.discountValue}%` : formatCurrency(voucher.discountValue);
 };
 
 export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
@@ -104,22 +138,22 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       },
     });
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.BRANCH_PAYMENT_CONFIG, portal, branchId] });
-    showNotify({ type: "success", message: "Payment config saved." });
+    showNotify({ type: "success", message: "Đã lưu cấu hình thanh toán." });
   };
 
   const createVoucher = async () => {
     if (!branchId) return;
 
-    await createVoucherMutation.mutateAsync({ portal, branchId, data: voucherForm });
+    await createVoucherMutation.mutateAsync({ portal, branchId, data: toVoucherPayload(voucherForm) });
     setVoucherForm(emptyVoucher);
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PAPER_VOUCHERS, portal, branchId] });
-    showNotify({ type: "success", message: "Paper voucher created." });
+    showNotify({ type: "success", message: "Đã tạo voucher giấy." });
   };
 
   return (
     <PortalShell
-      title="Branch Settings"
-      description="Configure branch payment methods and paper vouchers."
+      title="Cài đặt chi nhánh"
+      description="Cấu hình thanh toán và voucher giấy cho từng chi nhánh."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal, "settings")}
@@ -127,22 +161,22 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       currentUser={currentUser}
       stats={
         <>
-          <PortalStatCard label="Branches" value={String(branches.length)} helper="Available to configure" />
-          <PortalStatCard label="Cash" value="Enabled" helper="Default fallback payment" />
-          <PortalStatCard label="PayOS" value={paymentConfigQuery.data?.payOsEnabled ? "Enabled" : "Off"} helper="Branch QR payment" />
-          <PortalStatCard label="Vouchers" value={String(activeVouchers)} helper="Active paper vouchers" />
+          <PortalStatCard label="Chi nhánh" value={String(branches.length)} helper="Có thể cấu hình" />
+          <PortalStatCard label="Tiền mặt" value="Đang bật" helper="Phương thức mặc định" />
+          <PortalStatCard label="PayOS" value={paymentConfigQuery.data?.payOsEnabled ? "Đang bật" : "Đang tắt"} helper="Thanh toán QR theo chi nhánh" />
+          <PortalStatCard label="Voucher" value={String(activeVouchers)} helper="Voucher giấy đang hoạt động" />
         </>
       }
     >
       <section className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
         <label className="text-sm font-semibold">
-          Branch
+          Chi nhánh
           <select
             value={branchId}
             onChange={(event) => setBranchId(event.target.value)}
             className="border-input bg-card mt-2 h-10 w-full max-w-lg rounded-lg border px-3 text-sm outline-none"
           >
-            <option value="">Select branch</option>
+            <option value="">Chọn chi nhánh</option>
             {branches.map((branch) => (
               <option key={branch.branchId} value={branch.branchId}>
                 {branch.name}
@@ -155,7 +189,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       {paymentConfigQuery.isLoading || vouchersQuery.isLoading ? (
         <div className="bg-card border-border/60 flex items-center gap-3 rounded-xl border p-6 shadow-sm">
           <Spinner className="text-primary size-5" />
-          <span className="text-sm font-medium">Loading settings...</span>
+          <span className="text-sm font-medium">Đang tải cài đặt...</span>
         </div>
       ) : null}
 
@@ -163,7 +197,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
         <div className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <CreditCard className="text-primary size-5" />
-            <h2 className="text-xl font-bold">Payment Config</h2>
+            <h2 className="text-xl font-bold">Cấu hình thanh toán</h2>
           </div>
           <div className="mt-5 space-y-4">
             <label className="flex items-center gap-3 text-sm font-semibold">
@@ -176,7 +210,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
                   defaultMethod: event.target.checked ? current.defaultMethod : "CASH",
                 }))}
               />
-              Enable PayOS for this branch
+              Bật PayOS cho chi nhánh này
             </label>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -184,30 +218,30 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
                 label="PayOS Client ID"
                 value={paymentForm.payOsClientId ?? ""}
                 onChange={(value) => setPaymentForm((current) => ({ ...current, payOsClientId: value }))}
-                helper={paymentConfigQuery.data?.hasPayOsClientId ? `Configured (${paymentConfigQuery.data.payOsClientIdPreview ?? "saved"}) - leave blank to keep current Client ID.` : "Required when enabling PayOS."}
+                helper={paymentConfigQuery.data?.hasPayOsClientId ? `Đã cấu hình (${paymentConfigQuery.data.payOsClientIdPreview ?? "đã lưu"}) - để trống nếu muốn giữ Client ID hiện tại.` : "Bắt buộc khi bật PayOS."}
               />
               <TextField
                 label="PayOS API Key"
                 value={paymentForm.payOsApiKey ?? ""}
                 onChange={(value) => setPaymentForm((current) => ({ ...current, payOsApiKey: value }))}
                 type="password"
-                helper={paymentConfigQuery.data?.hasPayOsApiKey ? "Configured - leave blank to keep current key." : "Required when enabling PayOS."}
+                helper={paymentConfigQuery.data?.hasPayOsApiKey ? "Đã cấu hình - để trống nếu muốn giữ key hiện tại." : "Bắt buộc khi bật PayOS."}
               />
               <TextField
                 label="Checksum Key"
                 value={paymentForm.payOsChecksumKey ?? ""}
                 onChange={(value) => setPaymentForm((current) => ({ ...current, payOsChecksumKey: value }))}
                 type="password"
-                helper={paymentConfigQuery.data?.hasPayOsChecksumKey ? "Configured - leave blank to keep current key." : "Required when enabling PayOS."}
+                helper={paymentConfigQuery.data?.hasPayOsChecksumKey ? "Đã cấu hình - để trống nếu muốn giữ key hiện tại." : "Bắt buộc khi bật PayOS."}
               />
               <label className="text-sm font-semibold">
-                Default Method
+                Phương thức mặc định
                 <select
                   value={paymentForm.defaultMethod}
                   onChange={(event) => setPaymentForm((current) => ({ ...current, defaultMethod: event.target.value as PaymentMethod }))}
                   className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
                 >
-                  <option value="CASH">Cash</option>
+                  <option value="CASH">Tiền mặt</option>
                   <option value="PAYOS" disabled={!paymentForm.payOsEnabled}>PayOS</option>
                 </select>
               </label>
@@ -215,7 +249,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
 
             <Button onClick={savePaymentConfig} disabled={!branchId || savePaymentMutation.isPending}>
               <Save className="size-4" />
-              Save payment config
+              Lưu cấu hình
             </Button>
           </div>
         </div>
@@ -223,68 +257,123 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
         <div className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <Gift className="text-primary size-5" />
-            <h2 className="text-xl font-bold">Create Paper Voucher</h2>
+            <h2 className="text-xl font-bold">Tạo voucher giấy</h2>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <TextField label="Code" value={voucherForm.code} onChange={(value) => setVoucherForm((current) => ({ ...current, code: value }))} />
-            <TextField label="Name" value={voucherForm.name} onChange={(value) => setVoucherForm((current) => ({ ...current, name: value }))} />
+            <TextField label="Mã voucher" value={voucherForm.code} onChange={(value) => setVoucherForm((current) => ({ ...current, code: value }))} />
+            <TextField label="Tên voucher" value={voucherForm.name} onChange={(value) => setVoucherForm((current) => ({ ...current, name: value }))} />
             <label className="text-sm font-semibold">
-              Discount Type
+              Loại giảm giá
               <select
                 value={voucherForm.discountType}
                 onChange={(event) => setVoucherForm((current) => ({ ...current, discountType: event.target.value as DiscountType }))}
                 className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
               >
-                <option value="PERCENT">Percent</option>
-                <option value="FIXED_AMOUNT">Fixed amount</option>
+                <option value="PERCENT">Theo phần trăm</option>
+                <option value="FIXED_AMOUNT">Số tiền cố định</option>
               </select>
             </label>
-            <NumberField label="Discount Value" value={voucherForm.discountValue} onChange={(value) => setVoucherForm((current) => ({ ...current, discountValue: value }))} />
-            <NumberField label="Min Order" value={voucherForm.minOrderAmount} onChange={(value) => setVoucherForm((current) => ({ ...current, minOrderAmount: value }))} />
-            <NumberField label="Max Discount" value={voucherForm.maxDiscountAmount ?? 0} onChange={(value) => setVoucherForm((current) => ({ ...current, maxDiscountAmount: value || null }))} />
-            <NumberField label="Quantity" value={voucherForm.quantity} onChange={(value) => setVoucherForm((current) => ({ ...current, quantity: value }))} />
-            <TextField label="Description" value={voucherForm.description ?? ""} onChange={(value) => setVoucherForm((current) => ({ ...current, description: value }))} />
-            <TextField label="Valid From" value={voucherForm.validFrom ?? ""} onChange={(value) => setVoucherForm((current) => ({ ...current, validFrom: value || null }))} type="date" />
-            <TextField label="Valid Until" value={voucherForm.validUntil ?? ""} onChange={(value) => setVoucherForm((current) => ({ ...current, validUntil: value || null }))} type="date" />
+            <NumberField label="Giá trị giảm" value={voucherForm.discountValue} onChange={(value) => setVoucherForm((current) => ({ ...current, discountValue: value }))} />
+            <NumberField label="Đơn tối thiểu" value={voucherForm.minOrderAmount} onChange={(value) => setVoucherForm((current) => ({ ...current, minOrderAmount: value }))} />
+            <NumberField label="Giảm tối đa" value={voucherForm.maxDiscountAmount ?? 0} onChange={(value) => setVoucherForm((current) => ({ ...current, maxDiscountAmount: value || null }))} />
+            <NumberField label="Số lượng" value={voucherForm.quantity} onChange={(value) => setVoucherForm((current) => ({ ...current, quantity: value }))} />
+            <TextField label="Mô tả" value={voucherForm.description ?? ""} onChange={(value) => setVoucherForm((current) => ({ ...current, description: value }))} />
+            <TextField
+              label="Ngày bắt đầu"
+              value={voucherForm.validFrom ?? ""}
+              onChange={(value) => setVoucherForm((current) => ({ ...current, validFrom: value || null }))}
+              type="date"
+              helper="Voucher có hiệu lực từ 00:00 của ngày được chọn."
+            />
+            <TextField
+              label="Ngày kết thúc"
+              value={voucherForm.validUntil ?? ""}
+              onChange={(value) => setVoucherForm((current) => ({ ...current, validUntil: value || null }))}
+              type="date"
+              helper="Voucher hết hạn lúc 23:59:59 của ngày này."
+            />
           </div>
           <Button className="mt-4" onClick={createVoucher} disabled={!branchId || createVoucherMutation.isPending}>
             <Gift className="size-4" />
-            Create voucher
+            Tạo voucher
           </Button>
         </div>
       </section>
 
       <section className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-xl font-bold">Paper Vouchers</h2>
+          <div>
+            <h2 className="text-xl font-bold">Danh sách voucher giấy</h2>
+            <p className="text-muted-foreground mt-1 text-sm">Theo dõi thời hạn, số lượt dùng và mã QR dùng để in/phát cho khách.</p>
+          </div>
           <Button variant="soft" onClick={() => vouchersQuery.refetch()} disabled={vouchersQuery.isFetching}>
             <RefreshCw className={cn("size-4", vouchersQuery.isFetching && "animate-spin")} />
-            Refresh
+            Làm mới
           </Button>
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           {vouchers.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No paper voucher created yet.</p>
+            <div className="border-border/60 bg-muted/20 rounded-xl border border-dashed p-8 text-center">
+              <TicketPercent className="text-muted-foreground mx-auto size-8" />
+              <p className="mt-3 text-sm font-semibold">Chưa có voucher giấy</p>
+              <p className="text-muted-foreground mt-1 text-sm">Tạo voucher đầu tiên để áp dụng cho đơn hàng tại quầy.</p>
+            </div>
           ) : (
-            vouchers.map((voucher) => (
-              <article key={voucher.voucherId} className="border-border/60 rounded-xl border p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-black">{voucher.code}</p>
-                    <p className="text-muted-foreground text-sm">{voucher.name}</p>
+            vouchers.map((voucher) => {
+              const usedPercent = voucher.quantity > 0 ? Math.min(100, Math.round((voucher.usedCount / voucher.quantity) * 100)) : 0;
+
+              return (
+                <article key={voucher.voucherId} className="border-border/60 hover:border-primary/30 hover:bg-muted/20 rounded-xl border p-4 transition-colors">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="bg-primary/10 text-primary rounded-md px-2.5 py-1 font-mono text-sm font-black tracking-wide">
+                          {voucher.code}
+                        </span>
+                        <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", voucher.isActive ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground")}>
+                          {voucher.isActive ? "Đang hoạt động" : "Tạm tắt"}
+                        </span>
+                      </div>
+                      <p className="text-foreground mt-3 truncate text-base font-bold">{voucher.name}</p>
+                      {voucher.description ? <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{voucher.description}</p> : null}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-black">{formatVoucherDiscount(voucher)}</p>
+                      <p className="text-muted-foreground text-xs font-semibold">
+                        {voucher.discountType === "PERCENT" ? "Giảm theo %" : "Giảm cố định"}
+                      </p>
+                    </div>
                   </div>
-                  <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", voucher.isActive ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground")}>
-                    {voucher.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-                <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-                  <p><span className="text-muted-foreground">Discount:</span> {voucher.discountType === "PERCENT" ? `${voucher.discountValue}%` : formatCurrency(voucher.discountValue)}</p>
-                  <p><span className="text-muted-foreground">Used:</span> {voucher.usedCount}/{voucher.quantity}</p>
-                  <p><span className="text-muted-foreground">Min:</span> {formatCurrency(voucher.minOrderAmount)}</p>
-                  <p><span className="text-muted-foreground">QR:</span> {voucher.qrPayload}</p>
-                </div>
-              </article>
-            ))
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <VoucherMetric icon={<WalletCards className="size-4" />} label="Đơn tối thiểu" value={formatCurrency(voucher.minOrderAmount)} />
+                    <VoucherMetric icon={<Gift className="size-4" />} label="Giảm tối đa" value={voucher.maxDiscountAmount ? formatCurrency(voucher.maxDiscountAmount) : "Không giới hạn"} />
+                    <VoucherMetric icon={<Clock3 className="size-4" />} label="Còn lại" value={`${voucher.remainingCount}/${voucher.quantity}`} />
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between text-xs font-semibold">
+                      <span className="text-muted-foreground">Đã dùng {voucher.usedCount} lượt</span>
+                      <span>{usedPercent}%</span>
+                    </div>
+                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                      <div className="bg-primary h-full rounded-full" style={{ width: `${usedPercent}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="border-border/60 mt-4 grid gap-3 border-t pt-4 text-sm md:grid-cols-[1fr_1.2fr]">
+                    <div className="text-muted-foreground flex items-center gap-2">
+                      <CalendarDays className="size-4" />
+                      <span>{formatDate(voucher.validFrom)} - {formatDate(voucher.validUntil)}</span>
+                    </div>
+                    <div className="text-muted-foreground flex min-w-0 items-center gap-2">
+                      <QrCode className="size-4 shrink-0" />
+                      <span className="truncate font-mono text-xs">{voucher.qrPayload}</span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
       </section>
@@ -310,6 +399,24 @@ const TextField = ({
     <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 h-10" />
     {helper ? <span className="text-muted-foreground mt-1 block text-xs font-medium">{helper}</span> : null}
   </label>
+);
+
+const VoucherMetric = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) => (
+  <div className="bg-muted/40 rounded-lg p-3">
+    <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+      {icon}
+      {label}
+    </div>
+    <p className="mt-1 truncate text-sm font-bold">{value}</p>
+  </div>
 );
 
 const NumberField = ({

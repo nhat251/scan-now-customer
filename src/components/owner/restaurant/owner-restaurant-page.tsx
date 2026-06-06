@@ -38,11 +38,11 @@ export const OwnerRestaurantPage = () => {
     const nextErrors: Partial<Record<keyof OwnerRestaurantFormValues, string>> = {};
 
     if (!value.name.trim()) {
-      nextErrors.name = "Restaurant name is required.";
+      nextErrors.name = "Tên nhà hàng là bắt buộc.";
     }
 
     if (!value.slug.trim()) {
-      nextErrors.slug = "Slug is required.";
+      nextErrors.slug = "Slug là bắt buộc.";
     }
 
     setErrors(nextErrors);
@@ -63,31 +63,31 @@ export const OwnerRestaurantPage = () => {
   if (restaurantQuery.isError) {
     return (
       <PortalShell
-        title="My Restaurant"
-        description="View and update your restaurant profile."
-        portalLabel="Management Suite"
-        portalName="Owner Portal"
+        title="Nhà hàng"
+        description="Xem và cập nhật hồ sơ nhà hàng."
+        portalLabel="Bộ quản lý"
+        portalName="Cổng chủ quán"
         navItems={getOwnerPortalNavItems("restaurant")}
-        topbarTitle={currentUser?.fullName ?? "Owner Portal"}
+        topbarTitle={currentUser?.fullName ?? "Cổng chủ quán"}
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Owner portal</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">
-            {isAccessError ? "Your access could not be verified" : "We could not load your restaurant data"}
+            {isAccessError ? "Không xác minh được quyền truy cập" : "Không tải được dữ liệu nhà hàng"}
           </h2>
           <p className="text-muted-foreground mt-3 text-sm md:text-base">
             {isAccessError
-              ? "Your session may be expired or you may no longer have permission to view this restaurant."
-              : "Please try again."}
+              ? "Phiên đăng nhập có thể đã hết hạn hoặc bạn không còn quyền xem nhà hàng này."
+              : "Vui lòng thử lại."}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button onClick={() => restaurantQuery.refetch()} disabled={restaurantQuery.isRefetching}>
-              Try again
+              Thử lại
             </Button>
             {isAccessError ? (
               <Button variant="outline" onClick={() => router.push(PATH.auth.login)}>
-                Go to login
+                Về trang đăng nhập
               </Button>
             ) : null}
           </div>
@@ -100,19 +100,19 @@ export const OwnerRestaurantPage = () => {
 
   return (
     <PortalShell
-      title="My Restaurant"
-      description="View and update your restaurant profile, brand assets, and summary details."
-      portalLabel="Management Suite"
-      portalName="Owner Portal"
+      title="Nhà hàng"
+      description="Xem và cập nhật hồ sơ, thương hiệu và thông tin tổng quan của nhà hàng."
+      portalLabel="Bộ quản lý"
+      portalName="Cổng chủ quán"
       navItems={getOwnerPortalNavItems("restaurant")}
-      topbarTitle={restaurant?.name ?? currentUser?.fullName ?? "Owner Portal"}
+      topbarTitle={restaurant?.name ?? currentUser?.fullName ?? "Cổng chủ quán"}
       currentUser={currentUser}
       stats={
         <>
-          <PortalStatCard label="Restaurant" value={restaurant?.name ?? "-"} helper={restaurant?.slug ? `/${restaurant.slug}` : "Slug pending"} />
-          <PortalStatCard label="Branches" value={String(restaurant?.totalBranches ?? 0)} helper="Total branches linked to this restaurant" />
-          <PortalStatCard label="Owner Email" value={restaurant?.ownerEmail ?? "-"} helper={restaurant?.ownerPhone ?? "No phone on file"} />
-          <PortalStatCard label="Status" value={restaurant?.isActive ? "Active" : "Inactive"} helper="Published restaurant availability" />
+          <PortalStatCard label="Nhà hàng" value={restaurant?.name ?? "-"} helper={restaurant?.slug ? `/${restaurant.slug}` : "Chưa có slug"} />
+          <PortalStatCard label="Chi nhánh" value={String(restaurant?.totalBranches ?? 0)} helper="Tổng chi nhánh thuộc nhà hàng" />
+          <PortalStatCard label="Email chủ quán" value={restaurant?.ownerEmail ?? "-"} helper={restaurant?.ownerPhone ?? "Chưa có số điện thoại"} />
+          <PortalStatCard label="Trạng thái" value={restaurant?.isActive ? "Hoạt động" : "Tạm tắt"} helper="Trạng thái hiển thị của nhà hàng" />
         </>
       }
     >

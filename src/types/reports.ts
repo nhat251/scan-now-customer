@@ -25,6 +25,12 @@ export type BranchReportResponse = {
   orders: number;
 };
 
+export type PaymentMethodReportResponse = {
+  method: string;
+  amount: number;
+  count: number;
+};
+
 export type OwnerReportResponse = {
   fromDate: string;
   toDate: string;
@@ -38,4 +44,5 @@ export type OwnerReportResponse = {
   peakHours: ReportPointResponse[];
   topItems: TopItemReportResponse[];
   branches: BranchReportResponse[];
+  paymentMethods: PaymentMethodReportResponse[];
 };

@@ -15,22 +15,22 @@ export const OwnerRestaurantForm = ({ value, errors, submitting, onChange, onSub
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">Restaurant profile</h2>
+        <h2 className="text-lg font-semibold">Hồ sơ nhà hàng</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Update your restaurant identity and the details shown across your owner portal.
+          Cập nhật thông tin nhận diện và nội dung hiển thị trong cổng chủ quán.
         </p>
       </div>
 
       <FieldGroup className="gap-5">
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="restaurant-name">Restaurant name</FieldLabel>
+            <FieldLabel htmlFor="restaurant-name">Tên nhà hàng</FieldLabel>
             <FieldContent>
               <Input
                 id="restaurant-name"
                 value={value.name}
                 onChange={(event) => onChange("name", event.target.value)}
-                placeholder="Enter restaurant name"
+                placeholder="Nhập tên nhà hàng"
                 aria-invalid={!!errors.name}
               />
               <FieldError>{errors.name}</FieldError>
@@ -53,7 +53,7 @@ export const OwnerRestaurantForm = ({ value, errors, submitting, onChange, onSub
         </div>
 
         <Field>
-          <FieldLabel htmlFor="restaurant-logo-url">Logo URL</FieldLabel>
+          <FieldLabel htmlFor="restaurant-logo-url">URL logo</FieldLabel>
           <FieldContent>
             <Input
               id="restaurant-logo-url"
@@ -67,13 +67,13 @@ export const OwnerRestaurantForm = ({ value, errors, submitting, onChange, onSub
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="restaurant-description">Description</FieldLabel>
+          <FieldLabel htmlFor="restaurant-description">Mô tả</FieldLabel>
           <FieldContent>
             <textarea
               id="restaurant-description"
               value={value.description}
               onChange={(event) => onChange("description", event.target.value)}
-              placeholder="Describe your restaurant"
+              placeholder="Mô tả nhà hàng"
               aria-invalid={!!errors.description}
               className="border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-32 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
             />
@@ -83,7 +83,7 @@ export const OwnerRestaurantForm = ({ value, errors, submitting, onChange, onSub
 
         <div className="flex justify-end">
           <Button onClick={onSubmit} disabled={submitting}>
-            {submitting ? "Saving..." : "Save restaurant"}
+            {submitting ? "Đang lưu..." : "Lưu nhà hàng"}
           </Button>
         </div>
       </FieldGroup>

@@ -87,16 +87,16 @@ export const OwnerBranchesPage = () => {
 
     return (
       <PortalShell
-        title="Branches"
-        description="Manage every branch in your restaurant portfolio."
-        portalLabel="Management Suite"
-        portalName="Owner Portal"
+        title="Chi nhánh"
+        description="Quản lý toàn bộ chi nhánh trong hệ thống nhà hàng."
+        portalLabel="Bộ quản lý"
+        portalName="Cổng chủ quán"
         navItems={getOwnerPortalNavItems("branches")}
-        topbarTitle={currentUser?.fullName ?? "Owner Portal"}
+        topbarTitle={currentUser?.fullName ?? "Cổng chủ quán"}
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Owner portal</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">{errorState.heading}</h2>
           <p className="text-muted-foreground mt-3 text-sm md:text-base">{errorState.description}</p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -105,7 +105,7 @@ export const OwnerBranchesPage = () => {
             </Button>
             {errorState.shouldRouteToLogin ? (
               <Button variant="outline" onClick={() => router.push(PATH.auth.login)}>
-                Go to login
+                Về trang đăng nhập
               </Button>
             ) : null}
           </div>
@@ -116,25 +116,25 @@ export const OwnerBranchesPage = () => {
 
   return (
     <PortalShell
-      title="Branches"
-      description="Monitor branch operations, contact details, hours, and activation status."
-      portalLabel="Management Suite"
-      portalName="Owner Portal"
+      title="Chi nhánh"
+      description="Theo dõi thông tin vận hành, liên hệ, giờ mở cửa và trạng thái kích hoạt."
+      portalLabel="Bộ quản lý"
+      portalName="Cổng chủ quán"
       navItems={getOwnerPortalNavItems("branches")}
-      topbarTitle={currentUser?.fullName ?? "Owner Portal"}
+      topbarTitle={currentUser?.fullName ?? "Cổng chủ quán"}
       currentUser={currentUser}
       headerAction={
         <Button size="lg" className="h-12 px-8" onClick={() => router.push(PATH.owner.branchCreate)}>
           <Plus />
-          Create Branch
+          Tạo chi nhánh
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Total Branches" value={String(totalItems)} helper="Branches returned from backend" />
-          <PortalStatCard label="Active Branches" value={String(activeBranches)} helper="Currently active branches on this page" />
-          <PortalStatCard label="Inactive Branches" value={String(inactiveBranches)} helper="Branches that are currently inactive" />
-          <PortalStatCard label="Assigned Managers" value={String(managedBranches)} helper="Branches with a manager assigned" />
+          <PortalStatCard label="Tổng chi nhánh" value={String(totalItems)} helper="Số chi nhánh trong hệ thống" />
+          <PortalStatCard label="Hoạt động" value={String(activeBranches)} helper="Chi nhánh đang bật trên trang này" />
+          <PortalStatCard label="Tạm tắt" value={String(inactiveBranches)} helper="Chi nhánh hiện đang tắt" />
+          <PortalStatCard label="Có quản lý" value={String(managedBranches)} helper="Chi nhánh đã gán quản lý" />
         </>
       }
     >

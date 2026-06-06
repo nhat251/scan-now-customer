@@ -16,22 +16,22 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">{mode === "create" ? "Create branch" : "Update branch"}</h2>
+        <h2 className="text-lg font-semibold">{mode === "create" ? "Tạo chi nhánh" : "Cập nhật chi nhánh"}</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Configure branch identity, contact details, opening hours, and fee settings.
+          Cấu hình thông tin nhận diện, liên hệ, giờ mở cửa và các khoản phí của chi nhánh.
         </p>
       </div>
 
       <FieldGroup className="gap-6">
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="branch-name">Branch name</FieldLabel>
+            <FieldLabel htmlFor="branch-name">Tên chi nhánh</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-name"
                 value={value.name}
                 onChange={(event) => onChange("name", event.target.value)}
-                placeholder="Enter branch name"
+                placeholder="Nhập tên chi nhánh"
                 aria-invalid={!!errors.name}
               />
               <FieldError>{errors.name}</FieldError>
@@ -70,13 +70,13 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="branch-phone">Phone</FieldLabel>
+            <FieldLabel htmlFor="branch-phone">Số điện thoại</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-phone"
                 value={value.phone}
                 onChange={(event) => onChange("phone", event.target.value)}
-                placeholder="Contact phone"
+                placeholder="Số điện thoại liên hệ"
                 aria-invalid={!!errors.phone}
               />
               <FieldError>{errors.phone}</FieldError>
@@ -85,13 +85,13 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
         </div>
 
         <Field>
-          <FieldLabel htmlFor="branch-address">Address</FieldLabel>
+          <FieldLabel htmlFor="branch-address">Địa chỉ</FieldLabel>
           <FieldContent>
             <Input
               id="branch-address"
               value={value.address}
               onChange={(event) => onChange("address", event.target.value)}
-              placeholder="Street, ward, district, city"
+              placeholder="Đường, phường/xã, quận/huyện, thành phố"
               aria-invalid={!!errors.address}
             />
             <FieldError>{errors.address}</FieldError>
@@ -100,7 +100,7 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="branch-open-time">Open time</FieldLabel>
+            <FieldLabel htmlFor="branch-open-time">Giờ mở cửa</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-open-time"
@@ -114,7 +114,7 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="branch-close-time">Close time</FieldLabel>
+            <FieldLabel htmlFor="branch-close-time">Giờ đóng cửa</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-close-time"
@@ -146,7 +146,7 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="branch-service-charge-percent">Service charge %</FieldLabel>
+            <FieldLabel htmlFor="branch-service-charge-percent">Phí dịch vụ %</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-service-charge-percent"
@@ -162,7 +162,7 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="branch-service-charge-fixed">Fixed charge</FieldLabel>
+            <FieldLabel htmlFor="branch-service-charge-fixed">Phí cố định</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-service-charge-fixed"
@@ -180,7 +180,7 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
 
         <div className="flex justify-end">
           <Button onClick={onSubmit} disabled={submitting}>
-            {submitting ? "Saving..." : mode === "create" ? "Create branch" : "Save changes"}
+            {submitting ? "Đang lưu..." : mode === "create" ? "Tạo chi nhánh" : "Lưu thay đổi"}
           </Button>
         </div>
       </FieldGroup>

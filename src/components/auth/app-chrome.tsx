@@ -8,22 +8,13 @@ import { Header } from "@/components/molecules/globals/header";
 import { PATH } from "@/constants/path";
 
 const HIDE_PUBLIC_CHROME_PREFIXES = [
-  PATH.owner.users,
-  PATH.owner.restaurant,
-  PATH.owner.branches,
-  PATH.owner.menuItems,
-  PATH.manager.users,
-  PATH.manager.branches,
-  PATH.manager.menuItems,
-  PATH.me.branches,
-  PATH.me.menuItemDetail,
-  PATH.dashboards.admin,
-  PATH.dashboards.owner,
-  PATH.dashboards.manager,
-  PATH.dashboards.staff,
-  PATH.dashboards.kitchen,
-  PATH.dashboards.cashier,
-  PATH.cashier.dashboard,
+  "/admin",
+  "/cashier",
+  "/kitchen",
+  "/manager",
+  "/me",
+  "/owner",
+  "/staff",
 ];
 const HIDE_PUBLIC_CHROME_PATHS = [PATH.auth.login];
 
