@@ -94,6 +94,16 @@ export const getManageMenuItem = async (menuItemId: string) => {
   return await axiosBasic.get<ApiResponse<ManageMenuItemResponse>>(`/api/owner/menu-items/${menuItemId}`);
 };
 
+export const uploadManageMenuItemImages = async (files: File[]) => {
+  const formData = new FormData();
+
+  files.forEach((file) => formData.append("files", file));
+
+  return await axiosBasic.post<ApiResponse<string[]>>("/api/owner/menu-items/images", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
 export const createManageMenuItem = async ({
   branchId,
   categoryId,

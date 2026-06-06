@@ -16,6 +16,7 @@ export type PortalNavItem = {
   href: string;
   icon: React.ReactNode;
   active?: boolean;
+  section?: "main" | "branch";
 };
 
 type PortalShellProps = {
@@ -92,6 +93,8 @@ export const PortalShell = ({
 }: PortalShellProps) => {
   const router = useRouter();
   const logoutMutation = useLogoutMutation();
+  const mainNavItems = navItems.filter((item) => item.section !== "branch");
+  const branchNavItems = navItems.filter((item) => item.section === "branch");
 
   const handleLogout = async () => {
     try {
@@ -130,20 +133,25 @@ export const PortalShell = ({
           </div>
         ) : null}
 
-        <nav className="flex-1 space-y-1 px-3">
-          {navItems.map((item) => (
-            <Link
-              key={`${item.href}-${item.label}`}
-              href={item.href}
-              className={cn(
-                "text-muted-foreground hover:bg-muted/70 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all",
-                item.active && "bg-primary/10 text-primary border-primary rounded-r-none border-r-4"
-              )}
-            >
-              <span className="size-4">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+          <div className="space-y-1">
+            {mainNavItems.map((item) => (
+              <PortalNavLink key={`${item.href}-${item.label}`} item={item} />
+            ))}
+          </div>
+
+          {branchNavItems.length > 0 ? (
+            <div className="border-border/60 border-t pt-4">
+              <p className="text-muted-foreground px-4 pb-2 text-[10px] font-bold tracking-[0.2em] uppercase">
+                Branch tools
+              </p>
+              <div className="space-y-1">
+                {branchNavItems.map((item) => (
+                  <PortalNavLink key={`${item.href}-${item.label}`} item={item} />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </nav>
 
         <div className="border-border/60 mt-auto border-t p-6">
@@ -206,6 +214,19 @@ export const PortalShell = ({
     </div>
   );
 };
+
+const PortalNavLink = ({ item }: { item: PortalNavItem }) => (
+  <Link
+    href={item.href}
+    className={cn(
+      "text-muted-foreground hover:bg-muted/70 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all",
+      item.active && "bg-primary/10 text-primary border-primary rounded-r-none border-r-4"
+    )}
+  >
+    <span className="size-4">{item.icon}</span>
+    <span>{item.label}</span>
+  </Link>
+);
 
 const ButtonIcon = ({ children }: { children: React.ReactNode }) => {
   return (

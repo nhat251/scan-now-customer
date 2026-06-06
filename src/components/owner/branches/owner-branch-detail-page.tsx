@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Soup, Table2, Tags } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
+import { getManageMenuNavItems } from "@/components/manage-menu/helpers";
 import {
   getBranchStatusLabel,
   getDefaultOwnerBranchFormValues,
@@ -130,7 +131,7 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
       description={mode === "create" ? "Create a new branch for your restaurant." : "Review and update branch information, contact details, and fees."}
       portalLabel="Management Suite"
       portalName="Owner Portal"
-      navItems={getOwnerPortalNavItems("branches")}
+      navItems={branchId ? getManageMenuNavItems("owner", "branches", branchId) : getOwnerPortalNavItems("branches")}
       topbarTitle={branch?.name ?? currentUser?.fullName ?? "Owner Portal"}
       currentUser={currentUser}
       branchName={branch?.name}

@@ -88,6 +88,7 @@ export const MeRoleShell = ({
       currentUser={currentUser}
       actions={headerAction}
       stats={stats}
+      navItems={navItems}
     >
       {children}
     </WaiterMobileShell>

@@ -74,6 +74,34 @@ const getAvailabilityQueryValue = (filter: AvailabilityFilter) => {
   return undefined;
 };
 
+const MenuItemImage = ({
+  src,
+  alt,
+  isAvailable,
+}: {
+  src?: string | null;
+  alt: string;
+  isAvailable: boolean;
+}) => {
+  const [imageSrc, setImageSrc] = useState(src || FALLBACK_MENU_IMAGE);
+
+  useEffect(() => {
+    setImageSrc(src || FALLBACK_MENU_IMAGE);
+  }, [src]);
+
+  return (
+    <Image
+      src={imageSrc}
+      alt={alt}
+      fill
+      unoptimized
+      sizes="96px"
+      className={cn("object-cover", !isAvailable && "opacity-60 grayscale")}
+      onError={() => setImageSrc(FALLBACK_MENU_IMAGE)}
+    />
+  );
+};
+
 export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const [searchInput, setSearchInput] = useState("");
@@ -270,7 +298,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               <button
                 type="button"
                 aria-label="Danh mục"
-                className="border-input bg-card focus:border-ring focus:ring-ring/50 flex h-11 w-full items-center gap-2 rounded-2xl border px-3 pl-10 text-sm font-semibold outline-none focus:ring-3"
+                className="border-input bg-card focus:border-ring focus:ring-ring/50 relative flex h-11 w-full items-center gap-2 rounded-2xl border px-3 pl-10 text-sm font-semibold outline-none focus:ring-3"
               >
                 <Store className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <span className="flex-1 truncate text-left">
@@ -314,7 +342,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               <button
                 type="button"
                 aria-label="Sắp xếp"
-                className="border-input bg-card focus:border-ring focus:ring-ring/50 flex h-11 w-full items-center gap-2 rounded-2xl border px-3 pl-10 text-sm font-semibold outline-none focus:ring-3"
+                className="border-input bg-card focus:border-ring focus:ring-ring/50 relative flex h-11 w-full items-center gap-2 rounded-2xl border px-3 pl-10 text-sm font-semibold outline-none focus:ring-3"
               >
                 <ArrowUpDown className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <span className="flex-1 truncate text-left">
@@ -494,14 +522,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                     </div>
 
                     <div className="relative size-[82px] overflow-hidden rounded-2xl bg-[#f1efe9] lg:size-24">
-                      <Image
-                        src={item.imageUrl || FALLBACK_MENU_IMAGE}
-                        alt={item.name}
-                        fill
-                        unoptimized
-                        sizes="96px"
-                        className={cn("object-cover", !item.isAvailable && "opacity-60 grayscale")}
-                      />
+                      <MenuItemImage src={item.imageUrl} alt={item.name} isAvailable={item.isAvailable} />
                     </div>
 
                     <div className="min-w-0 py-0.5 lg:py-0">

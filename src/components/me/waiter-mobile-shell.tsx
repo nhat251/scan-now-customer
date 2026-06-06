@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Bell, ClipboardList, Grid2x2, LogOut, Soup, UserCircle2 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import type { PortalNavItem } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
 import { useLogoutMutation } from "@/hooks/mutations/useLogoutMutation";
@@ -19,6 +20,15 @@ type WaiterMobileShellProps = {
   currentUser?: Pick<AuthUser, "fullName" | "role" | "avatarUrl"> | null;
   actions?: ReactNode;
   stats?: ReactNode;
+  navItems?: PortalNavItem[];
+};
+
+type MobileNavItem = {
+  key: string;
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  active?: boolean;
 };
 
 const waiterNavItems = (branchId: string) => [
@@ -46,7 +56,25 @@ const waiterNavItems = (branchId: string) => [
     href: PATH.me.branchDetail(branchId),
     icon: <UserCircle2 className="size-5" />,
   },
-] as const;
+] satisfies MobileNavItem[];
+
+const getMobileNavItems = (branchId: string, navItems?: PortalNavItem[]): MobileNavItem[] => {
+  if (!navItems?.length) {
+    return waiterNavItems(branchId);
+  }
+
+  const branchScopedPrefix = `${PATH.me.branches}/${branchId}`;
+
+  return navItems
+    .filter((item) => item.href === branchScopedPrefix || item.href.startsWith(`${branchScopedPrefix}/`))
+    .map((item) => ({
+      key: item.href,
+      label: item.label,
+      href: item.href,
+      icon: item.icon,
+      active: item.active,
+    }));
+};
 
 export const WaiterMobileShell = ({
   children,
@@ -57,9 +85,11 @@ export const WaiterMobileShell = ({
   currentUser,
   actions,
   stats,
+  navItems,
 }: WaiterMobileShellProps) => {
   const logoutMutation = useLogoutMutation();
-  const items = waiterNavItems(branchId);
+  const items = getMobileNavItems(branchId, navItems);
+  const isItemActive = (item: MobileNavItem) => item.active ?? item.key === active;
 
   return (
     <div className="min-h-screen bg-[#f8f7f4] font-sans text-stone-900">
@@ -76,7 +106,7 @@ export const WaiterMobileShell = ({
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-stone-500 transition-all hover:bg-stone-100",
-                active === item.key && "border-primary-container bg-primary-container/10 text-primary-container rounded-r-none border-r-4",
+                isItemActive(item) && "border-primary-container bg-primary-container/10 text-primary-container rounded-r-none border-r-4",
               )}
             >
               {item.icon}
@@ -145,9 +175,12 @@ export const WaiterMobileShell = ({
           <main className="flex-1 space-y-5 px-4 py-4 pb-[92px] lg:space-y-8 lg:p-0">{children}</main>
         </div>
 
-        <nav className="fixed bottom-0 left-1/2 z-50 grid h-[68px] w-full max-w-[500px] -translate-x-1/2 grid-cols-4 items-center border-t border-[#e8e4dc] bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden">
+        <nav
+          className="fixed bottom-0 left-1/2 z-50 grid h-[68px] w-full max-w-[500px] -translate-x-1/2 items-center border-t border-[#e8e4dc] bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+          style={{ gridTemplateColumns: `repeat(${Math.max(items.length, 1)}, minmax(0, 1fr))` }}
+        >
           {items.map((item) => (
-            <WaiterNavItem key={item.key} item={item} active={active === item.key} />
+            <WaiterNavItem key={item.key} item={item} active={isItemActive(item)} />
           ))}
         </nav>
       </div>
@@ -159,7 +192,7 @@ const WaiterNavItem = ({
   item,
   active,
 }: {
-  item: ReturnType<typeof waiterNavItems>[number];
+  item: MobileNavItem;
   active: boolean;
 }) => {
   return (

@@ -28,6 +28,7 @@ import type { MyTableResponse, OpenTableSessionResponse } from "@/types/me";
 import {
   canHandleKitchenOrders,
   canHandleWaiterOrders,
+  canManageMenuAvailability,
   canManageTableSessions,
   formatCurrency,
   formatDateTime,
@@ -60,6 +61,7 @@ const canCloseTableSession = (table: MyTableResponse) =>
 
 export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
   const currentUser = useUserStore((state) => state.user);
+  const canSeeMenu = canManageMenuAvailability(currentUser?.role);
   const canSeeTables = canManageTableSessions(currentUser?.role);
   const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
   const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
@@ -115,7 +117,7 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
       navItems={getMyPortalNavItems({
         active: "tables",
         branchId,
-        canSeeMenu: false,
+        canSeeMenu,
         canSeeTables,
         canSeeOrders,
         canSeeKitchen,

@@ -122,7 +122,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       description="Configure branch payment methods and paper vouchers."
       portalLabel={copy.label}
       portalName={copy.name}
-      navItems={getManageMenuNavItems(portal, "settings", branchId || undefined)}
+      navItems={getManageMenuNavItems(portal, "settings")}
       topbarTitle={currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
       stats={

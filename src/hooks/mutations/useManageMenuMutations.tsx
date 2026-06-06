@@ -15,6 +15,7 @@ import {
   updateManageCategory,
   updateManageMenuItem,
   updateManageMenuItemPrice,
+  uploadManageMenuItemImages,
 } from "@/services/manage-menu";
 import { showNotify } from "@/stores/global";
 import type { ApiResponse } from "@/types/api";
@@ -144,6 +145,17 @@ export const useUpdateManageMenuItemMutation = () => {
       showNotify({ type: "success", message: "Menu item updated successfully." });
     },
     onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update menu item.") }),
+  });
+};
+
+export const useUploadManageMenuItemImagesMutation = () => {
+  return useMutation<File[], ApiResponse<string[]>>({
+    mutationFn: async (files) => (await uploadManageMenuItemImages(files)).data,
+    hasLoading: true,
+    onSuccess: () => {
+      showNotify({ type: "success", message: "Image uploaded successfully." });
+    },
+    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to upload image.") }),
   });
 };
 

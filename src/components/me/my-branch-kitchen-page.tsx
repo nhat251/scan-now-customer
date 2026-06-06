@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, BellRing, Check, ChefHat, Clock3, RefreshCw, Soup } from "lucide-react";
 
-import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
+import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
@@ -30,6 +30,7 @@ import {
   getApiErrorMessage,
   getMyPortalNavItems,
 } from "./helpers";
+import { MeRoleShell as PortalShell } from "./me-role-shell";
 
 type Props = {
   branchId: string;
@@ -235,6 +236,7 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
       description="Prepare backend-grouped dishes by priority. Notes create separate groups to protect preparation requirements."
       portalLabel="Branch Workspace"
       portalName="My Branch Portal"
+      branchId={branchId}
       navItems={getMyPortalNavItems({
         active: "kitchen",
         branchId,

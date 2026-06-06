@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, DollarSign, Layers, PackageCheck } from "lucide-react";
@@ -35,6 +36,26 @@ const DetailRow = ({ label, value }: { label: string; value?: React.ReactNode })
     <dd className="text-on-surface text-sm font-medium sm:text-right">{value || "-"}</dd>
   </div>
 );
+
+const MenuItemDetailImage = ({ src, alt }: { src?: string | null; alt: string }) => {
+  const [imageSrc, setImageSrc] = useState(src || FALLBACK_MENU_IMAGE);
+
+  useEffect(() => {
+    setImageSrc(src || FALLBACK_MENU_IMAGE);
+  }, [src]);
+
+  return (
+    <Image
+      src={imageSrc}
+      alt={alt}
+      fill
+      unoptimized
+      sizes="(max-width: 1280px) 100vw, 480px"
+      className="object-cover"
+      onError={() => setImageSrc(FALLBACK_MENU_IMAGE)}
+    />
+  );
+};
 
 export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) => {
   const currentUser = useUserStore((state) => state.user);
@@ -118,14 +139,7 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
         <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
           <div className="bg-card border-border/60 rounded-xl border p-4 shadow-sm">
             <div className="bg-surface-container relative aspect-[4/3] overflow-hidden rounded-lg">
-              <Image
-                src={item.imageUrl || FALLBACK_MENU_IMAGE}
-                alt={item.name}
-                fill
-                unoptimized
-                sizes="(max-width: 1280px) 100vw, 480px"
-                className="object-cover"
-              />
+              <MenuItemDetailImage src={item.imageUrl} alt={item.name} />
             </div>
           </div>
 

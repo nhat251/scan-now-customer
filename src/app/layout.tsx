@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={SITE_CONFIG.defaultLocale} suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <NextIntlProvider>
           <ReactQueryProvider>
             <AppChrome>{children}</AppChrome>
