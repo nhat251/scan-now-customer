@@ -2,6 +2,7 @@ import type { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 
 import defaultAxios from "axios";
 
 import { getStoredAccessToken } from "@/lib/auth";
+import { getTenantSlug } from "@/lib/tenant";
 import { login, logout } from "@/stores/user";
 import type { ApiResponse } from "@/types/api";
 import type { AuthPayload } from "@/types/auth";
@@ -79,6 +80,14 @@ axiosBasic.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     } else if (config.headers?.Authorization) {
       delete config.headers.Authorization;
+    }
+
+    // Tell the backend which tenant this request belongs to.
+    // The backend TenantResolutionMiddleware reads this header to scope
+    // all EF Core queries to the correct Restaurant (tenant).
+    const tenantSlug = getTenantSlug();
+    if (tenantSlug) {
+      config.headers["X-Tenant-Slug"] = tenantSlug;
     }
 
     return config;
