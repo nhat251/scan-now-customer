@@ -2,7 +2,7 @@
  * Extracts the tenant slug from the current browser hostname and sends it to
  * the backend via the X-Tenant-Slug request header.
  *
- * Production:  tenant1.scannow.vn  →  "tenant1"
+ * Production:  tenant1.scannow.site  →  "tenant1"
  * Local dev:   localhost:3000       →  falls back to NEXT_PUBLIC_DEV_TENANT_SLUG
  * Reserved:    www / app / admin   →  returns null (no tenant filter applied)
  */
@@ -17,7 +17,7 @@ export function getTenantSlug(): string | null {
   // Server-side: no window, no subdomain to read.
   if (typeof window === "undefined") return null;
 
-  const hostname = window.location.hostname; // e.g. "tenant1.scannow.vn"
+  const hostname = window.location.hostname; // e.g. "tenant1.scannow.site"
   const parts = hostname.split(".");
 
   // Need at least <subdomain>.<domain>.<tld> (3 parts).
