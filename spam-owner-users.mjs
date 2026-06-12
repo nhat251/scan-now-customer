@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "https://scannow.onrender.com";
+const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "https://api.scannow.site";
 const OWNER_IDENTIFIER = process.env.OWNER_IDENTIFIER;
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
 const PASSWORD = process.env.SPAM_USER_PASSWORD ?? "Spam@123456";

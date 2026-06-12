@@ -82,7 +82,7 @@ src/
 
 **API Layer:**
 
-- Canonical backend contract reference: `BACKEND_CONTRACTS.md` (derived from `https://scannow.onrender.com/openapi/v1.json`) — consult this first before editing `src/services/*`, `src/types/*`, `src/hooks/queries/*`, or `src/hooks/mutations/*`
+- Canonical backend contract reference: `BACKEND_CONTRACTS.md` (derived from `https://api.scannow.site/openapi/v1.json`) — consult this first before editing `src/services/*`, `src/types/*`, `src/hooks/queries/*`, or `src/hooks/mutations/*`
 - If local frontend DTOs differ from the published backend contract, prefer the published backend contract unless an explicit repo note says otherwise
 - Axios instance at `src/services/axiosBasic.tsx` with automatic JWT token injection
 - Mutations organized in `src/hooks/mutations/`, queries in `src/hooks/queries/`
