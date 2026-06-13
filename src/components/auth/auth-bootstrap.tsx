@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 
+import { hasStoredAccessToken } from "@/lib/auth";
 import { refreshTokenRequest } from "@/services/auth";
 import { hydrateUserSession, login, logout, setAuthInitialized, useUserStore } from "@/stores/user";
 
@@ -28,6 +29,11 @@ export const AuthBootstrap = ({ children }: { children: React.ReactNode }) => {
 
     const bootstrapAuth = async () => {
       try {
+        if (!hasStoredAccessToken()) {
+          if (isMounted) logout();
+          return;
+        }
+
         const response = await refreshTokenRequest();
 
         if (!isMounted) {

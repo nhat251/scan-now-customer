@@ -105,7 +105,13 @@ axiosBasic.interceptors.response.use(
     const originalRequest = error.config as RetryableRequestConfig | undefined;
     const status = error.response?.status;
 
-    if (!originalRequest || status !== 401 || originalRequest._retry || originalRequest.skipAuthRefresh) {
+    if (
+      !originalRequest ||
+      status !== 401 ||
+      originalRequest._retry ||
+      originalRequest.skipAuthRefresh ||
+      !getStoredAccessToken()
+    ) {
       return Promise.reject(error);
     }
 
