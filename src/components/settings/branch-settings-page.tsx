@@ -8,6 +8,7 @@ import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { QUERY_KEY } from "@/constants/queryKeys";
 import { useCreatePaperVoucherMutation, useUpsertBranchPaymentConfigMutation } from "@/hooks/mutations/useBranchSettingsMutations";
@@ -192,9 +193,12 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       }
     >
       <section className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
-        <label className="text-sm font-semibold">
-          Chi nhánh <span className="text-destructive">*</span>
+        <div className="space-y-2">
+          <Label htmlFor="branch-select" required>
+            Chi nhánh
+          </Label>
           <select
+            id="branch-select"
             value={branchId}
             onChange={(event) => setBranchId(event.target.value)}
             className="border-input bg-card mt-2 h-10 w-full max-w-lg rounded-lg border px-3 text-sm outline-none"
@@ -206,7 +210,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
               </option>
             ))}
           </select>
-        </label>
+        </div>
       </section>
 
       {paymentConfigQuery.isLoading || vouchersQuery.isLoading ? (

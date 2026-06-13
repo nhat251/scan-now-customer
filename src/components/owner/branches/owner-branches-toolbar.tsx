@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Search } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { FilterDropdown } from "@/components/organisms/manager-users/filter-dropdown";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
@@ -13,12 +15,43 @@ type OwnerBranchesToolbarProps = {
   onStatusFilterChange: (value: BranchStatusFilter) => void;
 };
 
+type ToolbarFormValues = {
+  search: string;
+  status: BranchStatusFilter;
+};
+
 export const OwnerBranchesToolbar = ({
   searchInput,
   statusFilter,
   onSearchInputChange,
   onStatusFilterChange,
 }: OwnerBranchesToolbarProps) => {
+  const { register, control, setValue } = useForm<ToolbarFormValues>({
+    defaultValues: {
+      search: searchInput,
+      status: statusFilter,
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const statusVal = useWatch({ control, name: "status" });
+
+  useEffect(() => {
+    onSearchInputChange(searchVal);
+  }, [searchVal, onSearchInputChange]);
+
+  useEffect(() => {
+    onStatusFilterChange(statusVal);
+  }, [statusVal, onStatusFilterChange]);
+
+  useEffect(() => {
+    setValue("search", searchInput);
+  }, [searchInput, setValue]);
+
+  useEffect(() => {
+    setValue("status", statusFilter);
+  }, [statusFilter, setValue]);
+
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
@@ -31,8 +64,7 @@ export const OwnerBranchesToolbar = ({
                 id="owner-branches-search"
                 className="bg-muted/50 h-12 pl-9"
                 placeholder="Tìm theo tên chi nhánh, email, số điện thoại, địa chỉ..."
-                value={searchInput}
-                onChange={(event) => onSearchInputChange(event.target.value)}
+                {...register("search")}
               />
             </div>
           </FieldContent>
@@ -41,10 +73,10 @@ export const OwnerBranchesToolbar = ({
         <FilterDropdown
           id="owner-branches-status-filter"
           label="Trạng thái"
-          value={statusFilter}
-          displayValue={getBranchStatusFilterLabel(statusFilter)}
+          value={statusVal}
+          displayValue={getBranchStatusFilterLabel(statusVal)}
           options={BRANCH_STATUS_FILTER_OPTIONS}
-          onValueChange={onStatusFilterChange}
+          onValueChange={(val) => setValue("status", val)}
         />
       </div>
     </section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Calendar,
   ChevronLeft,
@@ -12,6 +12,7 @@ import {
   Search,
   Wallet,
 } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
@@ -86,27 +87,22 @@ const getStatusVariant = (status: string): "success" | "warning" | "destructive"
   return "default";
 };
 
-const FilterSelect = ({
-  value,
-  onChange,
-  options,
-  className,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  options: ReadonlyArray<{ label: string; value: string }>;
-  className?: string;
-}) => (
+const FilterSelect = forwardRef<
+  HTMLSelectElement,
+  {
+    options: ReadonlyArray<{ label: string; value: string }>;
+    className?: string;
+  } & React.SelectHTMLAttributes<HTMLSelectElement>
+>(({ options, className, ...rest }, ref) => (
   <select
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
+    ref={ref}
     className={cn(
       "border-input bg-card h-10 w-full rounded-lg border px-3 pr-8 text-sm font-medium outline-none",
       "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
       "appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23666%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.17l3.71-3.94a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200L5.21%208.27a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat",
-      !value && "text-muted-foreground",
       className,
     )}
+    {...rest}
   >
     {options.map((opt) => (
       <option key={opt.value} value={opt.value}>
@@ -114,7 +110,8 @@ const FilterSelect = ({
       </option>
     ))}
   </select>
-);
+));
+FilterSelect.displayName = "FilterSelect";
 
 const getVisiblePages = (page: number, totalPages: number) => {
   const pages = new Set<number>([1, totalPages, page, page - 1, page + 1]);
@@ -137,34 +134,54 @@ const getVisiblePages = (page: number, totalPages: number) => {
 export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranchOrdersPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal as ManagePortal);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebounce(searchInput.trim(), 250);
-  const [tableNumber, setTableNumber] = useState("");
-  const [status, setStatus] = useState<"" | OrderStatus>("");
-  const [paymentStatus, setPaymentStatus] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [sortValue, setSortValue] = useState<(typeof SORT_OPTIONS)[number]["value"]>("createdAt:desc");
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<OwnerTableOrderHistoryResponse | null>(null);
-  const [sortBy, sortDirection] = sortValue.split(":") as [string, "asc" | "desc"];
+
+  const { register, control, reset } = useForm({
+    defaultValues: {
+      search: "",
+      tableNumber: "",
+      status: "" as "" | OrderStatus,
+      paymentStatus: "",
+      paymentMethod: "",
+      fromDate: "",
+      toDate: "",
+      sortValue: "createdAt:desc" as (typeof SORT_OPTIONS)[number]["value"],
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const tableNumberVal = useWatch({ control, name: "tableNumber" });
+  const statusVal = useWatch({ control, name: "status" });
+  const paymentStatusVal = useWatch({ control, name: "paymentStatus" });
+  const paymentMethodVal = useWatch({ control, name: "paymentMethod" });
+  const fromDateVal = useWatch({ control, name: "fromDate" });
+  const toDateVal = useWatch({ control, name: "toDate" });
+  const sortValueVal = useWatch({ control, name: "sortValue" });
+
+  const search = useDebounce(searchVal.trim(), 250);
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, [search, tableNumberVal, statusVal, paymentStatusVal, paymentMethodVal, fromDateVal, toDateVal, sortValueVal]);
+
+  const [sortBy, sortDirection] = sortValueVal.split(":") as [string, "asc" | "desc"];
   const pageSize = 10;
   const query = useMemo<OwnerOrderInvoiceQuery>(
     () => ({
       pageNumber,
       pageSize,
       search: search || undefined,
-      tableNumber: tableNumber.trim() || undefined,
-      status: status || undefined,
-      paymentStatus: paymentStatus || undefined,
-      paymentMethod: paymentMethod || undefined,
-      fromDate: fromDate || undefined,
-      toDate: toDate || undefined,
+      tableNumber: tableNumberVal.trim() || undefined,
+      status: statusVal || undefined,
+      paymentStatus: paymentStatusVal || undefined,
+      paymentMethod: paymentMethodVal || undefined,
+      fromDate: fromDateVal || undefined,
+      toDate: toDateVal || undefined,
       sortBy,
       sortDirection,
     }),
-    [fromDate, pageNumber, pageSize, paymentMethod, paymentStatus, search, sortBy, sortDirection, status, tableNumber, toDate]
+    [fromDateVal, pageNumber, pageSize, paymentMethodVal, paymentStatusVal, search, sortBy, sortDirection, statusVal, tableNumberVal, toDateVal]
   );
   const ordersQuery = useOwnerBranchOrdersQuery(branchId, query);
   const branchDetailQuery = useOwnerBranchDetailQuery(branchId);
@@ -180,11 +197,6 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
   const orders = result?.orders.items ?? [];
   const totalPages = Math.max(result?.orders.totalPages ?? 1, 1);
   const visiblePages = getVisiblePages(pageNumber, totalPages);
-
-  const setFilter = (callback: () => void) => {
-    setPageNumber(1);
-    callback();
-  };
 
   return (
     <PortalShell
@@ -215,8 +227,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
           <div className="relative lg:col-span-2">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={searchInput}
-              onChange={(event) => setFilter(() => setSearchInput(event.target.value))}
+              {...register("search")}
               placeholder="Search order, session, customer..."
               className="h-10 pl-10"
             />
@@ -224,26 +235,22 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
           <div className="relative">
             <Hash className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={tableNumber}
-              onChange={(event) => setFilter(() => setTableNumber(event.target.value))}
+              {...register("tableNumber")}
               placeholder="Table"
               className="h-10 pl-10"
             />
           </div>
           <FilterSelect
-            value={status}
-            onChange={(v) => setFilter(() => setStatus(v as "" | OrderStatus))}
             options={ORDER_STATUS_OPTIONS}
+            {...register("status")}
           />
           <FilterSelect
-            value={paymentStatus}
-            onChange={(v) => setFilter(() => setPaymentStatus(v))}
             options={PAYMENT_STATUS_OPTIONS}
+            {...register("paymentStatus")}
           />
           <FilterSelect
-            value={sortValue}
-            onChange={(v) => setFilter(() => setSortValue(v as (typeof SORT_OPTIONS)[number]["value"]))}
             options={[...SORT_OPTIONS]}
+            {...register("sortValue")}
           />
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
@@ -251,8 +258,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
             <Calendar className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
               type="date"
-              value={fromDate}
-              onChange={(event) => setFilter(() => setFromDate(event.target.value))}
+              {...register("fromDate")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-10 w-full rounded-lg border pr-3 pl-10 text-sm font-medium outline-none focus:ring-[3px]"
             />
           </div>
@@ -260,15 +266,13 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
             <Calendar className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
               type="date"
-              value={toDate}
-              onChange={(event) => setFilter(() => setToDate(event.target.value))}
+              {...register("toDate")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-10 w-full rounded-lg border pr-3 pl-10 text-sm font-medium outline-none focus:ring-[3px]"
             />
           </div>
           <FilterSelect
-            value={paymentMethod}
-            onChange={(v) => setFilter(() => setPaymentMethod(v))}
             options={PAYMENT_METHOD_OPTIONS}
+            {...register("paymentMethod")}
           />
           <div className="flex items-center gap-2 lg:col-span-2">
             <Button
@@ -280,18 +284,11 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
               <RefreshCw className={cn("size-4", ordersQuery.isFetching && "animate-spin")} />
               Refresh
             </Button>
-            {(search || tableNumber || status || paymentStatus || paymentMethod || fromDate || toDate) ? (
+            {(search || tableNumberVal || statusVal || paymentStatusVal || paymentMethodVal || fromDateVal || toDateVal) ? (
               <Button
                 variant="ghost"
                 onClick={() => {
-                  setSearchInput("");
-                  setTableNumber("");
-                  setStatus("");
-                  setPaymentStatus("");
-                  setPaymentMethod("");
-                  setFromDate("");
-                  setToDate("");
-                  setSortValue("createdAt:desc");
+                  reset();
                   setPageNumber(1);
                 }}
               >
@@ -324,7 +321,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
               <Wallet className="text-muted-foreground size-10" />
               <h3 className="mt-4 text-lg font-bold">No invoices found</h3>
               <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-                {search || tableNumber || status || paymentStatus || paymentMethod || fromDate || toDate
+                {search || tableNumberVal || statusVal || paymentStatusVal || paymentMethodVal || fromDateVal || toDateVal
                   ? "Try adjusting your filters to find what you're looking for."
                   : "Orders from customers seated at tables in this branch will appear here."}
               </p>

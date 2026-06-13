@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Search } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { FilterDropdown } from "@/components/organisms/manager-users/filter-dropdown";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
@@ -22,6 +24,13 @@ type OwnerUsersToolbarProps = {
   onStatusFilterChange: (value: UserStatusFilter) => void;
 };
 
+type ToolbarFormValues = {
+  search: string;
+  role: string;
+  branch: string;
+  status: UserStatusFilter;
+};
+
 export const OwnerUsersToolbar = ({
   branches,
   branchFilter,
@@ -33,6 +42,52 @@ export const OwnerUsersToolbar = ({
   onSearchInputChange,
   onStatusFilterChange,
 }: OwnerUsersToolbarProps) => {
+  const { register, control, setValue } = useForm<ToolbarFormValues>({
+    defaultValues: {
+      search: searchInput,
+      role: roleFilter,
+      branch: branchFilter,
+      status: statusFilter,
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const roleVal = useWatch({ control, name: "role" });
+  const branchVal = useWatch({ control, name: "branch" });
+  const statusVal = useWatch({ control, name: "status" });
+
+  useEffect(() => {
+    onSearchInputChange(searchVal);
+  }, [searchVal, onSearchInputChange]);
+
+  useEffect(() => {
+    onRoleFilterChange(roleVal);
+  }, [roleVal, onRoleFilterChange]);
+
+  useEffect(() => {
+    onBranchFilterChange(branchVal);
+  }, [branchVal, onBranchFilterChange]);
+
+  useEffect(() => {
+    onStatusFilterChange(statusVal);
+  }, [statusVal, onStatusFilterChange]);
+
+  useEffect(() => {
+    setValue("search", searchInput);
+  }, [searchInput, setValue]);
+
+  useEffect(() => {
+    setValue("role", roleFilter);
+  }, [roleFilter, setValue]);
+
+  useEffect(() => {
+    setValue("branch", branchFilter);
+  }, [branchFilter, setValue]);
+
+  useEffect(() => {
+    setValue("status", statusFilter);
+  }, [statusFilter, setValue]);
+
   const roleFilterOptions = [
     { label: "All roles", value: "all" },
     ...ROLE_OPTIONS.map((role) => ({ label: getRoleLabel(role), value: role })),
@@ -54,8 +109,7 @@ export const OwnerUsersToolbar = ({
                 id="owner-users-search"
                 className="bg-muted/50 h-12 pl-9"
                 placeholder="Search by name, username, email, phone, branch..."
-                value={searchInput}
-                onChange={(event) => onSearchInputChange(event.target.value)}
+                {...register("search")}
               />
             </div>
           </FieldContent>
@@ -64,28 +118,28 @@ export const OwnerUsersToolbar = ({
         <FilterDropdown
           id="owner-role-filter"
           label="Role"
-          value={roleFilter}
-          displayValue={getRoleFilterLabel(roleFilter)}
+          value={roleVal}
+          displayValue={getRoleFilterLabel(roleVal)}
           options={roleFilterOptions}
-          onValueChange={onRoleFilterChange}
+          onValueChange={(val) => setValue("role", val)}
         />
 
         <FilterDropdown
           id="owner-branch-filter"
           label="Branch"
-          value={branchFilter}
-          displayValue={getBranchFilterLabel(branchFilter, branches)}
+          value={branchVal}
+          displayValue={getBranchFilterLabel(branchVal, branches)}
           options={branchFilterOptions}
-          onValueChange={onBranchFilterChange}
+          onValueChange={(val) => setValue("branch", val)}
         />
 
         <FilterDropdown
           id="owner-status-filter"
           label="Status"
-          value={statusFilter}
-          displayValue={getStatusFilterLabel(statusFilter)}
+          value={statusVal}
+          displayValue={getStatusFilterLabel(statusVal)}
           options={STATUS_FILTER_OPTIONS}
-          onValueChange={onStatusFilterChange}
+          onValueChange={(val) => setValue("status", val)}
         />
       </div>
     </section>

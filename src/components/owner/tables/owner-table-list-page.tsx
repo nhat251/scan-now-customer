@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Download, Edit, Eye, Plus, Power, PowerOff, QrCode, RefreshCw, Search } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -60,28 +61,45 @@ const SORT_OPTIONS = [
 export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableListPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getTablePortalCopy(portal);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebounce(searchInput.trim(), 250);
-  const [status, setStatus] = useState<OwnerTableStatusFilter>("all");
-  const [activeFilter, setActiveFilter] = useState<OwnerTableActiveFilter>("all");
-  const [capacity, setCapacity] = useState("");
-  const [sortValue, setSortValue] = useState<(typeof SORT_OPTIONS)[number]["value"]>("tableNumber:asc");
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [regenerateTableId, setRegenerateTableId] = useState<string | null>(null);
-  const [sortBy, sortDirection] = sortValue.split(":") as [string, "asc" | "desc"];
+
+  const { register, control } = useForm({
+    defaultValues: {
+      search: "",
+      status: "all" as OwnerTableStatusFilter,
+      capacity: "",
+      activeFilter: "all" as OwnerTableActiveFilter,
+      sortValue: "tableNumber:asc" as (typeof SORT_OPTIONS)[number]["value"],
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const statusVal = useWatch({ control, name: "status" });
+  const capacityVal = useWatch({ control, name: "capacity" });
+  const activeFilterVal = useWatch({ control, name: "activeFilter" });
+  const sortValueVal = useWatch({ control, name: "sortValue" });
+
+  const search = useDebounce(searchVal.trim(), 250);
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, [search, statusVal, capacityVal, activeFilterVal, sortValueVal]);
+
+  const [sortBy, sortDirection] = sortValueVal.split(":") as [string, "asc" | "desc"];
   const query = useMemo<OwnerTablesQuery>(
     () => ({
       pageNumber,
       pageSize,
       search: search || undefined,
-      status: status === "all" ? undefined : status,
-      capacity: capacity ? Number(capacity) : undefined,
-      isActive: activeFilterToQuery(activeFilter),
+      status: statusVal === "all" ? undefined : statusVal,
+      capacity: capacityVal ? Number(capacityVal) : undefined,
+      isActive: activeFilterToQuery(activeFilterVal),
       sortBy,
       sortDirection,
     }),
-    [activeFilter, capacity, pageNumber, pageSize, search, sortBy, sortDirection, status]
+    [activeFilterVal, capacityVal, pageNumber, pageSize, search, sortBy, sortDirection, statusVal]
   );
   const tablesQuery = useOwnerBranchTablesQuery(branchId, query);
   const branchDetailQuery = useOwnerBranchDetailQuery(branchId);
@@ -95,11 +113,6 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
   const totalPages = Math.max(tablesQuery.data?.totalPages ?? 1, 1);
   const activeCount = tables.filter((table) => table.isActive).length;
   const occupiedCount = tables.filter((table) => normalizeOwnerTableStatus(table.status) === "OCCUPIED").length;
-
-  const setFilter = (callback: () => void) => {
-    setPageNumber(1);
-    callback();
-  };
 
   const downloadQr = async (tableId: string) => {
     const table = tables.find((item) => item.tableId === tableId);
@@ -153,15 +166,13 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={searchInput}
-              onChange={(event) => setFilter(() => setSearchInput(event.target.value))}
+              {...register("search")}
               placeholder="Search table"
               className="h-11 pl-10"
             />
           </label>
           <select
-            value={status}
-            onChange={(event) => setFilter(() => setStatus(event.target.value as OwnerTableStatusFilter))}
+            {...register("status")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             {OWNER_TABLE_STATUS_FILTER_OPTIONS.map((option) => (
@@ -173,14 +184,12 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
           <Input
             type="number"
             min={1}
-            value={capacity}
-            onChange={(event) => setFilter(() => setCapacity(event.target.value))}
+            {...register("capacity")}
             placeholder="Capacity"
             className="h-11"
           />
           <select
-            value={activeFilter}
-            onChange={(event) => setFilter(() => setActiveFilter(event.target.value as OwnerTableActiveFilter))}
+            {...register("activeFilter")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             <option value="all">All active</option>
@@ -188,8 +197,7 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
             <option value="inactive">Inactive</option>
           </select>
           <select
-            value={sortValue}
-            onChange={(event) => setFilter(() => setSortValue(event.target.value as (typeof SORT_OPTIONS)[number]["value"]))}
+            {...register("sortValue")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             {SORT_OPTIONS.map((option) => (

@@ -10,6 +10,7 @@ import { z } from "zod";
 import { PortalShell } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateManageCategoryMutation, useUpdateManageCategoryMutation } from "@/hooks/mutations/useManageMenuMutations";
 import { useManageCategoryQuery } from "@/hooks/queries/useManageMenuQueries";
@@ -127,12 +128,12 @@ export const CategoryFormPage = ({ branchId, categoryId, mode, portal }: Categor
 
       <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">
-              Category name <span className="text-destructive">*</span>
-            </span>
-            <Input {...register("name")} />
-          </label>
+          <div className="space-y-2">
+            <Label htmlFor="category-name" required>
+              Category name
+            </Label>
+            <Input id="category-name" {...register("name")} />
+          </div>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Display order</span>
             <Input

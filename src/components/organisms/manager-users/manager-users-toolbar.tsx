@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { Search } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,13 @@ type ManagerUsersToolbarProps = {
   onStatusChange: (value: UserStatusFilter) => void;
 };
 
+type ToolbarFormValues = {
+  search: string;
+  role: string;
+  branch: string;
+  status: UserStatusFilter;
+};
+
 export const ManagerUsersToolbar = ({
   branchFilterLabel,
   branchFilterOptions,
@@ -38,6 +47,52 @@ export const ManagerUsersToolbar = ({
   onSearchChange,
   onStatusChange,
 }: ManagerUsersToolbarProps) => {
+  const { register, control, setValue } = useForm<ToolbarFormValues>({
+    defaultValues: {
+      search: searchInput,
+      role: roleValue,
+      branch: branchValue,
+      status: status,
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const roleVal = useWatch({ control, name: "role" });
+  const branchVal = useWatch({ control, name: "branch" });
+  const statusVal = useWatch({ control, name: "status" });
+
+  useEffect(() => {
+    onSearchChange(searchVal);
+  }, [searchVal, onSearchChange]);
+
+  useEffect(() => {
+    onRoleChange(roleVal);
+  }, [roleVal, onRoleChange]);
+
+  useEffect(() => {
+    onBranchChange(branchVal);
+  }, [branchVal, onBranchChange]);
+
+  useEffect(() => {
+    onStatusChange(statusVal);
+  }, [statusVal, onStatusChange]);
+
+  useEffect(() => {
+    setValue("search", searchInput);
+  }, [searchInput, setValue]);
+
+  useEffect(() => {
+    setValue("role", roleValue);
+  }, [roleValue, setValue]);
+
+  useEffect(() => {
+    setValue("branch", branchValue);
+  }, [branchValue, setValue]);
+
+  useEffect(() => {
+    setValue("status", status);
+  }, [status, setValue]);
+
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="grid gap-4 lg:grid-cols-[2fr_repeat(3,1fr)]">
@@ -50,8 +105,7 @@ export const ManagerUsersToolbar = ({
                 id="search"
                 className="bg-muted/50 h-12 pl-9"
                 placeholder="Search by name, username, email, phone, branch..."
-                value={searchInput}
-                onChange={(event) => onSearchChange(event.target.value)}
+                {...register("search")}
               />
             </div>
           </FieldContent>
@@ -60,28 +114,28 @@ export const ManagerUsersToolbar = ({
         <FilterDropdown
           id="role-filter"
           label="Role"
-          value={roleValue}
+          value={roleVal}
           displayValue={roleFilterLabel}
           options={roleFilterOptions}
-          onValueChange={onRoleChange}
+          onValueChange={(val) => setValue("role", val)}
         />
 
         <FilterDropdown
           id="branch-filter"
           label="Branch"
-          value={branchValue}
+          value={branchVal}
           displayValue={branchFilterLabel}
           options={branchFilterOptions}
-          onValueChange={onBranchChange}
+          onValueChange={(val) => setValue("branch", val)}
         />
 
         <FilterDropdown
           id="status-filter"
           label="Status"
-          value={status}
+          value={statusVal}
           displayValue={statusFilterLabel}
           options={STATUS_OPTIONS}
-          onValueChange={onStatusChange}
+          onValueChange={(val) => setValue("status", val)}
         />
       </div>
     </section>

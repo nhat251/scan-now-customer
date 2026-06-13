@@ -12,6 +12,7 @@ import { z } from "zod";
 import { PortalShell } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateManageMenuItemMutation,
@@ -212,11 +213,12 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
 
       <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">
-              Category <span className="text-destructive">*</span>
-            </span>
+          <div className="space-y-2">
+            <Label htmlFor="item-category" required>
+              Category
+            </Label>
             <select
+              id="item-category"
               {...register("categoryId")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-3"
             >
@@ -227,13 +229,13 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
                 </option>
               ))}
             </select>
-          </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">
-              Name <span className="text-destructive">*</span>
-            </span>
-            <Input {...register("name")} />
-          </label>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="item-name" required>
+              Name
+            </Label>
+            <Input id="item-name" {...register("name")} />
+          </div>
           <label className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold">Image URL</span>
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
@@ -283,17 +285,18 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
             <span className="text-sm font-semibold">Description</span>
             <Textarea {...register("description")} />
           </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">
-              Price {mode === "create" && <span className="text-destructive">*</span>}
-            </span>
+          <div className="space-y-2">
+            <Label htmlFor="item-price" required={mode === "create"}>
+              Price
+            </Label>
             <Input
+              id="item-price"
               disabled={mode === "edit"}
               type="number"
               min={0}
               {...register("price")}
             />
-          </label>
+          </div>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Cost Price</span>
             <Input type="number" min={0} {...register("costPrice")} />

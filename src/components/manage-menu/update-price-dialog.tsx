@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateManageMenuItemPriceMutation } from "@/hooks/mutations/useManageMenuMutations";
 import { showNotify } from "@/stores/global";
@@ -90,12 +91,12 @@ export const UpdatePriceDialog = ({ menuItemId, currentPrice, open, onOpenChange
             <p className="text-muted-foreground text-sm font-semibold">Current Price</p>
             <p className="mt-1 text-2xl font-bold">{formatCurrency(currentPrice)}</p>
           </div>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">
-              New Price <span className="text-destructive">*</span>
-            </span>
-            <Input type="number" min={1} {...register("price")} />
-          </label>
+          <div className="space-y-2">
+            <Label htmlFor="new-price" required>
+              New Price
+            </Label>
+            <Input id="new-price" type="number" min={1} {...register("price")} />
+          </div>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Note</span>
             <Textarea {...register("note")} />
