@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowUpDown, Loader2, Minus, Plus, ShoppingBag, Sparkles, Store, Utensils } from "lucide-react";
+import { AlertCircle, ArrowUpDown, Loader2, Minus, Plus, ShoppingBag, Sparkles, Store, Utensils, ArrowRight, ClipboardList, Check, X } from "lucide-react";
 
 import { Logo } from "@/components/atoms/logo";
 import { SessionCartSheet } from "@/components/customer/session-cart-sheet";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { PATH } from "@/constants/path";
 import { usePublicBranchCategoriesQuery, usePublicSessionMenuQuery } from "@/hooks/queries/usePublicCustomerQueries";
 import { recalculateCart, useSharedCart } from "@/hooks/useSharedCart";
@@ -56,6 +57,8 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
   const normalizedSessionCode = sessionCode.toUpperCase();
   const [categoryId, setCategoryId] = useState("all");
   const [sortValue, setSortValue] = useState(SORT_OPTIONS[0]?.value ?? "displayOrder:asc");
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+  const [sortSheetOpen, setSortSheetOpen] = useState(false);
   const [persistedSession, setPersistedSession] = useState<PersistedCustomerSession | null>(null);
   const [trackedOrderId, setTrackedOrderId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -74,6 +77,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
       categoryId: categoryId === "all" ? undefined : categoryId,
       sortBy,
       sortDirection,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }),
     [categoryId, sortBy, sortDirection]
   );
@@ -168,241 +172,230 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
   };
 
   return (
-    <main className="fixed inset-0 z-[60] overflow-y-auto bg-gradient-to-b from-orange-50/70 via-[#f8f9fa] to-[#f8f9fa] font-sans text-gray-900">
-      <div className="mx-auto min-h-full w-full max-w-md pb-24">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-orange-50 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md">
-          <Logo size={16} textSize="text-xl" />
-          <div className="text-primary-container flex items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-bold">
-            <Utensils className="size-4" />
-            {session ? `Bàn ${session.tableNumber}` : "Bàn"}
+    <main className="min-h-screen bg-background font-body-md text-on-surface pb-32 max-w-[480px] mx-auto relative selection:bg-primary-fixed selection:text-on-primary-fixed">
+      {/* 1. Sticky Header */}
+      <header className="w-full sticky top-0 z-50 backdrop-blur-xl bg-surface/95 flex items-center justify-between px-4 h-16 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Utensils className="text-primary size-6" />
+          <h1 className="font-headline-md text-headline-md font-bold text-primary">ScanNow</h1>
+        </div>
+        <div className="bg-primary-container px-4 py-1.5 rounded-full flex items-center gap-2">
+          <Utensils className="text-on-primary-container size-4" />
+          <span className="font-label-md text-on-primary-container">{session ? `Bàn ${session.tableNumber}` : "Bàn"}</span>
+        </div>
+      </header>
+
+      {/* 2. Orange Welcome Banner */}
+      <section className="px-4 pt-6">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#f97316] to-[#d84315] rounded-3xl p-6 text-white shadow-lg shadow-primary/20">
+          <div className="relative z-10">
+            <p className="font-label-sm tracking-wider uppercase opacity-90 mb-1 text-white">Chào mừng bạn đến với</p>
+            <h2 className="font-headline-lg-mobile text-headline-lg-mobile font-extrabold mb-2 text-white">{session?.branchName || "ScanNow Premium"}</h2>
+            <p className="font-body-sm opacity-90 max-w-[80%] text-white">Thưởng thức hương vị truyền thống trong không gian hiện đại.</p>
           </div>
-        </header>
+          {/* Abstract Shape Decoration */}
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -right-4 top-2 w-20 h-20 border-4 border-white/10 rounded-full"></div>
+        </div>
+      </section>
 
-        {session ? (
-          <section className="px-4 pt-4">
-            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-orange-200/70">
-              <p className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-orange-100 uppercase">
-                <Sparkles className="size-4" />
-                Thực đơn tại bàn {session.tableNumber}
-              </p>
-              <h1 className="mt-2 text-2xl font-black">{session.branchName}</h1>
-              <p className="mt-2 max-w-xs text-sm leading-5 text-orange-50">
-                Chọn món yêu thích, thêm ghi chú theo khẩu vị và gửi đơn ngay tại bàn.
-              </p>
-            </div>
-          </section>
-        ) : null}
-
-        {!sessionMenuQuery.isLoading && !sessionMenuQuery.isError && mustTryItems.length > 0 ? (
-          <section className="mt-5 px-4">
-            <h2 className="mb-3 text-lg font-bold text-gray-800">Gợi ý dành cho bạn</h2>
-            <div className="scrollbar-hide flex gap-4 overflow-x-auto pb-2">
-              {mustTryItems.map((item) => (
-                <Link
-                  key={item.menuItemId}
-                  href={PATH.customer.sessionMenuItem(normalizedSessionCode, item.menuItemId)}
-                  className="w-[160px] shrink-0 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm"
-                >
-                  <div className="relative mb-2 h-24 w-full overflow-hidden rounded-lg bg-gray-100">
-                    <Image
-                      alt={item.name}
-                      src={item.imageUrl || FALLBACK_IMAGE}
-                      fill
-                      sizes="160px"
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
-                  <h3 className="truncate text-sm font-bold text-gray-900">{item.name}</h3>
-                  <span className="text-primary-container text-sm font-bold">{formatCurrency(item.price)}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="mt-6 px-4">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="truncate text-xl font-bold text-gray-800">Khám phá món ngon</h2>
-              {session ? (
-                <p className="truncate text-xs font-semibold text-gray-500">
-                  Mã phiên: {normalizedSessionCode}
-                </p>
-              ) : null}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <label className="relative flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50">
-                <Store className="size-[18px]" />
-                <span>Danh mục</span>
-                <select
-                  value={categoryId}
-                  onChange={(event) => setCategoryId(event.target.value)}
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  aria-label="Danh mục"
-                >
-                  <option value="all">Tất cả</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="relative flex h-9 items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50">
-                <ArrowUpDown className="size-[18px]" />
-                <span>Sắp xếp</span>
-                <select
-                  value={sortValue}
-                  onChange={(event) => setSortValue(event.target.value)}
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  aria-label="Sắp xếp"
-                >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+      {/* 3. Featured Dishes Row */}
+      {!sessionMenuQuery.isLoading && !sessionMenuQuery.isError && mustTryItems.length > 0 ? (
+        <section className="pt-8">
+          <div className="px-4 flex justify-between items-end mb-4">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface">Gợi ý dành cho bạn</h3>
+            <Sparkles className="text-primary size-5" />
           </div>
-
-          {sessionMenuQuery.isLoading ? (
-            <div className="flex min-h-72 items-center justify-center">
-              <Loader2 className="text-primary-container size-8 animate-spin" />
-            </div>
-          ) : null}
-
-          {sessionMenuQuery.isError ? (
-            <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-              <AlertCircle className="text-destructive mx-auto size-10" />
-              <h2 className="mt-3 text-xl font-bold">Không thể tải thực đơn</h2>
-              <p className="mt-2 text-sm text-gray-500">
-                {getCustomerApiErrorMessage(sessionMenuQuery.error, "Phiên dùng bữa không tồn tại hoặc đã hết hạn.")}
-              </p>
-              <Button className="mt-5" onClick={() => sessionMenuQuery.refetch()} disabled={sessionMenuQuery.isRefetching}>
-                Thử lại
-              </Button>
-            </div>
-          ) : null}
-
-          {!sessionMenuQuery.isLoading && !sessionMenuQuery.isError && menuGroups.length === 0 ? (
-            <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-              <ShoppingBag className="mx-auto size-10 text-gray-400" />
-              <h2 className="mt-3 text-xl font-bold">Chưa có món phù hợp</h2>
-              <p className="mt-2 text-sm text-gray-500">Hãy thử danh mục hoặc cách sắp xếp khác.</p>
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-4">
-            {menuItems.map((item) => {
-              const quantity = cart.items.find((line) => line.menuItemId === item.menuItemId)?.quantity ?? 0;
-
-              return (
-                <article key={item.menuItemId} className="flex gap-4 rounded-2xl border border-gray-50 bg-white p-3 shadow-sm">
-                  <Link
-                    href={PATH.customer.sessionMenuItem(normalizedSessionCode, item.menuItemId)}
-                    className="relative size-24 shrink-0 overflow-hidden rounded-xl bg-gray-100"
-                  >
-                    <Image
-                      alt={item.name}
-                      src={item.imageUrl || FALLBACK_IMAGE}
-                      fill
-                      sizes="96px"
-                      unoptimized
-                      className={cn("object-cover", !item.isAvailable && "opacity-50 grayscale")}
-                    />
-                    {item.isFeatured ? (
-                      <span className="bg-primary-container absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-black text-white">
-                        HOT
-                      </span>
+          <div className="flex overflow-x-auto no-scrollbar gap-4 px-4 pb-2">
+            {mustTryItems.map((item) => (
+              <Link
+                key={item.menuItemId}
+                href={PATH.customer.sessionMenuItem(normalizedSessionCode, item.menuItemId)}
+                className="flex-shrink-0 w-[160px] bg-surface-container-lowest rounded-2xl p-2 shadow-sm active-scale transition-transform duration-150 block"
+              >
+                <div className="relative w-full h-24 mb-3 rounded-lg overflow-hidden bg-surface-variant">
+                  <Image 
+                    src={item.imageUrl || FALLBACK_IMAGE}
+                    alt={item.name}
+                    fill
+                    sizes="160px"
+                    unoptimized
+                    className="object-cover"
+                  />
+                  {item.isFeatured ? (
+                      <span className="absolute top-1 right-1 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Bestseller</span>
                     ) : null}
-                  </Link>
-                  <div className="flex min-w-0 flex-1 flex-col justify-between">
-                    <Link href={PATH.customer.sessionMenuItem(normalizedSessionCode, item.menuItemId)} className="block">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 leading-tight font-bold text-gray-900">{item.name}</h3>
-                        {!item.isAvailable ? (
-                          <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">
-                            Hết món
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                        {item.description || "Món được chuẩn bị tươi mới tại nhà hàng."}
-                      </p>
-                    </Link>
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <span className="text-primary-container font-bold">{formatCurrency(item.price)}</span>
-                      {quantity > 0 ? (
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => updateQuantity(item, -1)}
-                            className="text-primary-container flex size-8 items-center justify-center rounded-full border border-orange-100 bg-orange-50 transition-colors hover:bg-orange-100"
-                            aria-label={`Giảm số lượng ${item.name}`}
-                          >
-                            <Minus className="size-5" strokeWidth={2.5} />
-                          </button>
-                          <span className="min-w-3 text-center font-bold text-gray-900">{quantity}</span>
-                          <button
-                            type="button"
-                            onClick={() => updateQuantity(item, 1)}
-                            className="bg-primary-container hover:bg-primary flex size-8 items-center justify-center rounded-full text-white transition-colors"
-                            aria-label={`Tăng số lượng ${item.name}`}
-                          >
-                            <Plus className="size-5" strokeWidth={2.5} />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item, 1)}
-                          disabled={!item.isAvailable}
-                          className="flex size-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:bg-gray-100 disabled:text-gray-400"
-                          aria-label={`Thêm ${item.name} vào giỏ`}
-                        >
-                          <Plus className="size-5" strokeWidth={2.5} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+                </div>
+                <h4 className="font-body-sm font-bold text-on-surface truncate">{item.name}</h4>
+                <p className="font-body-md font-bold text-primary">{formatCurrency(item.price)}</p>
+              </Link>
+            ))}
           </div>
         </section>
-      </div>
+      ) : null}
 
-      <footer className="fixed right-0 bottom-0 left-0 z-[70] border-t border-gray-100 bg-white/80 p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-xs font-bold tracking-wider text-gray-400 uppercase">Tổng</p>
-            <p className="truncate font-bold text-gray-900">{totalItems} món</p>
-            <p className="text-primary-container text-sm font-bold">{formatCurrency(subtotal)}</p>
-            <p className="text-[11px] font-semibold text-gray-400">
-              {cartStatus === "connected"
-                ? "Giỏ dùng chung đã kết nối"
-                : cartStatus === "reconnecting" || cartStatus === "connecting"
-                  ? "Đang kết nối giỏ dùng chung"
-                  : "Giỏ dùng chung đang ngoại tuyến"}
-            </p>
+      {/* 4. Category + Sort Controls */}
+      <section className="px-4 pt-8 flex gap-3">
+        <button
+          type="button"
+          onClick={() => setCategorySheetOpen(true)}
+          className="flex-1 relative flex items-center justify-center gap-2 bg-white border border-outline-variant py-3 rounded-xl font-headline-sm text-on-surface-variant active-scale transition-all hover:bg-surface-container-low"
+        >
+          <Store className="size-5" />
+          <span className="text-label-md truncate max-w-[100px]">
+            {categoryId === "all" ? "Danh mục" : categories.find(c => c.id === categoryId)?.name || "Danh mục"}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSortSheetOpen(true)}
+          className="flex-1 relative flex items-center justify-center gap-2 bg-white border border-outline-variant py-3 rounded-xl font-headline-sm text-on-surface-variant active-scale transition-all hover:bg-surface-container-low"
+        >
+          <ArrowUpDown className="size-5" />
+          <span className="text-label-md truncate max-w-[100px]">
+            {SORT_OPTIONS.find(s => s.value === sortValue)?.label || "Sắp xếp"}
+          </span>
+        </button>
+      </section>
+
+      {/* 5. Menu Items List */}
+      <section className="px-4 pt-6 flex flex-col gap-4">
+        {sessionMenuQuery.isLoading ? (
+          <div className="flex min-h-72 items-center justify-center">
+            <Loader2 className="size-8 animate-spin text-primary" />
           </div>
-          <Button
-            className="h-12 rounded-2xl px-6 text-base font-bold shadow-lg shadow-orange-200"
-            disabled={totalItems > 0 ? isCartUpdating : !trackedOrderId}
-            onClick={() =>
-              totalItems > 0
-                ? setCartOpen(true)
-                : router.push(PATH.customer.sessionOrder(normalizedSessionCode, trackedOrderId ?? ""))
-            }
-          >
-            <ShoppingBag className="size-5" />
-            {totalItems > 0 ? "Xem giỏ" : trackedOrderId ? "Theo dõi đơn" : "Giỏ hàng"}
-          </Button>
+        ) : null}
+
+        {sessionMenuQuery.isError ? (
+          <div className="rounded-2xl border border-outline-variant/50 bg-white p-8 text-center shadow-sm">
+            <AlertCircle className="mx-auto size-10 text-error" />
+            <h2 className="mt-3 text-xl font-bold">Không thể tải thực đơn</h2>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              {getCustomerApiErrorMessage(sessionMenuQuery.error, "Phiên dùng bữa không tồn tại hoặc đã hết hạn.")}
+            </p>
+            <Button className="mt-5 bg-primary text-white" onClick={() => sessionMenuQuery.refetch()} disabled={sessionMenuQuery.isRefetching}>
+              Thử lại
+            </Button>
+          </div>
+        ) : null}
+
+        {!sessionMenuQuery.isLoading && !sessionMenuQuery.isError && menuGroups.length === 0 ? (
+          <div className="rounded-2xl border border-outline-variant/50 bg-white p-8 text-center shadow-sm">
+            <ShoppingBag className="mx-auto size-10 text-on-surface-variant/50" />
+            <h2 className="mt-3 text-xl font-bold text-on-surface">Chưa có món phù hợp</h2>
+            <p className="mt-2 text-sm text-on-surface-variant">Hãy thử danh mục hoặc cách sắp xếp khác.</p>
+          </div>
+        ) : null}
+
+        {menuItems.map((item) => {
+          const quantity = cart.items.find((line) => line.menuItemId === item.menuItemId)?.quantity ?? 0;
+
+          return (
+            <div key={item.menuItemId} className="bg-white rounded-2xl p-3 shadow-sm flex gap-4 active:bg-surface-container transition-colors border border-outline-variant/30">
+              <Link 
+                href={PATH.customer.sessionMenuItem(normalizedSessionCode, item.menuItemId)} 
+                className="relative w-24 h-24 flex-shrink-0 bg-surface-variant rounded-xl overflow-hidden block"
+              >
+                <Image
+                  src={item.imageUrl || FALLBACK_IMAGE}
+                  alt={item.name}
+                  fill
+                  sizes="96px"
+                  unoptimized
+                  className={cn("object-cover", !item.isAvailable && "opacity-50 grayscale")}
+                />
+                {item.isFeatured ? (
+                  <span className="absolute top-1 right-1 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Bestseller</span>
+                ) : null}
+              </Link>
+              
+              <div className="flex-1 flex flex-col justify-between py-0.5 min-w-0">
+                <Link href={PATH.customer.sessionMenuItem(normalizedSessionCode, item.menuItemId)} className="block">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-headline-sm text-on-surface text-base line-clamp-1">{item.name}</h4>
+                    {!item.isAvailable ? (
+                        <span className="shrink-0 rounded-full bg-surface-variant px-2 py-0.5 text-[10px] font-bold text-on-surface-variant ml-2">
+                          Hết món
+                        </span>
+                      ) : null}
+                  </div>
+                  <p className="font-body-sm text-on-surface-variant line-clamp-2 leading-tight mt-1">{item.description || "Món được chuẩn bị tươi mới."}</p>
+                </Link>
+                
+                <div className="flex justify-between items-center mt-2">
+                  <p className="font-headline-sm text-primary">{formatCurrency(item.price)}</p>
+                  
+                  {quantity > 0 ? (
+                    <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-1 py-1">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item, -1)}
+                        className="flex size-7 items-center justify-center rounded-full border border-primary/30 bg-white text-primary shadow-sm transition-all hover:bg-surface-container active:scale-90"
+                        aria-label={`Giảm số lượng ${item.name}`}
+                      >
+                        <Minus className="size-3.5" strokeWidth={2.5} />
+                      </button>
+                      <span className="min-w-4 text-center font-label-md text-on-surface">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item, 1)}
+                        className="flex size-7 items-center justify-center rounded-full bg-primary text-white shadow-sm transition-all hover:bg-primary/90 active:scale-90"
+                        aria-label={`Tăng số lượng ${item.name}`}
+                      >
+                        <Plus className="size-3.5" strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      type="button"
+                      disabled={!item.isAvailable}
+                      onClick={() => updateQuantity(item, 1)}
+                      className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white active:scale-90 transition-transform disabled:bg-surface-variant disabled:text-on-surface-variant"
+                    >
+                      <Plus className="size-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* 6. Fixed Bottom Cart Bar */}
+      <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-8 pt-4 bg-surface/80 backdrop-blur-xl border-t border-outline-variant/30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+        <div className="max-w-[480px] mx-auto flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="font-label-sm text-on-surface-variant">Giỏ hàng:</span>
+              <span className="font-label-md text-primary bg-primary-container/20 px-2 py-0.5 rounded-full">{totalItems} món</span>
+            </div>
+            <p className="font-headline-sm text-primary text-xl">{formatCurrency(subtotal)}</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {trackedOrderId && totalItems > 0 ? (
+              <button
+                onClick={() => router.push(PATH.customer.sessionOrder(normalizedSessionCode, trackedOrderId))}
+                className="flex size-[52px] shrink-0 items-center justify-center rounded-2xl bg-secondary text-white shadow-lg shadow-secondary/20 active-scale transition-all"
+                aria-label="Theo dõi đơn"
+              >
+                <ClipboardList className="size-6" />
+              </button>
+            ) : null}
+            <button 
+              disabled={totalItems > 0 ? isCartUpdating : !trackedOrderId}
+              onClick={() => totalItems > 0 ? setCartOpen(true) : router.push(PATH.customer.sessionOrder(normalizedSessionCode, trackedOrderId ?? ""))}
+              className="flex h-[52px] items-center gap-3 bg-primary px-6 rounded-2xl shadow-lg shadow-primary/25 active-scale transition-all text-white disabled:opacity-50 disabled:shadow-none"
+            >
+              <span className="font-headline-sm text-base">
+                {totalItems > 0 ? "Xem giỏ hàng" : trackedOrderId ? "Theo dõi đơn" : "Giỏ hàng"}
+              </span>
+              <ArrowRight className="size-5" />
+            </button>
+          </div>
         </div>
-      </footer>
+      </div>
 
       <SessionCartSheet
         cart={cart}
@@ -414,6 +407,75 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
         onNoteChange={updateCartNote}
         onClear={clearCart}
       />
+
+      {/* Category Bottom Sheet */}
+      <Dialog open={categorySheetOpen} onOpenChange={setCategorySheetOpen}>
+        <DialogContent
+          showCloseButton={false}
+          overlayClassName="z-[80] bg-black/40 backdrop-blur-sm"
+          className="data-[state=open]:slide-in-from-bottom-10 data-[state=closed]:slide-out-to-bottom-10 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 top-auto bottom-0 left-1/2 z-[90] flex max-h-[800px] max-w-[480px] -translate-x-1/2 translate-y-0 flex-col gap-0 rounded-t-[2rem] rounded-b-none border-0 bg-surface-container-lowest p-0 shadow-2xl duration-300"
+        >
+          <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-outline-variant/50" />
+          <DialogHeader className="flex-row items-center justify-between gap-3 px-5 pt-4 pb-4 text-left border-b border-outline-variant/30">
+            <DialogTitle className="font-headline-sm text-headline-sm text-on-surface">Danh mục</DialogTitle>
+            <DialogClose asChild>
+              <button aria-label="Đóng" className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-variant text-on-surface hover:bg-outline-variant/50 transition-colors">
+                <X className="size-5" />
+              </button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="flex flex-col p-4 gap-2 overflow-y-auto pb-safe">
+            <button
+              onClick={() => { setCategoryId("all"); setCategorySheetOpen(false); }}
+              className={cn("flex items-center justify-between px-4 py-3.5 rounded-2xl active-scale transition-colors", categoryId === "all" ? "bg-primary-container/10 text-primary-container font-bold" : "bg-white text-on-surface border border-outline-variant/30 shadow-sm")}
+            >
+              <span className="font-headline-sm text-base">Tất cả món</span>
+              {categoryId === "all" && <Check className="size-5" strokeWidth={2.5} />}
+            </button>
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => { setCategoryId(category.id); setCategorySheetOpen(false); }}
+                className={cn("flex items-center justify-between px-4 py-3.5 rounded-2xl active-scale transition-colors", categoryId === category.id ? "bg-primary-container/10 text-primary-container font-bold" : "bg-white text-on-surface border border-outline-variant/30 shadow-sm")}
+              >
+                <span className="font-headline-sm text-base">{category.name}</span>
+                {categoryId === category.id && <Check className="size-5" strokeWidth={2.5} />}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sort Bottom Sheet */}
+      <Dialog open={sortSheetOpen} onOpenChange={setSortSheetOpen}>
+        <DialogContent
+          showCloseButton={false}
+          overlayClassName="z-[80] bg-black/40 backdrop-blur-sm"
+          className="data-[state=open]:slide-in-from-bottom-10 data-[state=closed]:slide-out-to-bottom-10 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 top-auto bottom-0 left-1/2 z-[90] flex max-h-[800px] max-w-[480px] -translate-x-1/2 translate-y-0 flex-col gap-0 rounded-t-[2rem] rounded-b-none border-0 bg-surface-container-lowest p-0 shadow-2xl duration-300"
+        >
+          <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-outline-variant/50" />
+          <DialogHeader className="flex-row items-center justify-between gap-3 px-5 pt-4 pb-4 text-left border-b border-outline-variant/30">
+            <DialogTitle className="font-headline-sm text-headline-sm text-on-surface">Sắp xếp theo</DialogTitle>
+            <DialogClose asChild>
+              <button aria-label="Đóng" className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-variant text-on-surface hover:bg-outline-variant/50 transition-colors">
+                <X className="size-5" />
+              </button>
+            </DialogClose>
+          </DialogHeader>
+          <div className="flex flex-col p-4 gap-2 overflow-y-auto pb-safe">
+            {SORT_OPTIONS.map(option => (
+              <button
+                key={option.value}
+                onClick={() => { setSortValue(option.value); setSortSheetOpen(false); }}
+                className={cn("flex items-center justify-between px-4 py-3.5 rounded-2xl active-scale transition-colors", sortValue === option.value ? "bg-primary-container/10 text-primary-container font-bold" : "bg-white text-on-surface border border-outline-variant/30 shadow-sm")}
+              >
+                <span className="font-headline-sm text-base">{option.label}</span>
+                {sortValue === option.value && <Check className="size-5" strokeWidth={2.5} />}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };

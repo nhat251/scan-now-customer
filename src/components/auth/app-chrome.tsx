@@ -19,6 +19,7 @@ const HIDE_PUBLIC_CHROME_PREFIXES = [
   PATH.me.menuItemDetail,
   PATH.dashboards.owner,
   PATH.dashboards.manager,
+  "/sessions/",
 ];
 const HIDE_PUBLIC_CHROME_PATHS = [PATH.auth.login];
 

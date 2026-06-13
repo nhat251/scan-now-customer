@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, DollarSign, History, Save } from "lucide-react";
+import { ArrowLeft, DollarSign, History, ImageIcon, Save, Upload } from "lucide-react";
 
 import { PortalShell } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateManageMenuItemMutation, useUpdateManageMenuItemMutation } from "@/hooks/mutations/useManageMenuMutations";
+import {
+  useCreateManageMenuItemMutation,
+  useUpdateManageMenuItemMutation,
+  useUploadManageMenuItemImagesMutation,
+} from "@/hooks/mutations/useManageMenuMutations";
 import { useManageCategoriesQuery, useManageMenuItemQuery } from "@/hooks/queries/useManageMenuQueries";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
@@ -66,6 +71,7 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
   );
   const createMutation = useCreateManageMenuItemMutation();
   const updateMutation = useUpdateManageMenuItemMutation();
+  const uploadImageMutation = useUploadManageMenuItemImagesMutation();
   const [form, setForm] = useState<ManageMenuItemFormValues>(emptyMenuItemForm);
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
 
@@ -132,7 +138,32 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
     }
   };
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const handleImageUpload = async (files: FileList | null) => {
+    const file = files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      showNotify({ type: "warning", message: "Please choose an image file." });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showNotify({ type: "warning", message: "Image must be 5MB or smaller." });
+      return;
+    }
+
+    const response = await uploadImageMutation.mutateAsync([file]);
+    const imageUrl = response.result[0];
+
+    if (imageUrl) {
+      onChange("imageUrl", imageUrl);
+    }
+  };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || uploadImageMutation.isPending;
 
   return (
     <PortalShell
@@ -199,7 +230,48 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
           </label>
           <label className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold">Image URL</span>
-            <Input value={form.imageUrl} onChange={(event) => onChange("imageUrl", event.target.value)} />
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+              <Input value={form.imageUrl} onChange={(event) => onChange("imageUrl", event.target.value)} />
+              <Button asChild variant="outline" className="relative overflow-hidden">
+                <span>
+                  <Upload className="size-4" />
+                  {uploadImageMutation.isPending ? "Uploading..." : "Upload Image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    disabled={uploadImageMutation.isPending}
+                    onChange={(event) => {
+                      void handleImageUpload(event.target.files);
+                      event.target.value = "";
+                    }}
+                  />
+                </span>
+              </Button>
+            </div>
+            {form.imageUrl ? (
+              <div className="border-border/60 bg-surface-container-low mt-3 flex items-center gap-3 rounded-xl border p-3">
+                <div className="relative size-16 overflow-hidden rounded-lg bg-white">
+                  <Image
+                    src={form.imageUrl}
+                    alt="Menu item preview"
+                    fill
+                    unoptimized
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold">Current image</p>
+                  <p className="text-muted-foreground truncate">{form.imageUrl}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground bg-surface-container-low mt-3 flex items-center gap-2 rounded-xl p-3 text-sm">
+                <ImageIcon className="size-4" />
+                No image selected.
+              </div>
+            )}
           </label>
           <label className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold">Description</span>

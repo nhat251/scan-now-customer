@@ -7,6 +7,7 @@ import { Download, Edit, Eye, Plus, Power, PowerOff, QrCode, RefreshCw, Search }
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FooterPagination } from "@/components/ui/footer-pagination";
 import { Input } from "@/components/ui/input";
 import { Tag } from "@/components/ui/tag";
 import {
@@ -14,6 +15,7 @@ import {
   useRegenerateOwnerTableQrMutation,
   useSetOwnerTableActiveMutation,
 } from "@/hooks/mutations/useOwnerTableMutations";
+import { useOwnerBranchDetailQuery } from "@/hooks/queries/useOwnerBranchDetailQuery";
 import { useOwnerBranchTablesQuery } from "@/hooks/queries/useOwnerTableQueries";
 import { useDebounce } from "@/hooks/useDebounce";
 import { showNotify } from "@/stores/global";
@@ -82,11 +84,13 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
     [activeFilter, capacity, pageNumber, pageSize, search, sortBy, sortDirection, status]
   );
   const tablesQuery = useOwnerBranchTablesQuery(branchId, query);
+  const branchDetailQuery = useOwnerBranchDetailQuery(branchId);
   const activeMutation = useSetOwnerTableActiveMutation();
   const regenerateMutation = useRegenerateOwnerTableQrMutation();
   const downloadMutation = useDownloadOwnerTableQrMutation();
 
   const tables = tablesQuery.data?.items ?? [];
+  const branchName = branchDetailQuery.data?.name ?? (tables.length > 0 ? tables[0].branchName : undefined);
   const totalItems = tablesQuery.data?.totalItems ?? 0;
   const totalPages = Math.max(tablesQuery.data?.totalPages ?? 1, 1);
   const activeCount = tables.filter((table) => table.isActive).length;
@@ -123,8 +127,10 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getTablePortalNavItems(portal, branchId)}
-      topbarTitle={currentUser?.fullName ?? copy.topbar}
+      topbarTitle={branchName ?? currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
+      branchName={branchName}
+      branchId={branchId}
       headerAction={
         <Button asChild>
           <Link href={getOwnerTableCreatePath(branchId, portal)}>
@@ -283,43 +289,20 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
             </tbody>
           </table>
         </div>
-        <div className="border-border/60 flex flex-col gap-3 border-t px-6 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-muted-foreground text-sm">
-              Page {Math.min(pageNumber, totalPages)} of {totalPages} - {totalItems} tables
-            </p>
-            <select
-              value={pageSize}
-              onChange={(event) => {
-                setPageNumber(1);
-                setPageSize(Number(event.target.value));
-              }}
-              className="border-input bg-card h-10 rounded-md border px-3 text-sm font-semibold"
-            >
-              {OWNER_TABLE_PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size} / page
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={pageNumber <= 1 || tablesQuery.isFetching}
-              onClick={() => setPageNumber((current) => Math.max(current - 1, 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={pageNumber >= totalPages || tablesQuery.isFetching}
-              onClick={() => setPageNumber((current) => Math.min(current + 1, totalPages))}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <FooterPagination
+          page={pageNumber}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          pageSizeOptions={OWNER_TABLE_PAGE_SIZE_OPTIONS}
+          totalItems={totalItems}
+          itemLabel="tables"
+          disabled={tablesQuery.isFetching}
+          onPageChange={setPageNumber}
+          onPageSizeChange={(nextPageSize) => {
+            setPageNumber(1);
+            setPageSize(nextPageSize);
+          }}
+        />
       </section>
 
       <Dialog open={Boolean(regenerateTableId)} onOpenChange={(open) => !open && setRegenerateTableId(null)}>

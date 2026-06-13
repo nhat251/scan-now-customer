@@ -23,7 +23,7 @@ import { getRoleLabel } from "@/constants/roleLabels";
 import { cn } from "@/lib/utils";
 import type { BranchResponse, ManagedUserRole, UserFormValues } from "@/types/user-management";
 
-const ROLE_OPTIONS: ManagedUserRole[] = ["BRANCH_MANAGER", "STAFF", "KITCHEN"];
+const ROLE_OPTIONS: ManagedUserRole[] = ["BRANCH_MANAGER", "STAFF", "KITCHEN", "CASHIER"];
 
 type OwnerUserFormDialogProps = {
   open: boolean;
@@ -56,7 +56,7 @@ export const OwnerUserFormDialog = ({
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Create user" : "Update user"}</DialogTitle>
           <DialogDescription>
-            Owners can manage branch managers, staff, and kitchen users inside their restaurant.
+            Owners can manage branch managers, staff, kitchen, and cashier users inside their restaurant.
           </DialogDescription>
         </DialogHeader>
 

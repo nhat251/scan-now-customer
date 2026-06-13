@@ -5,7 +5,7 @@ import type { PortalNavItem } from "@/components/auth/portal-shell";
 import { PATH } from "@/constants/path";
 import type { MyBranchResponse, MyMenuItemResponse, MyTableStatus } from "@/types/me";
 
-export const STAFF_MENU_ROLES = ["STAFF", "KITCHEN"] as const;
+export const STAFF_MENU_ROLES = ["STAFF"] as const;
 export const STAFF_TABLE_ROLES = ["STAFF"] as const;
 export const WAITER_ORDER_ROLES = ["STAFF", "BRANCH_MANAGER"] as const;
 export const KITCHEN_ORDER_ROLES = ["KITCHEN", "BRANCH_MANAGER"] as const;
@@ -64,15 +64,15 @@ export const getBranchStatusLabel = (branch?: Pick<MyBranchResponse, "isActive">
     return "-";
   }
 
-  return branch.isActive ? "Active" : "Inactive";
+  return branch.isActive ? "Đang hoạt động" : "Ngưng hoạt động";
 };
 
 export const getAvailabilityLabel = (item: Pick<MyMenuItemResponse, "isAvailable">) => {
-  return item.isAvailable ? "Available" : "Out of Stock";
+  return item.isAvailable ? "Còn hàng" : "Hết hàng";
 };
 
 export const getActiveLabel = (value: boolean) => {
-  return value ? "Active" : "Inactive";
+  return value ? "Đang hoạt động" : "Tạm ẩn";
 };
 
 const TABLE_STATUS_BY_CODE: Record<number, MyTableStatus> = {
@@ -97,7 +97,19 @@ export const getTableStatusLabel = (status?: MyTableStatus | number | null) => {
     return "-";
   }
 
-  return normalizedStatus.charAt(0) + normalizedStatus.slice(1).toLowerCase();
+  if (normalizedStatus === "AVAILABLE") {
+    return "Trống";
+  }
+
+  if (normalizedStatus === "OCCUPIED") {
+    return "Có khách";
+  }
+
+  if (normalizedStatus === "RESERVED") {
+    return "Đã đặt";
+  }
+
+  return "Ngưng dùng";
 };
 
 export const getTableStatusTone = (status?: MyTableStatus | number | null) => {
@@ -165,7 +177,7 @@ export const getMyPortalNavItems = ({
 }): PortalNavItem[] => {
   const items: PortalNavItem[] = [
     {
-      label: "My Branches",
+      label: "Chi nhánh của tôi",
       href: PATH.me.branches,
       icon: <Building2 className="size-4" />,
       active: active === "branches",
@@ -174,7 +186,7 @@ export const getMyPortalNavItems = ({
 
   if (branchId) {
     items.push({
-      label: "Branch Detail",
+      label: "Chi nhánh",
       href: PATH.me.branchDetail(branchId),
       icon: <LayoutList className="size-4" />,
       active: active === "branch-detail",
@@ -183,7 +195,7 @@ export const getMyPortalNavItems = ({
 
   if (branchId && canSeeMenu) {
     items.push({
-      label: "Menu Availability",
+      label: "Menu",
       href: PATH.me.branchMenu(branchId),
       icon: <Soup className="size-4" />,
       active: active === "menu",
@@ -192,7 +204,7 @@ export const getMyPortalNavItems = ({
 
   if (branchId && canSeeTables) {
     items.push({
-      label: "Table Sessions",
+      label: "Sơ đồ bàn",
       href: PATH.me.branchTables(branchId),
       icon: <Table2 className="size-4" />,
       active: active === "tables",
@@ -201,7 +213,7 @@ export const getMyPortalNavItems = ({
 
   if (branchId && canSeeOrders) {
     items.push({
-      label: "Order Service",
+      label: "Đơn hàng",
       href: PATH.me.branchOrders(branchId),
       icon: <ClipboardList className="size-4" />,
       active: active === "orders",
@@ -210,7 +222,7 @@ export const getMyPortalNavItems = ({
 
   if (branchId && canSeeKitchen) {
     items.push({
-      label: "Kitchen Queue",
+      label: "Bếp",
       href: PATH.me.branchKitchen(branchId),
       icon: <ChefHat className="size-4" />,
       active: active === "kitchen",

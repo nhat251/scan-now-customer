@@ -3,6 +3,7 @@ import useQuery from "@/hooks/useQuery";
 import {
   getGroupedKitchenItems,
   getOrderDetail,
+  getPendingKitchenOrders,
   getPendingWaiterOrders,
   getPublicPaymentStatus,
   getReadyToServeItems,
@@ -57,6 +58,19 @@ export const usePendingWaiterOrdersQuery = (
   });
 };
 
+export const usePendingKitchenOrdersQuery = (
+  branchId?: string,
+  enabled = true
+): UseQueryResult<PendingOrderResponse[], Error> => {
+  return useQuery<ApiResponse<PendingOrderResponse[]>, PendingOrderResponse[]>({
+    queryKey: [QUERY_KEY.KITCHEN_PENDING_ORDERS, branchId ?? ""],
+    queryFn: () => getPendingKitchenOrders(branchId ?? ""),
+    select: (response) => response.data.result,
+    enabled: enabled && Boolean(branchId),
+    refetchInterval: 10000,
+  });
+};
+
 export const useReadyToServeItemsQuery = (
   branchId?: string,
   enabled = true
@@ -72,7 +86,7 @@ export const useReadyToServeItemsQuery = (
 
 export const useGroupedKitchenItemsQuery = (
   branchId: string | undefined,
-  status?: "Confirmed" | "Cooking",
+  status?: "Confirmed",
   enabled = true
 ): UseQueryResult<GroupedKitchenItem[], Error> => {
   return useQuery<ApiResponse<GroupedKitchenItem[]>, GroupedKitchenItem[]>({

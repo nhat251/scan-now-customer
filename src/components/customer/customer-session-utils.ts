@@ -53,6 +53,10 @@ export const readPersistedCustomerOrder = (sessionCode: string) => {
   return window.localStorage.getItem(`${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`);
 };
 
+export const clearPersistedCustomerOrder = (sessionCode: string) => {
+  window.localStorage.removeItem(`${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`);
+};
+
 export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",

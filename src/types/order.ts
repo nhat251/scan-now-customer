@@ -19,6 +19,7 @@ export type CustomerOrderItemResponse = {
   quantity: number;
   subTotal: number;
   note: string | null;
+  status: OrderItemStatus;
   estimatedCookingMinutes: number;
 };
 
@@ -65,6 +66,7 @@ export type PendingOrderItemResponse = {
   subTotal: number;
   note: string | null;
   status: OrderItemStatus;
+  createdAt: string;
 };
 
 export type PendingOrderResponse = {
@@ -157,6 +159,11 @@ export type UpdateKitchenItemsResponse = {
   affectedOrderIds: string[];
 };
 
+export type ConfirmKitchenItemsResponse = {
+  itemsConfirmed: number;
+  affectedOrderIds: string[];
+};
+
 export type PaymentMethod = "PAYOS" | "CASH";
 
 export type CreateCheckoutRequest = {
@@ -174,6 +181,7 @@ export type CheckoutResponse = {
   accountName: string | null;
   amount: number | null;
   description: string | null;
+  paymentExpiresAt: string | null;
 };
 
 export type PaymentStatusResponse = {

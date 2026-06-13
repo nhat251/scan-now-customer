@@ -1,4 +1,4 @@
-import { Save } from "lucide-react";
+import { Hash, Save, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,22 @@ export const OwnerTableForm = ({
 }: OwnerTableFormProps) => {
   return (
     <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold">Table Details</h2>
+          <p className="text-muted-foreground mt-1 text-sm">Edit table number and seating capacity</p>
+        </div>
+        <Button onClick={onSubmit} disabled={submitting}>
+          <Save className="size-4" />
+          {submitting ? "Saving..." : submitLabel}
+        </Button>
+      </div>
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-sm font-semibold">Table Number</span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold">
+            <Hash className="text-muted-foreground size-3.5" />
+            Table Number
+          </span>
           <Input
             value={value.tableNumber}
             onChange={(event) => onChange("tableNumber", event.target.value)}
@@ -31,21 +44,18 @@ export const OwnerTableForm = ({
           />
         </label>
         <label className="space-y-2">
-          <span className="text-sm font-semibold">Capacity</span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold">
+            <Users className="text-muted-foreground size-3.5" />
+            Capacity
+          </span>
           <Input
             type="number"
             min={1}
             value={value.capacity}
             onChange={(event) => onChange("capacity", event.target.value)}
+            placeholder="4"
           />
         </label>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <Button onClick={onSubmit} disabled={submitting}>
-          <Save className="size-4" />
-          {submitting ? "Saving..." : submitLabel}
-        </Button>
       </div>
     </section>
   );

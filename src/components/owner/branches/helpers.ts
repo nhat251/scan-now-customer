@@ -5,33 +5,33 @@ import type { BranchResponse, OwnerBranchFormValues } from "@/types/user-managem
 export type BranchStatusFilter = "all" | "active" | "inactive";
 
 export const BRANCH_STATUS_FILTER_OPTIONS: Array<{ label: string; value: BranchStatusFilter }> = [
-  { label: "All statuses", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
+  { label: "Tất cả trạng thái", value: "all" },
+  { label: "Hoạt động", value: "active" },
+  { label: "Tạm tắt", value: "inactive" },
 ];
 
 export const BRANCH_PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 export const BRANCH_SORT_OPTIONS = [
-  { label: "Newest first", sortBy: "createdAt", sortDirection: "desc" as const },
-  { label: "Oldest first", sortBy: "createdAt", sortDirection: "asc" as const },
-  { label: "Name A-Z", sortBy: "name", sortDirection: "asc" as const },
-  { label: "Name Z-A", sortBy: "name", sortDirection: "desc" as const },
+  { label: "Mới nhất trước", sortBy: "createdAt", sortDirection: "desc" as const },
+  { label: "Cũ nhất trước", sortBy: "createdAt", sortDirection: "asc" as const },
+  { label: "Tên A-Z", sortBy: "name", sortDirection: "asc" as const },
+  { label: "Tên Z-A", sortBy: "name", sortDirection: "desc" as const },
 ];
 
 export const getBranchStatusFilterLabel = (status: BranchStatusFilter) => {
-  return BRANCH_STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "All statuses";
+  return BRANCH_STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "Tất cả trạng thái";
 };
 
 export const getBranchSortOptionLabel = (sortBy: string, sortDirection: "asc" | "desc") => {
   return (
     BRANCH_SORT_OPTIONS.find((option) => option.sortBy === sortBy && option.sortDirection === sortDirection)?.label ??
-    "Sort"
+    "Sắp xếp"
   );
 };
 
 export const getBranchStatusLabel = (branch: Pick<BranchResponse, "isActive">) => {
-  return branch.isActive ? "Active" : "Inactive";
+  return branch.isActive ? "Hoạt động" : "Tạm tắt";
 };
 
 export const branchStatusFilterToQuery = (status: BranchStatusFilter) => {
@@ -51,18 +51,18 @@ export const getOwnerBranchErrorState = (error: unknown) => {
 
   if (hasAccessFailure) {
     return {
-      heading: "Your access could not be verified",
-      description: "Your session may be expired or you may no longer have permission to manage branches.",
+      heading: "Không xác minh được quyền truy cập",
+      description: "Phiên đăng nhập có thể đã hết hạn hoặc bạn không còn quyền quản lý chi nhánh.",
       shouldRouteToLogin: true,
-      retryLabel: "Try again",
+      retryLabel: "Thử lại",
     };
   }
 
   return {
-    heading: "We could not load branch data",
-    description: error instanceof AxiosError ? error.response?.data?.message ?? error.message : "Please try again.",
+    heading: "Không tải được dữ liệu chi nhánh",
+    description: error instanceof AxiosError ? error.response?.data?.message ?? error.message : "Vui lòng thử lại.",
     shouldRouteToLogin: false,
-    retryLabel: "Try again",
+    retryLabel: "Thử lại",
   };
 };
 

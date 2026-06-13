@@ -12,6 +12,11 @@ class Path {
     manager: "/manager/dashboard" as const,
     staff: "/staff/dashboard" as const,
     kitchen: "/kitchen/dashboard" as const,
+    cashier: "/cashier/dashboard" as const,
+  };
+
+  cashier = {
+    dashboard: "/cashier/dashboard" as const,
   };
 
   owner = {
@@ -44,6 +49,9 @@ class Path {
     },
     get branchTables() {
       return (branchId: string) => `${this.branches}/${branchId}/tables` as const;
+    },
+    get branchOrders() {
+      return (branchId: string) => `${this.branches}/${branchId}/orders` as const;
     },
     get branchTableCreate() {
       return (branchId: string) => `${this.branchTables(branchId)}/create` as const;
@@ -81,6 +89,9 @@ class Path {
     },
     get branchTables() {
       return (branchId: string) => `${this.branches}/${branchId}/tables` as const;
+    },
+    get branchOrders() {
+      return (branchId: string) => `${this.branches}/${branchId}/orders` as const;
     },
     get branchTableCreate() {
       return (branchId: string) => `${this.branchTables(branchId)}/create` as const;

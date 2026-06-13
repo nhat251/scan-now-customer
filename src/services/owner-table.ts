@@ -2,6 +2,9 @@ import { axiosBasic } from "@/services/axiosBasic";
 import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
   CreateOwnerTableRequest,
+  OwnerOrderInvoiceListResponse,
+  OwnerOrderInvoiceQuery,
+  OwnerTableOrderHistoryResponse,
   OwnerTableResponse,
   OwnerTablesQuery,
   RegenerateOwnerTableQrResponse,
@@ -19,6 +22,19 @@ export const getOwnerBranchTables = async (branchId: string, query: OwnerTablesQ
 export const getOwnerTable = async (branchId: string, tableId: string) => {
   return await axiosBasic.get<ApiResponse<OwnerTableResponse>>(
     `/api/owner/branches/${branchId}/tables/${tableId}`
+  );
+};
+
+export const getOwnerTableOrderHistory = async (branchId: string, tableId: string) => {
+  return await axiosBasic.get<ApiResponse<OwnerTableOrderHistoryResponse[]>>(
+    `/api/owner/branches/${branchId}/tables/${tableId}/orders`
+  );
+};
+
+export const getOwnerBranchOrders = async (branchId: string, query: OwnerOrderInvoiceQuery) => {
+  return await axiosBasic.get<ApiResponse<OwnerOrderInvoiceListResponse>>(
+    `/api/owner/branches/${branchId}/orders`,
+    { params: query }
   );
 };
 
