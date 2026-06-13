@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Soup, Table2, Tags } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { getManageMenuNavItems } from "@/components/manage-menu/helpers";
@@ -20,6 +22,7 @@ import { useCreateOwnerBranchMutation, useUpdateOwnerBranchMutation } from "@/ho
 import { useOwnerBranchDetailQuery } from "@/hooks/queries/useOwnerBranchDetailQuery";
 import { useUserStore } from "@/stores/user";
 import type { CreateBranchRequest, OwnerBranchFormValues, UpdateBranchRequest } from "@/types/user-management";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type OwnerBranchDetailPageProps = {
   branchId?: string;
@@ -39,43 +42,42 @@ const toBranchPayload = (value: OwnerBranchFormValues): CreateBranchRequest | Up
   serviceChargeFixed: value.serviceChargeFixed ? Number(value.serviceChargeFixed) : undefined,
 });
 
+const ownerBranchSchema = z.object({
+  name: z.string().trim().min(1, "Tên chi nhánh là bắt buộc."),
+  slug: z.string().trim().min(1, "Slug là bắt buộc."),
+  email: z.string().refine(
+    (val) => !val || val.includes("@"),
+    { message: "Email không hợp lệ." }
+  ),
+  phone: z.string(),
+  address: z.string(),
+  openTime: z.string(),
+  closeTime: z.string(),
+  vatPercent: z.string(),
+  serviceChargePercent: z.string(),
+  serviceChargeFixed: z.string(),
+});
+
 export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageProps) => {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
   const detailQuery = useOwnerBranchDetailQuery(branchId);
   const createMutation = useCreateOwnerBranchMutation();
   const updateMutation = useUpdateOwnerBranchMutation();
-  const [value, setValue] = useState<OwnerBranchFormValues>(getDefaultOwnerBranchFormValues());
-  const [errors, setErrors] = useState<Partial<Record<keyof OwnerBranchFormValues, string>>>({});
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<OwnerBranchFormValues>({
+    resolver: zodResolver(ownerBranchSchema),
+    defaultValues: getDefaultOwnerBranchFormValues(),
+  });
 
   useEffect(() => {
     if (mode === "edit" && detailQuery.data) {
-      setValue(toOwnerBranchFormValues(detailQuery.data));
+      reset(toOwnerBranchFormValues(detailQuery.data));
     }
-  }, [detailQuery.data, mode]);
+  }, [detailQuery.data, mode, reset]);
 
-  const onChange = <Key extends keyof OwnerBranchFormValues>(key: Key, nextValue: OwnerBranchFormValues[Key]) => {
-    setValue((current) => ({ ...current, [key]: nextValue }));
-    setErrors((current) => ({ ...current, [key]: undefined }));
-  };
-
-  const validateForm = () => {
-    const nextErrors: Partial<Record<keyof OwnerBranchFormValues, string>> = {};
-
-    if (!value.name.trim()) nextErrors.name = "Tên chi nhánh là bắt buộc.";
-    if (!value.slug.trim()) nextErrors.slug = "Slug là bắt buộc.";
-    if (value.email && !value.email.includes("@")) nextErrors.email = "Email không hợp lệ.";
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const submitForm = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    const payload = toBranchPayload(value);
+  const submitForm = async (values: OwnerBranchFormValues) => {
+    const payload = toBranchPayload(values);
 
     if (mode === "create") {
       await createMutation.mutateAsync(payload);
@@ -175,7 +177,7 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
         ) : undefined
       }
     >
-      <OwnerBranchForm mode={mode} value={value} errors={errors} submitting={isSubmitting} onChange={onChange} onSubmit={submitForm} />
+      <OwnerBranchForm mode={mode} register={register} errors={errors} submitting={isSubmitting} onSubmit={handleSubmit(submitForm)} />
     </PortalShell>
   );
 };

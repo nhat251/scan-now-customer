@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Loader2, ShoppingBag, Utensils } from "lucide-react";
+import { useForm } from "react-hook-form";
 
 import { PATH } from "@/constants/path";
 import { usePlacePublicOrderMutation } from "@/hooks/mutations/useOrderMutations";
@@ -25,12 +26,17 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
   const router = useRouter();
   const normalizedSessionCode = sessionCode.toUpperCase();
   const [session, setSession] = useState<PersistedCustomerSession | null>(null);
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerNote, setCustomerNote] = useState("");
   const [formError, setFormError] = useState("");
   const { cart, status: cartStatus, isUpdating, updateCart, clearCart } = useSharedCart(normalizedSessionCode);
   const placeOrderMutation = usePlacePublicOrderMutation();
+
+  const { register, getValues } = useForm({
+    defaultValues: {
+      customerName: "",
+      customerPhone: "",
+      customerNote: "",
+    },
+  });
 
   useEffect(() => {
     setSession(readPersistedCustomerSession());
@@ -64,13 +70,15 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
       return;
     }
 
+    const values = getValues();
+
     try {
       const response = await placeOrderMutation.mutateAsync({
         sessionCode: normalizedSessionCode,
         request: {
-          customerName: customerName.trim() || null,
-          customerPhone: customerPhone.trim() || null,
-          customerNote: customerNote.trim() || null,
+          customerName: values.customerName.trim() || null,
+          customerPhone: values.customerPhone.trim() || null,
+          customerNote: values.customerNote.trim() || null,
           items: cart.items.map((item) => ({
             menuItemId: item.menuItemId,
             quantity: item.quantity,
@@ -171,23 +179,20 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
             </p>
             <div className="mt-5 flex flex-col gap-3">
               <input
-                value={customerName}
-                onChange={(event) => setCustomerName(event.target.value)}
                 placeholder="Tên khách (tùy chọn)"
                 className="bg-surface-container-low font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:ring-primary-container/30 h-14 w-full rounded-2xl border-none px-4 transition-all outline-none focus:ring-2"
+                {...register("customerName")}
               />
               <input
-                value={customerPhone}
-                onChange={(event) => setCustomerPhone(event.target.value)}
                 placeholder="Số điện thoại (tùy chọn)"
                 inputMode="tel"
                 className="bg-surface-container-low font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:ring-primary-container/30 h-14 w-full rounded-2xl border-none px-4 transition-all outline-none focus:ring-2"
+                {...register("customerPhone")}
               />
               <textarea
-                value={customerNote}
-                onChange={(event) => setCustomerNote(event.target.value)}
                 placeholder="Ghi chú chung cho đơn hàng"
                 className="bg-surface-container-low font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:ring-primary-container/30 min-h-[100px] w-full resize-none rounded-2xl border-none p-4 transition-all outline-none focus:ring-2"
+                {...register("customerNote")}
               />
             </div>
           </div>

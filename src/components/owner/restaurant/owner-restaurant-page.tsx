@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { toOwnerRestaurantFormValues, toUpdateRestaurantPayload } from "@/components/owner/restaurant/helpers";
@@ -14,47 +16,34 @@ import { useUpdateOwnerRestaurantMutation } from "@/hooks/mutations/useOwnerRest
 import { useOwnerRestaurantQuery } from "@/hooks/queries/useOwnerRestaurantQuery";
 import { useUserStore } from "@/stores/user";
 import type { OwnerRestaurantFormValues } from "@/types/user-management";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const ownerRestaurantSchema = z.object({
+  name: z.string().trim().min(1, "Tên nhà hàng là bắt buộc."),
+  slug: z.string().trim().min(1, "Slug là bắt buộc."),
+  logoUrl: z.string(),
+  description: z.string(),
+});
 
 export const OwnerRestaurantPage = () => {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
   const restaurantQuery = useOwnerRestaurantQuery();
   const updateMutation = useUpdateOwnerRestaurantMutation();
-  const [value, setValue] = useState<OwnerRestaurantFormValues>(toOwnerRestaurantFormValues());
-  const [errors, setErrors] = useState<Partial<Record<keyof OwnerRestaurantFormValues, string>>>({});
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<OwnerRestaurantFormValues>({
+    resolver: zodResolver(ownerRestaurantSchema),
+    defaultValues: toOwnerRestaurantFormValues(),
+  });
 
   useEffect(() => {
     if (restaurantQuery.data) {
-      setValue(toOwnerRestaurantFormValues(restaurantQuery.data));
+      reset(toOwnerRestaurantFormValues(restaurantQuery.data));
     }
-  }, [restaurantQuery.data]);
+  }, [restaurantQuery.data, reset]);
 
-  const onChange = <Key extends keyof OwnerRestaurantFormValues>(key: Key, nextValue: OwnerRestaurantFormValues[Key]) => {
-    setValue((current) => ({ ...current, [key]: nextValue }));
-    setErrors((current) => ({ ...current, [key]: undefined }));
-  };
-
-  const validateForm = () => {
-    const nextErrors: Partial<Record<keyof OwnerRestaurantFormValues, string>> = {};
-
-    if (!value.name.trim()) {
-      nextErrors.name = "Tên nhà hàng là bắt buộc.";
-    }
-
-    if (!value.slug.trim()) {
-      nextErrors.slug = "Slug là bắt buộc.";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const submitForm = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    await updateMutation.mutateAsync(toUpdateRestaurantPayload(value));
+  const submitForm = async (values: OwnerRestaurantFormValues) => {
+    await updateMutation.mutateAsync(toUpdateRestaurantPayload(values));
   };
 
   const error = restaurantQuery.error;
@@ -117,11 +106,10 @@ export const OwnerRestaurantPage = () => {
       }
     >
       <OwnerRestaurantForm
-        value={value}
+        register={register}
         errors={errors}
         submitting={updateMutation.isPending}
-        onChange={onChange}
-        onSubmit={submitForm}
+        onSubmit={handleSubmit(submitForm)}
       />
     </PortalShell>
   );

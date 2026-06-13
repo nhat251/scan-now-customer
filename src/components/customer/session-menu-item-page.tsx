@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AlertCircle, ChevronLeft, Clock, Loader2, Minus, Plus, ShoppingBag, StickyNote, Utensils } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
@@ -28,8 +29,17 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
   const normalizedSessionCode = sessionCode.toUpperCase();
   const [session, setSession] = useState<PersistedCustomerSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
-  const [note, setNote] = useState("");
   const { cart, isUpdating, updateCart } = useSharedCart(normalizedSessionCode);
+
+  const { control, register, setValue, getValues, reset } = useForm({
+    defaultValues: {
+      note: "",
+      localQuantity: 1,
+    },
+  });
+
+  const watched = useWatch({ control });
+  const localQuantity = watched.localQuantity ?? 1;
 
   useEffect(() => {
     const storedSession = readPersistedCustomerSession();
@@ -45,38 +55,30 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
   const item = itemQuery.data;
   const cartLine = cart.items.find((line) => line.menuItemId === menuItemId);
   const quantity = cartLine?.quantity ?? 0;
-  
-  // Local quantity for the UI so user can tweak before saving, 
-  // or maybe use `quantity` directly if we want immediate cart sync.
-  // The original design uses immediate sync for "setCartQuantity" or maybe just local? 
-  // Original implementation updates cart only on handleSaveToCart. Wait!
-  // Looking at the original: `const [note, setNote] = useState("");`
-  // And `const setCartQuantity = async (nextQuantity: number) => { ... updateCart ... }`
-  // `handleSaveToCart = async () => { await setCartQuantity(quantity || 1); ... }`
-  // Wait, if it uses `quantity`, it's directly from `cartLine?.quantity`. 
-  // Let's create a local state for quantity to mimic the design "Thêm vào giỏ", or just update cart immediately.
-  // Original `handleSaveToCart` used `quantity || 1`. 
-  // But wait, in the bottom bar it has minus, plus, and then a button "Thêm vào giỏ".
-  // Let's use local quantity state.
-  const [localQuantity, setLocalQuantity] = useState(Math.max(quantity, 1));
 
   useEffect(() => {
-    setNote(cartLine?.specialRequest ?? "");
-    setLocalQuantity(Math.max(cartLine?.quantity ?? 1, 1));
-  }, [cartLine]);
+    reset({
+      note: cartLine?.specialRequest ?? "",
+      localQuantity: Math.max(cartLine?.quantity ?? 1, 1),
+    });
+  }, [cartLine, reset]);
 
   const handleSaveToCart = async () => {
     if (!item) return;
 
+    const values = getValues();
+    const currentQuantity = values.localQuantity;
+    const currentNote = values.note;
+
     const nextItems = cart.items.filter((line) => line.menuItemId !== item.menuItemId);
 
-    if (localQuantity > 0) {
+    if (currentQuantity > 0) {
       const nextLine: CartItemDto = {
         menuItemId: item.menuItemId,
         menuItemName: item.name,
         price: item.price,
-        quantity: localQuantity,
-        specialRequest: note.trim() || null,
+        quantity: currentQuantity,
+        specialRequest: currentNote.trim() || null,
         imageUrl: item.imageUrl || null,
       };
       nextItems.push(nextLine);
@@ -86,7 +88,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
     
     showNotify({
       type: "success",
-      message: localQuantity > 0 ? "Đã cập nhật món trong giỏ hàng." : "Đã thêm món vào giỏ hàng.",
+      message: currentQuantity > 0 ? "Đã cập nhật món trong giỏ hàng." : "Đã thêm món vào giỏ hàng.",
     });
   };
 
@@ -196,10 +198,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
                 <h2 className="font-headline-sm text-headline-sm text-on-surface">Ghi chú cho món</h2>
               </div>
               <textarea
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
                 className="bg-surface-container-low font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-primary-container/30 min-h-[100px] w-full resize-none rounded-xl border-none p-4 transition-all outline-none focus:ring-2"
                 placeholder="Ví dụ: Ít hành, không lấy giá..."
+                {...register("note")}
               />
               <p className="font-label-sm text-label-sm text-on-surface-variant/70 mt-2 italic">
                 Nhà hàng sẽ cố gắng đáp ứng yêu cầu của bạn.
@@ -217,7 +218,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
             <div className="bg-primary-container/10 border-primary-container/10 flex h-14 items-center rounded-2xl border p-1">
               <button
                 type="button"
-                onClick={() => setLocalQuantity(Math.max(1, localQuantity - 1))}
+                onClick={() => setValue("localQuantity", Math.max(1, localQuantity - 1))}
                 className="hover:bg-primary-container/20 text-primary-container flex h-12 w-12 items-center justify-center rounded-xl transition-colors active:scale-90 disabled:opacity-50"
                 disabled={isUpdating || localQuantity <= 1}
               >
@@ -226,7 +227,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
               <span className="font-headline-sm text-headline-sm text-on-primary-container w-10 text-center">{localQuantity}</span>
               <button
                 type="button"
-                onClick={() => setLocalQuantity(localQuantity + 1)}
+                onClick={() => setValue("localQuantity", localQuantity + 1)}
                 className="hover:bg-primary-container/20 text-primary-container flex h-12 w-12 items-center justify-center rounded-xl transition-colors active:scale-90 disabled:opacity-50"
                 disabled={isUpdating || !item.isAvailable}
               >
