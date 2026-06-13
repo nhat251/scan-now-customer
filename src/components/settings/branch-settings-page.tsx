@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { CalendarDays, Clock3, CreditCard, Gift, QrCode, RefreshCw, Save, TicketPercent, WalletCards } from "lucide-react";
+import { useForm } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
@@ -16,7 +17,7 @@ import { useOwnerBranchListQuery } from "@/hooks/queries/useOwnerBranchListQuery
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
-import type { DiscountType, PaperVoucherRequest, PaperVoucherResponse, PaymentMethod, UpsertBranchPaymentConfigRequest } from "@/types/branch-settings";
+import type { PaperVoucherRequest, PaperVoucherResponse, UpsertBranchPaymentConfigRequest } from "@/types/branch-settings";
 import type { BranchResponse } from "@/types/user-management";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -77,15 +78,6 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal);
   const [branchId, setBranchId] = useState("");
-  const [paymentForm, setPaymentForm] = useState<UpsertBranchPaymentConfigRequest>({
-    cashEnabled: true,
-    payOsEnabled: false,
-    payOsClientId: "",
-    payOsApiKey: "",
-    payOsChecksumKey: "",
-    defaultMethod: "CASH",
-  });
-  const [voucherForm, setVoucherForm] = useState<PaperVoucherRequest>(emptyVoucher);
 
   const ownerBranchesQuery = useOwnerBranchListQuery(
     { pageNumber: 1, pageSize: 100, sortBy: "name", sortDirection: "asc" },
@@ -108,11 +100,34 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
   const savePaymentMutation = useUpsertBranchPaymentConfigMutation();
   const createVoucherMutation = useCreatePaperVoucherMutation();
 
+  const { register: registerPayment, handleSubmit: handleSubmitPayment, reset: resetPayment, watch: watchPayment, setValue: setValuePayment } = useForm<UpsertBranchPaymentConfigRequest>({
+    defaultValues: {
+      cashEnabled: true,
+      payOsEnabled: false,
+      payOsClientId: "",
+      payOsApiKey: "",
+      payOsChecksumKey: "",
+      defaultMethod: "CASH",
+    },
+  });
+
+  const { register: registerVoucher, handleSubmit: handleSubmitVoucher, reset: resetVoucher } = useForm<PaperVoucherRequest>({
+    defaultValues: emptyVoucher,
+  });
+
+  const payOsEnabled = watchPayment("payOsEnabled");
+
+  useEffect(() => {
+    if (!payOsEnabled) {
+      setValuePayment("defaultMethod", "CASH");
+    }
+  }, [payOsEnabled, setValuePayment]);
+
   useEffect(() => {
     const config = paymentConfigQuery.data;
     if (!config) return;
 
-    setPaymentForm({
+    resetPayment({
       cashEnabled: true,
       payOsEnabled: config.payOsEnabled,
       payOsClientId: "",
@@ -120,32 +135,40 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       payOsChecksumKey: "",
       defaultMethod: config.defaultMethod,
     });
-  }, [paymentConfigQuery.data]);
+  }, [paymentConfigQuery.data, resetPayment]);
 
   const vouchers = vouchersQuery.data ?? [];
   const activeVouchers = vouchers.filter((voucher) => voucher.isActive).length;
 
-  const savePaymentConfig = async () => {
+  const savePaymentConfig = async (values: UpsertBranchPaymentConfigRequest) => {
     if (!branchId) return;
 
     await savePaymentMutation.mutateAsync({
       portal,
       branchId,
       data: {
-        ...paymentForm,
+        ...values,
         cashEnabled: true,
-        defaultMethod: paymentForm.payOsEnabled ? paymentForm.defaultMethod : "CASH",
+        defaultMethod: values.payOsEnabled ? values.defaultMethod : "CASH",
       },
     });
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.BRANCH_PAYMENT_CONFIG, portal, branchId] });
     showNotify({ type: "success", message: "Đã lưu cấu hình thanh toán." });
   };
 
-  const createVoucher = async () => {
+  const createVoucher = async (values: PaperVoucherRequest) => {
     if (!branchId) return;
 
-    await createVoucherMutation.mutateAsync({ portal, branchId, data: toVoucherPayload(voucherForm) });
-    setVoucherForm(emptyVoucher);
+    const payload = toVoucherPayload({
+      ...values,
+      discountValue: Number(values.discountValue || 0),
+      minOrderAmount: Number(values.minOrderAmount || 0),
+      maxDiscountAmount: values.maxDiscountAmount ? Number(values.maxDiscountAmount) : null,
+      quantity: Number(values.quantity || 1),
+    });
+
+    await createVoucherMutation.mutateAsync({ portal, branchId, data: payload });
+    resetVoucher(emptyVoucher);
     await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PAPER_VOUCHERS, portal, branchId] });
     showNotify({ type: "success", message: "Đã tạo voucher giấy." });
   };
@@ -170,7 +193,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
     >
       <section className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
         <label className="text-sm font-semibold">
-          Chi nhánh
+          Chi nhánh <span className="text-destructive">*</span>
           <select
             value={branchId}
             onChange={(event) => setBranchId(event.target.value)}
@@ -199,59 +222,86 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
             <CreditCard className="text-primary size-5" />
             <h2 className="text-xl font-bold">Cấu hình thanh toán</h2>
           </div>
-          <div className="mt-5 space-y-4">
+          <form onSubmit={handleSubmitPayment(savePaymentConfig)} className="mt-5 space-y-4">
             <label className="flex items-center gap-3 text-sm font-semibold">
               <input
                 type="checkbox"
-                checked={paymentForm.payOsEnabled}
-                onChange={(event) => setPaymentForm((current) => ({
-                  ...current,
-                  payOsEnabled: event.target.checked,
-                  defaultMethod: event.target.checked ? current.defaultMethod : "CASH",
-                }))}
+                {...registerPayment("payOsEnabled")}
               />
               Bật PayOS cho chi nhánh này
             </label>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <TextField
-                label="PayOS Client ID"
-                value={paymentForm.payOsClientId ?? ""}
-                onChange={(value) => setPaymentForm((current) => ({ ...current, payOsClientId: value }))}
-                helper={paymentConfigQuery.data?.hasPayOsClientId ? `Đã cấu hình (${paymentConfigQuery.data.payOsClientIdPreview ?? "đã lưu"}) - để trống nếu muốn giữ Client ID hiện tại.` : "Bắt buộc khi bật PayOS."}
-              />
-              <TextField
-                label="PayOS API Key"
-                value={paymentForm.payOsApiKey ?? ""}
-                onChange={(value) => setPaymentForm((current) => ({ ...current, payOsApiKey: value }))}
-                type="password"
-                helper={paymentConfigQuery.data?.hasPayOsApiKey ? "Đã cấu hình - để trống nếu muốn giữ key hiện tại." : "Bắt buộc khi bật PayOS."}
-              />
-              <TextField
-                label="Checksum Key"
-                value={paymentForm.payOsChecksumKey ?? ""}
-                onChange={(value) => setPaymentForm((current) => ({ ...current, payOsChecksumKey: value }))}
-                type="password"
-                helper={paymentConfigQuery.data?.hasPayOsChecksumKey ? "Đã cấu hình - để trống nếu muốn giữ key hiện tại." : "Bắt buộc khi bật PayOS."}
-              />
+              <label className="text-sm font-semibold">
+                PayOS Client ID
+                <Input
+                  {...registerPayment("payOsClientId")}
+                  className="mt-2 h-10"
+                />
+                {paymentConfigQuery.data?.hasPayOsClientId ? (
+                  <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                    Đã cấu hình ({paymentConfigQuery.data.payOsClientIdPreview ?? "đã lưu"}) - để trống nếu muốn giữ Client ID hiện tại.
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                    Bắt buộc khi bật PayOS.
+                  </span>
+                )}
+              </label>
+
+              <label className="text-sm font-semibold">
+                PayOS API Key
+                <Input
+                  type="password"
+                  {...registerPayment("payOsApiKey")}
+                  className="mt-2 h-10"
+                />
+                {paymentConfigQuery.data?.hasPayOsApiKey ? (
+                  <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                    Đã cấu hình - để trống nếu muốn giữ key hiện tại.
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                    Bắt buộc khi bật PayOS.
+                  </span>
+                )}
+              </label>
+
+              <label className="text-sm font-semibold">
+                Checksum Key
+                <Input
+                  type="password"
+                  {...registerPayment("payOsChecksumKey")}
+                  className="mt-2 h-10"
+                />
+                {paymentConfigQuery.data?.hasPayOsChecksumKey ? (
+                  <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                    Đã cấu hình - để trống nếu muốn giữ key hiện tại.
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                    Bắt buộc khi bật PayOS.
+                  </span>
+                )}
+              </label>
+
               <label className="text-sm font-semibold">
                 Phương thức mặc định
                 <select
-                  value={paymentForm.defaultMethod}
-                  onChange={(event) => setPaymentForm((current) => ({ ...current, defaultMethod: event.target.value as PaymentMethod }))}
+                  {...registerPayment("defaultMethod")}
                   className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
                 >
                   <option value="CASH">Tiền mặt</option>
-                  <option value="PAYOS" disabled={!paymentForm.payOsEnabled}>PayOS</option>
+                  <option value="PAYOS" disabled={!payOsEnabled}>PayOS</option>
                 </select>
               </label>
             </div>
 
-            <Button onClick={savePaymentConfig} disabled={!branchId || savePaymentMutation.isPending}>
+            <Button type="submit" disabled={!branchId || savePaymentMutation.isPending}>
               <Save className="size-4" />
               Lưu cấu hình
             </Button>
-          </div>
+          </form>
         </div>
 
         <div className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
@@ -259,44 +309,70 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
             <Gift className="text-primary size-5" />
             <h2 className="text-xl font-bold">Tạo voucher giấy</h2>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <TextField label="Mã voucher" value={voucherForm.code} onChange={(value) => setVoucherForm((current) => ({ ...current, code: value }))} />
-            <TextField label="Tên voucher" value={voucherForm.name} onChange={(value) => setVoucherForm((current) => ({ ...current, name: value }))} />
-            <label className="text-sm font-semibold">
-              Loại giảm giá
-              <select
-                value={voucherForm.discountType}
-                onChange={(event) => setVoucherForm((current) => ({ ...current, discountType: event.target.value as DiscountType }))}
-                className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
-              >
-                <option value="PERCENT">Theo phần trăm</option>
-                <option value="FIXED_AMOUNT">Số tiền cố định</option>
-              </select>
-            </label>
-            <NumberField label="Giá trị giảm" value={voucherForm.discountValue} onChange={(value) => setVoucherForm((current) => ({ ...current, discountValue: value }))} />
-            <NumberField label="Đơn tối thiểu" value={voucherForm.minOrderAmount} onChange={(value) => setVoucherForm((current) => ({ ...current, minOrderAmount: value }))} />
-            <NumberField label="Giảm tối đa" value={voucherForm.maxDiscountAmount ?? 0} onChange={(value) => setVoucherForm((current) => ({ ...current, maxDiscountAmount: value || null }))} />
-            <NumberField label="Số lượng" value={voucherForm.quantity} onChange={(value) => setVoucherForm((current) => ({ ...current, quantity: value }))} />
-            <TextField label="Mô tả" value={voucherForm.description ?? ""} onChange={(value) => setVoucherForm((current) => ({ ...current, description: value }))} />
-            <TextField
-              label="Ngày bắt đầu"
-              value={voucherForm.validFrom ?? ""}
-              onChange={(value) => setVoucherForm((current) => ({ ...current, validFrom: value || null }))}
-              type="date"
-              helper="Voucher có hiệu lực từ 00:00 của ngày được chọn."
-            />
-            <TextField
-              label="Ngày kết thúc"
-              value={voucherForm.validUntil ?? ""}
-              onChange={(value) => setVoucherForm((current) => ({ ...current, validUntil: value || null }))}
-              type="date"
-              helper="Voucher hết hạn lúc 23:59:59 của ngày này."
-            />
-          </div>
-          <Button className="mt-4" onClick={createVoucher} disabled={!branchId || createVoucherMutation.isPending}>
-            <Gift className="size-4" />
-            Tạo voucher
-          </Button>
+          <form onSubmit={handleSubmitVoucher(createVoucher)}>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-semibold">
+                Mã voucher
+                <Input {...registerVoucher("code")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Tên voucher
+                <Input {...registerVoucher("name")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Loại giảm giá
+                <select
+                  {...registerVoucher("discountType")}
+                  className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                >
+                  <option value="PERCENT">Theo phần trăm</option>
+                  <option value="FIXED_AMOUNT">Số tiền cố định</option>
+                </select>
+              </label>
+              <label className="text-sm font-semibold">
+                Giá trị giảm
+                <Input type="number" {...registerVoucher("discountValue")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Đơn tối thiểu
+                <Input type="number" {...registerVoucher("minOrderAmount")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Giảm tối đa
+                <Input type="number" {...registerVoucher("maxDiscountAmount")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Số lượng
+                <Input type="number" {...registerVoucher("quantity")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Mô tả
+                <Input {...registerVoucher("description")} className="mt-2 h-10" />
+              </label>
+              <label className="text-sm font-semibold">
+                Ngày bắt đầu
+                <Input
+                  type="date"
+                  {...registerVoucher("validFrom")}
+                  className="mt-2 h-10"
+                />
+                <span className="text-muted-foreground mt-1 block text-xs font-medium">Voucher có hiệu lực từ 00:00 của ngày được chọn.</span>
+              </label>
+              <label className="text-sm font-semibold">
+                Ngày kết thúc
+                <Input
+                  type="date"
+                  {...registerVoucher("validUntil")}
+                  className="mt-2 h-10"
+                />
+                <span className="text-muted-foreground mt-1 block text-xs font-medium">Voucher hết hạn lúc 23:59:59 của ngày này.</span>
+              </label>
+            </div>
+            <Button className="mt-4" type="submit" disabled={!branchId || createVoucherMutation.isPending}>
+              <Gift className="size-4" />
+              Tạo voucher
+            </Button>
+          </form>
         </div>
       </section>
 
@@ -381,26 +457,6 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
   );
 };
 
-const TextField = ({
-  label,
-  value,
-  onChange,
-  type = "text",
-  helper,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  helper?: string;
-}) => (
-  <label className="text-sm font-semibold">
-    {label}
-    <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 h-10" />
-    {helper ? <span className="text-muted-foreground mt-1 block text-xs font-medium">{helper}</span> : null}
-  </label>
-);
-
 const VoucherMetric = ({
   icon,
   label,
@@ -417,24 +473,4 @@ const VoucherMetric = ({
     </div>
     <p className="mt-1 truncate text-sm font-bold">{value}</p>
   </div>
-);
-
-const NumberField = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) => (
-  <label className="text-sm font-semibold">
-    {label}
-    <Input
-      type="number"
-      value={String(value)}
-      onChange={(event) => onChange(Number(event.target.value || 0))}
-      className="mt-2 h-10"
-    />
-  </label>
 );
