@@ -13,6 +13,7 @@ import {
   Table2,
   XCircle,
 } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -90,27 +91,38 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
   const canSeeTables = canManageTableSessions(currentUser?.role);
   const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
   const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebounce(searchInput.trim(), 250);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
-  const [sortValue, setSortValue] = useState<(typeof SORT_OPTIONS)[number]["value"]>("tableNumber:asc");
   const [pageNumber, setPageNumber] = useState(1);
   const [openedSession, setOpenedSession] = useState<OpenTableSessionResponse | null>(null);
 
+  const { register, control } = useForm({
+    defaultValues: {
+      search: "",
+      statusFilter: "all" as StatusFilter,
+      activeFilter: "all" as ActiveFilter,
+      sortValue: "tableNumber:asc" as (typeof SORT_OPTIONS)[number]["value"],
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const statusFilterVal = useWatch({ control, name: "statusFilter" });
+  const activeFilterVal = useWatch({ control, name: "activeFilter" });
+  const sortValueVal = useWatch({ control, name: "sortValue" });
+
+  const search = useDebounce(searchVal.trim(), 250);
+
   const branchQuery = useMyBranchDetailQuery(branchId, canSeeTables);
-  const [sortBy, sortDirection] = sortValue.split(":") as [string, "asc" | "desc"];
+  const [sortBy, sortDirection] = sortValueVal.split(":") as [string, "asc" | "desc"];
   const tableQueryParams = useMemo<MyTablesQuery>(
     () => ({
       pageNumber,
       pageSize: 10,
       search: search || undefined,
-      status: statusFilter === "all" ? undefined : statusFilter,
-      isActive: getActiveQueryValue(activeFilter),
+      status: statusFilterVal === "all" ? undefined : statusFilterVal,
+      isActive: getActiveQueryValue(activeFilterVal),
       sortBy,
       sortDirection,
     }),
-    [activeFilter, pageNumber, search, sortBy, sortDirection, statusFilter]
+    [activeFilterVal, pageNumber, search, sortBy, sortDirection, statusFilterVal]
   );
   const tablesQuery = useMyBranchTablesQuery(branchId, tableQueryParams, canSeeTables);
   const openMutation = useOpenMyTableSessionMutation();
@@ -125,7 +137,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
 
   useEffect(() => {
     setPageNumber(1);
-  }, [activeFilter, search, sortValue, statusFilter]);
+  }, [activeFilterVal, search, sortValueVal, statusFilterVal]);
 
   const handleOpenTable = async (table: MyTableResponse) => {
     const response = await openMutation.mutateAsync({
@@ -225,8 +237,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
+              {...register("search")}
               placeholder="Tìm số bàn"
               className="h-11 pl-10"
             />
@@ -235,8 +246,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
           <label className="relative">
             <SlidersHorizontal className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+              {...register("statusFilter")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 w-full appearance-none rounded-md border pr-3 pl-10 text-sm font-semibold outline-none focus:ring-3"
             >
               {STATUS_FILTERS.map((filter) => (
@@ -248,8 +258,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
           </label>
 
           <select
-            value={activeFilter}
-            onChange={(event) => setActiveFilter(event.target.value as ActiveFilter)}
+            {...register("activeFilter")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 w-full rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             <option value="all">Tất cả trạng thái hoạt động</option>
@@ -258,8 +267,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
           </select>
 
           <select
-            value={sortValue}
-            onChange={(event) => setSortValue(event.target.value as (typeof SORT_OPTIONS)[number]["value"])}
+            {...register("sortValue")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 w-full rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             {SORT_OPTIONS.map((option) => (

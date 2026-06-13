@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { getOwnerPortalErrorState, statusFilterToQuery } from "@/components/owner/users/helpers";
@@ -24,6 +26,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
 import type { OwnerScopedUserResponse, UserFormValues, UserListQuery, UserStatusFilter } from "@/types/user-management";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const EMPTY_FORM: UserFormValues = {
   fullName: "",
@@ -33,6 +36,20 @@ const EMPTY_FORM: UserFormValues = {
   password: "",
   role: "STAFF",
   branchIds: [],
+};
+
+const getOwnerUserSchema = (mode: "create" | "edit") => {
+  return z.object({
+    fullName: z.string().trim().min(1, "Họ tên là bắt buộc."),
+    username: z.string().trim().min(1, "Tên đăng nhập là bắt buộc."),
+    email: z.string().trim().min(1, "Email là bắt buộc.").email("Email không hợp lệ."),
+    phoneNumber: z.string(),
+    password: mode === "create"
+      ? z.string().min(1, "Mật khẩu là bắt buộc.")
+      : z.string(),
+    role: z.enum(["BRANCH_MANAGER", "STAFF", "KITCHEN", "CASHIER"]),
+    branchIds: z.array(z.string()).min(1, "Chọn ít nhất một chi nhánh."),
+  });
 };
 
 export const OwnerUsersPage = () => {
@@ -50,8 +67,13 @@ export const OwnerUsersPage = () => {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<OwnerScopedUserResponse | null>(null);
-  const [formValues, setFormValues] = useState<UserFormValues>(EMPTY_FORM);
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof UserFormValues, string>>>({});
+
+  const { register, control, handleSubmit, reset, setValue, formState: { errors } } = useForm<UserFormValues>({
+    resolver: (values, context, options) => {
+      return zodResolver(getOwnerUserSchema(dialogMode))(values, context, options);
+    },
+    defaultValues: EMPTY_FORM,
+  });
 
   useEffect(() => {
     setPageNumber(1);
@@ -89,8 +111,7 @@ export const OwnerUsersPage = () => {
   const restaurantName = users?.[0]?.restaurantName ?? "Cổng chủ quán";
 
   const resetForm = () => {
-    setFormValues(EMPTY_FORM);
-    setFormErrors({});
+    reset(EMPTY_FORM);
     setEditingUser(null);
   };
 
@@ -127,8 +148,7 @@ export const OwnerUsersPage = () => {
   const openEditDialog = (user: OwnerScopedUserResponse) => {
     setDialogMode("edit");
     setEditingUser(user);
-    setFormErrors({});
-    setFormValues({
+    reset({
       fullName: user.fullName,
       username: user.username,
       email: user.email,
@@ -140,48 +160,16 @@ export const OwnerUsersPage = () => {
     setIsDialogOpen(true);
   };
 
-  const validateForm = () => {
-    const nextErrors: Partial<Record<keyof UserFormValues, string>> = {};
-
-    if (!formValues.fullName.trim()) {
-      nextErrors.fullName = "Họ tên là bắt buộc.";
-    }
-
-    if (!formValues.username.trim()) {
-      nextErrors.username = "Tên đăng nhập là bắt buộc.";
-    }
-
-    if (!formValues.email.trim()) {
-      nextErrors.email = "Email là bắt buộc.";
-    }
-
-    if (dialogMode === "create" && !formValues.password.trim()) {
-      nextErrors.password = "Mật khẩu là bắt buộc.";
-    }
-
-    if (!formValues.branchIds.length) {
-      nextErrors.branchIds = "Chọn ít nhất một chi nhánh.";
-    }
-
-    setFormErrors(nextErrors);
-
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const submitForm = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  const submitForm = async (values: UserFormValues) => {
     if (dialogMode === "create") {
       await createMutation.mutateAsync({
-        fullName: formValues.fullName.trim(),
-        username: formValues.username.trim(),
-        email: formValues.email.trim(),
-        phoneNumber: formValues.phoneNumber.trim() || undefined,
-        password: formValues.password,
-        role: formValues.role,
-        branchIds: formValues.branchIds,
+        fullName: values.fullName.trim(),
+        username: values.username.trim(),
+        email: values.email.trim(),
+        phoneNumber: values.phoneNumber.trim() || undefined,
+        password: values.password,
+        role: values.role,
+        branchIds: values.branchIds,
       });
 
       await finishMutation();
@@ -201,12 +189,12 @@ export const OwnerUsersPage = () => {
     await updateMutation.mutateAsync({
       id: editingUser.userId,
       data: {
-        fullName: formValues.fullName.trim(),
-        username: formValues.username.trim(),
-        email: formValues.email.trim(),
-        phoneNumber: formValues.phoneNumber.trim() || undefined,
-        role: formValues.role,
-        branchIds: formValues.branchIds,
+        fullName: values.fullName.trim(),
+        username: values.username.trim(),
+        email: values.email.trim(),
+        phoneNumber: values.phoneNumber.trim() || undefined,
+        role: values.role,
+        branchIds: values.branchIds,
       },
     });
 
@@ -222,11 +210,6 @@ export const OwnerUsersPage = () => {
 
     await banMutation.mutateAsync({ id: user.userId });
     await refreshUsers();
-  };
-
-  const onChangeField = <Key extends keyof UserFormValues>(key: Key, value: UserFormValues[Key]) => {
-    setFormValues((current) => ({ ...current, [key]: value }));
-    setFormErrors((current) => ({ ...current, [key]: undefined }));
   };
 
   const hasQueryFailure = usersQuery.isError || branchesQuery.isError;
@@ -338,8 +321,9 @@ export const OwnerUsersPage = () => {
       <OwnerUserFormDialog
         open={isDialogOpen}
         mode={dialogMode}
-        value={formValues}
-        errors={formErrors}
+        register={register}
+        control={control}
+        errors={errors}
         branches={branches}
         submitting={isSubmitting}
         onOpenChange={(open) => {
@@ -348,8 +332,8 @@ export const OwnerUsersPage = () => {
             resetForm();
           }
         }}
-        onChange={onChangeField}
-        onSubmit={submitForm}
+        setValue={setValue}
+        onSubmit={handleSubmit(submitForm)}
       />
     </PortalShell>
   );

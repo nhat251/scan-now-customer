@@ -5,10 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, DollarSign, History, ImageIcon, Save, Upload } from "lucide-react";
+import type { FieldErrors} from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateManageMenuItemMutation,
@@ -19,6 +23,7 @@ import { useManageCategoriesQuery, useManageMenuItemQuery } from "@/hooks/querie
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
 import type { ManageMenuItemFormValues } from "@/types/manage-menu";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   emptyMenuItemForm,
@@ -58,6 +63,25 @@ const toUpdatePayload = (value: ManageMenuItemFormValues) => ({
   categoryId: value.categoryId,
 });
 
+const getMenuItemSchema = (mode: "create" | "edit") =>
+  z.object({
+    categoryId: z.string().min(1, "Category is required."),
+    name: z.string().trim().min(1, "Name is required."),
+    imageUrl: z.string().refine(
+      (val) => !val || isValidOptionalUrl(val),
+      { message: "Image URL must be a valid URL." }
+    ),
+    description: z.string(),
+    price: mode === "create"
+      ? z.string().refine((val) => Number(val) >= 0, { message: "Price must be greater than or equal to 0." })
+      : z.string(),
+    costPrice: z.string().refine((val) => Number(val) >= 0, { message: "Numeric values must be greater than or equal to 0." }),
+    preparationTime: z.string().refine((val) => Number(val) >= 0, { message: "Numeric values must be greater than or equal to 0." }),
+    displayOrder: z.string().refine((val) => Number(val) >= 0, { message: "Numeric values must be greater than or equal to 0." }),
+    isAvailable: z.boolean(),
+    isFeatured: z.boolean(),
+  });
+
 export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, portal }: MenuItemFormPageProps) => {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
@@ -72,69 +96,49 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
   const createMutation = useCreateManageMenuItemMutation();
   const updateMutation = useUpdateManageMenuItemMutation();
   const uploadImageMutation = useUploadManageMenuItemImagesMutation();
-  const [form, setForm] = useState<ManageMenuItemFormValues>(emptyMenuItemForm);
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
-
   const categories = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data?.items]);
+
+  const { register, control, handleSubmit, reset, setValue } = useForm<ManageMenuItemFormValues>({
+    resolver: zodResolver(getMenuItemSchema(mode)),
+    defaultValues: emptyMenuItemForm,
+  });
+
+  const categoryIdValue = useWatch({ control, name: "categoryId" });
+  const imageUrlValue = useWatch({ control, name: "imageUrl" });
 
   useEffect(() => {
     if (mode === "edit" && itemQuery.data) {
-      setForm(toMenuItemFormValues(itemQuery.data));
+      reset(toMenuItemFormValues(itemQuery.data));
     }
-  }, [itemQuery.data, mode]);
+  }, [itemQuery.data, mode, reset]);
 
   useEffect(() => {
-    if (mode === "create" && !form.categoryId && categories[0]) {
-      setForm((current) => ({ ...current, categoryId: categories[0].categoryId }));
+    if (mode === "create" && !categoryIdValue && categories[0]) {
+      setValue("categoryId", categories[0].categoryId);
     }
-  }, [categories, form.categoryId, mode]);
+  }, [categories, categoryIdValue, mode, setValue]);
 
-  const onChange = <Key extends keyof ManageMenuItemFormValues>(field: Key, value: ManageMenuItemFormValues[Key]) => {
-    setForm((current) => ({ ...current, [field]: value }));
-  };
-
-  const validate = () => {
-    if (!form.categoryId) {
-      showNotify({ type: "warning", message: "Category is required." });
-      return false;
-    }
-
-    if (!form.name.trim()) {
-      showNotify({ type: "warning", message: "Name is required." });
-      return false;
-    }
-
-    if (mode === "create" && Number(form.price) < 0) {
-      showNotify({ type: "warning", message: "Price must be greater than or equal to 0." });
-      return false;
-    }
-
-    if (Number(form.costPrice) < 0 || Number(form.preparationTime) < 0 || Number(form.displayOrder) < 0) {
-      showNotify({ type: "warning", message: "Numeric values must be greater than or equal to 0." });
-      return false;
-    }
-
-    if (!isValidOptionalUrl(form.imageUrl)) {
-      showNotify({ type: "warning", message: "Image URL must be a valid URL." });
-      return false;
-    }
-
-    return true;
-  };
-
-  const submit = async () => {
-    if (!branchId || !validate()) {
+  const submit = async (values: ManageMenuItemFormValues) => {
+    if (!branchId) {
       return;
     }
 
     if (mode === "create") {
-      await createMutation.mutateAsync({ branchId, categoryId: form.categoryId, data: toCreatePayload(form) });
+      await createMutation.mutateAsync({ branchId, categoryId: values.categoryId, data: toCreatePayload(values) });
       router.push(getMenuItemListPath(portal, branchId));
       return;
     }
 
     if (menuItemId) {
-      await updateMutation.mutateAsync({ menuItemId, data: toUpdatePayload(form) });
+      await updateMutation.mutateAsync({ menuItemId, data: toUpdatePayload(values) });
+    }
+  };
+
+  const onValidationError = (errors: FieldErrors<ManageMenuItemFormValues>) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      showNotify({ type: "warning", message: firstError.message });
     }
   };
 
@@ -159,7 +163,7 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
     const imageUrl = response.result[0];
 
     if (imageUrl) {
-      onChange("imageUrl", imageUrl);
+      setValue("imageUrl", imageUrl);
     }
   };
 
@@ -209,11 +213,13 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
 
       <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">Category</span>
+          <div className="space-y-2">
+            <Label htmlFor="item-category" required>
+              Category
+            </Label>
             <select
-              value={form.categoryId}
-              onChange={(event) => onChange("categoryId", event.target.value)}
+              id="item-category"
+              {...register("categoryId")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-3"
             >
               <option value="">Select category</option>
@@ -223,15 +229,17 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
                 </option>
               ))}
             </select>
-          </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">Name</span>
-            <Input value={form.name} onChange={(event) => onChange("name", event.target.value)} />
-          </label>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="item-name" required>
+              Name
+            </Label>
+            <Input id="item-name" {...register("name")} />
+          </div>
           <label className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold">Image URL</span>
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-              <Input value={form.imageUrl} onChange={(event) => onChange("imageUrl", event.target.value)} />
+              <Input {...register("imageUrl")} />
               <Button asChild variant="outline" className="relative overflow-hidden">
                 <span>
                   <Upload className="size-4" />
@@ -249,11 +257,11 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
                 </span>
               </Button>
             </div>
-            {form.imageUrl ? (
+            {imageUrlValue ? (
               <div className="border-border/60 bg-surface-container-low mt-3 flex items-center gap-3 rounded-xl border p-3">
                 <div className="relative size-16 overflow-hidden rounded-lg bg-white">
                   <Image
-                    src={form.imageUrl}
+                    src={imageUrlValue}
                     alt="Menu item preview"
                     fill
                     unoptimized
@@ -263,7 +271,7 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
                 </div>
                 <div className="min-w-0 text-sm">
                   <p className="font-semibold">Current image</p>
-                  <p className="text-muted-foreground truncate">{form.imageUrl}</p>
+                  <p className="text-muted-foreground truncate">{imageUrlValue}</p>
                 </div>
               </div>
             ) : (
@@ -275,42 +283,44 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
           </label>
           <label className="space-y-2 md:col-span-2">
             <span className="text-sm font-semibold">Description</span>
-            <Textarea value={form.description} onChange={(event) => onChange("description", event.target.value)} />
+            <Textarea {...register("description")} />
           </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">Price</span>
+          <div className="space-y-2">
+            <Label htmlFor="item-price" required={mode === "create"}>
+              Price
+            </Label>
             <Input
+              id="item-price"
               disabled={mode === "edit"}
               type="number"
               min={0}
-              value={form.price}
-              onChange={(event) => onChange("price", event.target.value)}
+              {...register("price")}
             />
-          </label>
+          </div>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Cost Price</span>
-            <Input type="number" min={0} value={form.costPrice} onChange={(event) => onChange("costPrice", event.target.value)} />
+            <Input type="number" min={0} {...register("costPrice")} />
           </label>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Preparation Time</span>
-            <Input type="number" min={0} value={form.preparationTime} onChange={(event) => onChange("preparationTime", event.target.value)} />
+            <Input type="number" min={0} {...register("preparationTime")} />
           </label>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Display Order</span>
-            <Input type="number" min={0} value={form.displayOrder} onChange={(event) => onChange("displayOrder", event.target.value)} />
+            <Input type="number" min={0} {...register("displayOrder")} />
           </label>
           <label className="flex items-center gap-3 rounded-xl border p-4 text-sm font-semibold">
-            <input type="checkbox" checked={form.isAvailable} onChange={(event) => onChange("isAvailable", event.target.checked)} />
+            <input type="checkbox" {...register("isAvailable")} />
             Available
           </label>
           <label className="flex items-center gap-3 rounded-xl border p-4 text-sm font-semibold">
-            <input type="checkbox" checked={form.isFeatured} onChange={(event) => onChange("isFeatured", event.target.checked)} />
+            <input type="checkbox" {...register("isFeatured")} />
             Featured
           </label>
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button onClick={submit} disabled={isSubmitting || categories.length === 0}>
+          <Button onClick={handleSubmit(submit, onValidationError)} disabled={isSubmitting || categories.length === 0}>
             <Save className="size-4" />
             {isSubmitting ? "Saving..." : "Save Menu Item"}
           </Button>

@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import type { Control, FieldErrors, UseFormRegister, UseFormSetValue} from "react-hook-form";
+import { useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,27 +30,33 @@ const ROLE_OPTIONS: ManagedUserRole[] = ["BRANCH_MANAGER", "STAFF", "KITCHEN", "
 type OwnerUserFormDialogProps = {
   open: boolean;
   mode: "create" | "edit";
-  value: UserFormValues;
-  errors: Partial<Record<keyof UserFormValues, string>>;
+  register: UseFormRegister<UserFormValues>;
+  control: Control<UserFormValues>;
+  errors: FieldErrors<UserFormValues>;
   branches: BranchResponse[];
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
-  onChange: <Key extends keyof UserFormValues>(key: Key, value: UserFormValues[Key]) => void;
+  setValue: UseFormSetValue<UserFormValues>;
   onSubmit: () => void;
 };
 
 export const OwnerUserFormDialog = ({
   open,
   mode,
-  value,
+  register,
+  control,
   errors,
   branches,
   submitting,
   onOpenChange,
-  onChange,
+  setValue,
   onSubmit,
 }: OwnerUserFormDialogProps) => {
-  const selectedBranchSet = useMemo(() => new Set(value.branchIds), [value.branchIds]);
+  const watchedValues = useWatch({ control });
+  const branchIds = watchedValues.branchIds;
+  const role = watchedValues.role ?? "STAFF";
+
+  const selectedBranchSet = useMemo(() => new Set(branchIds || []), [branchIds]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,45 +71,42 @@ export const OwnerUserFormDialog = ({
         <FieldGroup className="gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="fullName">Full name</FieldLabel>
+              <FieldLabel htmlFor="fullName" required>Full name</FieldLabel>
               <FieldContent>
                 <Input
                   id="fullName"
-                  value={value.fullName}
-                  onChange={(event) => onChange("fullName", event.target.value)}
                   placeholder="Enter full name"
                   aria-invalid={!!errors.fullName}
+                  {...register("fullName")}
                 />
-                <FieldError>{errors.fullName}</FieldError>
+                <FieldError>{errors.fullName?.message}</FieldError>
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <FieldLabel htmlFor="username" required>Username</FieldLabel>
               <FieldContent>
                 <Input
                   id="username"
-                  value={value.username}
-                  onChange={(event) => onChange("username", event.target.value)}
                   placeholder="Enter username"
                   aria-invalid={!!errors.username}
+                  {...register("username")}
                 />
-                <FieldError>{errors.username}</FieldError>
+                <FieldError>{errors.username?.message}</FieldError>
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email" required>Email</FieldLabel>
               <FieldContent>
                 <Input
                   id="email"
                   type="email"
-                  value={value.email}
-                  onChange={(event) => onChange("email", event.target.value)}
                   placeholder="name@example.com"
                   aria-invalid={!!errors.email}
+                  {...register("email")}
                 />
-                <FieldError>{errors.email}</FieldError>
+                <FieldError>{errors.email?.message}</FieldError>
               </FieldContent>
             </Field>
 
@@ -110,58 +115,56 @@ export const OwnerUserFormDialog = ({
               <FieldContent>
                 <Input
                   id="phoneNumber"
-                  value={value.phoneNumber}
-                  onChange={(event) => onChange("phoneNumber", event.target.value)}
                   placeholder="Optional phone number"
                   aria-invalid={!!errors.phoneNumber}
+                  {...register("phoneNumber")}
                 />
-                <FieldError>{errors.phoneNumber}</FieldError>
+                <FieldError>{errors.phoneNumber?.message}</FieldError>
               </FieldContent>
             </Field>
 
             {mode === "create" && (
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password" required>Password</FieldLabel>
                 <FieldContent>
                   <Input
                     id="password"
                     type="password"
-                    value={value.password}
-                    onChange={(event) => onChange("password", event.target.value)}
                     placeholder="Enter password"
                     aria-invalid={!!errors.password}
+                    {...register("password")}
                   />
-                  <FieldError>{errors.password}</FieldError>
+                  <FieldError>{errors.password?.message}</FieldError>
                 </FieldContent>
               </Field>
             )}
 
             <Field>
-              <FieldLabel htmlFor="role">Role</FieldLabel>
+              <FieldLabel htmlFor="role" required>Role</FieldLabel>
               <FieldContent>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button id="role" variant="outline" className="w-full justify-between" aria-invalid={!!errors.role}>
-                      {getRoleLabel(value.role)}
+                      {getRoleLabel(role)}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
-                    <DropdownMenuRadioGroup value={value.role} onValueChange={(nextRole) => onChange("role", nextRole as ManagedUserRole)}>
-                      {ROLE_OPTIONS.map((role) => (
-                        <DropdownMenuRadioItem key={role} value={role}>
-                          {getRoleLabel(role)}
+                    <DropdownMenuRadioGroup value={role} onValueChange={(nextRole) => setValue("role", nextRole as ManagedUserRole)}>
+                      {ROLE_OPTIONS.map((r) => (
+                        <DropdownMenuRadioItem key={r} value={r}>
+                          {getRoleLabel(r)}
                         </DropdownMenuRadioItem>
                       ))}
                     </DropdownMenuRadioGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <FieldError>{errors.role}</FieldError>
+                <FieldError>{errors.role?.message}</FieldError>
               </FieldContent>
             </Field>
           </div>
 
           <Field>
-            <FieldLabel>Branch assignment</FieldLabel>
+            <FieldLabel required>Branch assignment</FieldLabel>
             <FieldContent>
               <div className="border-border/70 grid gap-3 rounded-2xl border p-4 md:grid-cols-2">
                 {branches.map((branch) => {
@@ -189,11 +192,12 @@ export const OwnerUserFormDialog = ({
                           checked={checked}
                           onCheckedChange={(nextChecked) => {
                             const shouldCheck = nextChecked === true;
+                            const currentBranchIds = branchIds || [];
                             const nextBranchIds = shouldCheck
-                              ? [...value.branchIds, branch.branchId]
-                              : value.branchIds.filter((branchId) => branchId !== branch.branchId);
+                              ? [...currentBranchIds, branch.branchId]
+                              : currentBranchIds.filter((id) => id !== branch.branchId);
 
-                            onChange("branchIds", nextBranchIds);
+                            setValue("branchIds", nextBranchIds, { shouldValidate: true });
                           }}
                         >
                           Assign {branch.name}
@@ -203,7 +207,7 @@ export const OwnerUserFormDialog = ({
                   );
                 })}
               </div>
-              <FieldError>{errors.branchIds}</FieldError>
+              <FieldError>{errors.branchIds?.message}</FieldError>
             </FieldContent>
           </Field>
         </FieldGroup>

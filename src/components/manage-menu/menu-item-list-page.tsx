@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Check, Edit, History, PackageX, Plus, Power, PowerOff, Search, Star } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -55,28 +56,45 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebounce(searchInput.trim(), 250);
-  const [categoryId, setCategoryId] = useState("all");
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const [availability, setAvailability] = useState<AvailabilityFilter>("all");
-  const [featured, setFeatured] = useState<FeaturedFilter>("all");
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const { register, control } = useForm({
+    defaultValues: {
+      search: "",
+      categoryId: "all",
+      status: "all" as StatusFilter,
+      availability: "all" as AvailabilityFilter,
+      featured: "all" as FeaturedFilter,
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const categoryIdVal = useWatch({ control, name: "categoryId" });
+  const statusVal = useWatch({ control, name: "status" });
+  const availabilityVal = useWatch({ control, name: "availability" });
+  const featuredVal = useWatch({ control, name: "featured" });
+
+  const search = useDebounce(searchVal.trim(), 250);
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, [search, categoryIdVal, statusVal, availabilityVal, featuredVal]);
+
   const query = useMemo<ManageMenuQuery>(
     () => ({
       pageNumber,
       pageSize,
       search: search || undefined,
-      categoryId: categoryId === "all" ? undefined : categoryId,
-      isActive: statusFilterToQuery(status),
-      isAvailable: availabilityFilterToQuery(availability),
-      isFeatured: featuredFilterToQuery(featured),
+      categoryId: categoryIdVal === "all" ? undefined : categoryIdVal,
+      isActive: statusFilterToQuery(statusVal),
+      isAvailable: availabilityFilterToQuery(availabilityVal),
+      isFeatured: featuredFilterToQuery(featuredVal),
       sortBy: "displayOrder",
       sortDirection: "asc",
     }),
-    [availability, categoryId, featured, pageNumber, pageSize, search, status]
+    [availabilityVal, categoryIdVal, featuredVal, pageNumber, pageSize, search, statusVal]
   );
 
   const menuQuery = useManageMenuItemsQuery(branchId, query);
@@ -96,11 +114,6 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
   const totalItems = menuQuery.data?.totalItems ?? 0;
   const availableCount = items.filter((item) => item.isAvailable).length;
   const featuredCount = items.filter((item) => item.isFeatured).length;
-
-  const setFilter = (setter: (value: string) => void, value: string) => {
-    setPageNumber(1);
-    setter(value);
-  };
 
   const toggleSelected = (id: string) => {
     setSelectedIds((current) => (current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]));
@@ -176,25 +189,25 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
         <div className="grid gap-3 xl:grid-cols-[1fr_180px_180px_180px_180px]">
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input value={searchInput} onChange={(event) => setFilter(setSearchInput, event.target.value)} placeholder="Search menu items" className="h-11 pl-10" />
+            <Input {...register("search")} placeholder="Search menu items" className="h-11 pl-10" />
           </label>
-          <select value={categoryId} onChange={(event) => setFilter(setCategoryId, event.target.value)} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
+          <select {...register("categoryId")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
             <option value="all">All categories</option>
             {categories.map((category) => (
               <option key={category.categoryId} value={category.categoryId}>{category.name}</option>
             ))}
           </select>
-          <select value={status} onChange={(event) => setFilter((value) => setStatus(value as StatusFilter), event.target.value)} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
+          <select {...register("status")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
             <option value="all">All statuses</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <select value={availability} onChange={(event) => setFilter((value) => setAvailability(value as AvailabilityFilter), event.target.value)} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
+          <select {...register("availability")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
             <option value="all">All availability</option>
             <option value="available">Available</option>
             <option value="out-of-stock">Out of Stock</option>
           </select>
-          <select value={featured} onChange={(event) => setFilter((value) => setFeatured(value as FeaturedFilter), event.target.value)} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
+          <select {...register("featured")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
             <option value="all">All featured</option>
             <option value="featured">Featured</option>
             <option value="not-featured">Not featured</option>

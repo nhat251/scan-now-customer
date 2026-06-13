@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Edit, Plus, Power, PowerOff, RefreshCw, Search } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -54,23 +55,38 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebounce(searchInput.trim(), 250);
-  const [status, setStatus] = useState<StatusFilter>("all");
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortValue, setSortValue] = useState("displayOrder:asc");
-  const [sortBy, sortDirection] = sortValue.split(":") as [string, "asc" | "desc"];
+
+  const { register, control } = useForm({
+    defaultValues: {
+      search: "",
+      status: "all" as StatusFilter,
+      sortValue: "displayOrder:asc",
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const statusVal = useWatch({ control, name: "status" });
+  const sortValueVal = useWatch({ control, name: "sortValue" });
+
+  const search = useDebounce(searchVal.trim(), 250);
+
+  useEffect(() => {
+    setPageNumber(1);
+  }, [search, statusVal, sortValueVal]);
+
+  const [sortBy, sortDirection] = sortValueVal.split(":") as [string, "asc" | "desc"];
   const query = useMemo<ManageCategoryQuery>(
     () => ({
       pageNumber,
       pageSize,
       search: search || undefined,
-      isActive: statusFilterToQuery(status),
+      isActive: statusFilterToQuery(statusVal),
       sortBy,
       sortDirection,
     }),
-    [pageNumber, pageSize, search, sortBy, sortDirection, status]
+    [pageNumber, pageSize, search, sortBy, sortDirection, statusVal]
   );
   const categoriesQuery = useManageCategoriesQuery(branchId, query);
   const activeMutation = useSetManageCategoryActiveMutation();
@@ -131,21 +147,13 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={searchInput}
-              onChange={(event) => {
-                setPageNumber(1);
-                setSearchInput(event.target.value);
-              }}
+              {...register("search")}
               placeholder="Search categories"
               className="h-11 pl-10"
             />
           </label>
           <select
-            value={status}
-            onChange={(event) => {
-              setPageNumber(1);
-              setStatus(event.target.value as StatusFilter);
-            }}
+            {...register("status")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             <option value="all">All statuses</option>
@@ -153,11 +161,7 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
             <option value="inactive">Inactive</option>
           </select>
           <select
-            value={sortValue}
-            onChange={(event) => {
-              setPageNumber(1);
-              setSortValue(event.target.value);
-            }}
+            {...register("sortValue")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             {CATEGORY_SORT_OPTIONS.map((option) => (

@@ -1,6 +1,9 @@
+import type { Control, FieldErrors, UseFormRegister, UseFormSetValue} from "react-hook-form";
+import { useWatch } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { BranchResponse, ManagerUserFormValues, ManagerUserRoleOption } from "@/types/user-management";
 
@@ -13,30 +16,43 @@ const ROLE_OPTIONS: ManagerUserRoleOption[] = ["STAFF", "KITCHEN", "CASHIER"];
 
 type UserFormDialogProps = {
   branches: BranchResponse[];
-  form: ManagerUserFormValues;
+  register: UseFormRegister<ManagerUserFormValues>;
+  control: Control<ManagerUserFormValues>;
+  errors: FieldErrors<ManagerUserFormValues>;
+  setValue: UseFormSetValue<ManagerUserFormValues>;
   mode: FormMode;
   open: boolean;
   showBranchSelection?: boolean;
-  onBranchToggle: (branchId: string) => void;
   onClose: () => void;
   onSubmit: () => void;
-  onChange: (field: keyof ManagerUserFormValues, value: string) => void;
   pending: boolean;
 };
 
 export const UserFormDialog = ({
   branches,
-  form,
+  register,
+  control,
+  errors,
+  setValue,
   mode,
   open,
   showBranchSelection = true,
-  onBranchToggle,
   onClose,
   onSubmit,
-  onChange,
   pending,
 }: UserFormDialogProps) => {
-  const selectedRoleLabel = ROLE_OPTIONS.find((role) => role === form.role) ?? "Select role";
+  const watchedValues = useWatch({ control });
+  const branchIds = watchedValues.branchIds ?? [];
+  const role = watchedValues.role ?? "STAFF";
+
+  const selectedRoleLabel = ROLE_OPTIONS.find((r) => r === role) ?? "Select role";
+
+  const handleBranchToggle = (branchId: string) => {
+    const nextBranchIds = branchIds.includes(branchId)
+      ? branchIds.filter((id) => id !== branchId)
+      : [...branchIds, branchId];
+    setValue("branchIds", nextBranchIds, { shouldValidate: true });
+  };
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -51,23 +67,42 @@ export const UserFormDialog = ({
         <div className="grid gap-4 md:grid-cols-2">
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="fullName">Full name</FieldLabel>
+              <FieldLabel htmlFor="fullName" required>Full name</FieldLabel>
               <FieldContent>
-                <Input id="fullName" value={form.fullName} onChange={(event) => onChange("fullName", event.target.value)} />
+                <Input
+                  id="fullName"
+                  placeholder="Enter full name"
+                  aria-invalid={!!errors.fullName}
+                  {...register("fullName")}
+                />
+                <FieldError>{errors.fullName?.message}</FieldError>
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <FieldLabel htmlFor="username" required>Username</FieldLabel>
               <FieldContent>
-                <Input id="username" value={form.username} onChange={(event) => onChange("username", event.target.value)} />
+                <Input
+                  id="username"
+                  placeholder="Enter username"
+                  aria-invalid={!!errors.username}
+                  {...register("username")}
+                />
+                <FieldError>{errors.username?.message}</FieldError>
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email" required>Email</FieldLabel>
               <FieldContent>
-                <Input id="email" type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  aria-invalid={!!errors.email}
+                  {...register("email")}
+                />
+                <FieldError>{errors.email?.message}</FieldError>
               </FieldContent>
             </Field>
           </FieldGroup>
@@ -76,29 +111,37 @@ export const UserFormDialog = ({
             <Field>
               <FieldLabel htmlFor="phoneNumber">Phone number</FieldLabel>
               <FieldContent>
-                <Input id="phoneNumber" value={form.phoneNumber} onChange={(event) => onChange("phoneNumber", event.target.value)} />
+                <Input
+                  id="phoneNumber"
+                  placeholder="Optional phone number"
+                  aria-invalid={!!errors.phoneNumber}
+                  {...register("phoneNumber")}
+                />
+                <FieldError>{errors.phoneNumber?.message}</FieldError>
               </FieldContent>
             </Field>
 
             <FilterDropdown
               id="role"
               label="Role"
-              value={form.role}
+              value={role}
               displayValue={selectedRoleLabel}
               options={ROLE_OPTIONS.map((roleOption) => ({ label: roleOption, value: roleOption }))}
-              onValueChange={(nextRole) => onChange("role", nextRole)}
+              onValueChange={(nextRole) => setValue("role", nextRole as ManagerUserRoleOption)}
             />
 
             {mode === "create" && (
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password" required>Password</FieldLabel>
                 <FieldContent>
                   <Input
                     id="password"
                     type="password"
-                    value={form.password}
-                    onChange={(event) => onChange("password", event.target.value)}
+                    placeholder="Enter password"
+                    aria-invalid={!!errors.password}
+                    {...register("password")}
                   />
+                  <FieldError>{errors.password?.message}</FieldError>
                 </FieldContent>
               </Field>
             )}
@@ -106,7 +149,10 @@ export const UserFormDialog = ({
         </div>
 
         {showBranchSelection ? (
-          <BranchMultiSelect branches={branches} selectedBranchIds={form.branchIds} onBranchToggle={onBranchToggle} />
+          <div className="space-y-2">
+            <BranchMultiSelect branches={branches} selectedBranchIds={branchIds} onBranchToggle={handleBranchToggle} />
+            <FieldError>{errors.branchIds?.message}</FieldError>
+          </div>
         ) : null}
 
         <DialogFooter>

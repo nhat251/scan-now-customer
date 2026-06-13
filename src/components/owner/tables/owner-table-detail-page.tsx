@@ -15,6 +15,8 @@ import {
   RefreshCw,
   Save,
 } from "lucide-react";
+import { type FieldErrors,useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
 import type { OwnerTableFormValues, OwnerTableOrderHistoryResponse, OwnerTableStatus } from "@/types/owner-table";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   downloadQrBlob,
@@ -126,6 +129,14 @@ const STATUS_STYLE: Record<string, { active: string; inactive: string }> = {
   DISABLED: { active: "border-border bg-muted text-muted-foreground", inactive: "border-border text-muted-foreground" },
 };
 
+const ownerTableSchema = z.object({
+  tableNumber: z.string().trim().min(1, "Table number is required."),
+  capacity: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num >= 1;
+  }, { message: "Capacity must be greater than or equal to 1." }),
+});
+
 export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: OwnerTableDetailPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getTablePortalCopy(portal);
@@ -134,7 +145,6 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
   const table = tableQuery.data;
   const orderHistory = useMemo(() => orderHistoryQuery.data ?? [], [orderHistoryQuery.data]);
   const tableStatus = normalizeOwnerTableStatus(table?.status);
-  const [form, setForm] = useState<OwnerTableFormValues>(toOwnerTableFormValues());
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const updateMutation = useUpdateOwnerTableMutation();
   const statusMutation = useUpdateOwnerTableStatusMutation();
@@ -164,41 +174,31 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
     );
   }, [orderHistory]);
 
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<OwnerTableFormValues>({
+    resolver: zodResolver(ownerTableSchema),
+    defaultValues: toOwnerTableFormValues(),
+  });
+
   useEffect(() => {
     if (table) {
-      setForm(toOwnerTableFormValues(table));
+      reset(toOwnerTableFormValues(table));
     }
-  }, [table]);
+  }, [table, reset]);
 
   useEffect(() => {
     setHistoryPage((current) => Math.min(current, historyTotalPages));
   }, [historyTotalPages]);
 
-  const onChange = <Key extends keyof OwnerTableFormValues>(key: Key, value: OwnerTableFormValues[Key]) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const validate = () => {
-    if (!form.tableNumber.trim()) {
-      showNotify({ type: "warning", message: "Table number is required." });
-      return false;
-    }
-
-    if (!Number.isFinite(Number(form.capacity)) || Number(form.capacity) < 1) {
-      showNotify({ type: "warning", message: "Capacity must be greater than or equal to 1." });
-      return false;
-    }
-
-    return true;
-  };
-
-  const saveInfo = async () => {
-    if (!validate()) {
-      return;
-    }
-
-    await updateMutation.mutateAsync({ tableId, data: getOwnerTablePayload(form) });
+  const saveInfo = async (values: OwnerTableFormValues) => {
+    await updateMutation.mutateAsync({ tableId, data: getOwnerTablePayload(values) });
     await tableQuery.refetch();
+  };
+
+  const onValidationError = (errors: FieldErrors<OwnerTableFormValues>) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      showNotify({ type: "warning", message: firstError.message });
+    }
   };
 
   const updateStatus = async (status: Exclude<OwnerTableStatus, "OCCUPIED">) => {
@@ -286,11 +286,11 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
         <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
             <OwnerTableForm
-              value={form}
+              register={register}
+              errors={errors}
               submitting={updateMutation.isPending}
               submitLabel="Save Table"
-              onChange={onChange}
-              onSubmit={saveInfo}
+              onSubmit={handleSubmit(saveInfo, onValidationError)}
             />
 
             <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">

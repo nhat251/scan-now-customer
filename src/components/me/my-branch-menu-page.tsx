@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   Store,
 } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -104,31 +105,42 @@ const MenuItemImage = ({
 
 export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
   const currentUser = useUserStore((state) => state.user);
-  const [searchInput, setSearchInput] = useState("");
-  const search = useDebounce(searchInput.trim(), 250);
-  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>("all");
-  const [categoryId, setCategoryId] = useState("all");
-  const [sortValue, setSortValue] = useState<(typeof SORT_OPTIONS)[number]["value"]>("displayOrder:asc");
   const [pageNumber, setPageNumber] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const { register, control, setValue } = useForm({
+    defaultValues: {
+      search: "",
+      availabilityFilter: "all" as AvailabilityFilter,
+      categoryId: "all",
+      sortValue: "displayOrder:asc" as (typeof SORT_OPTIONS)[number]["value"],
+    },
+  });
+
+  const searchVal = useWatch({ control, name: "search" });
+  const availabilityFilterVal = useWatch({ control, name: "availabilityFilter" });
+  const categoryIdVal = useWatch({ control, name: "categoryId" });
+  const sortValueVal = useWatch({ control, name: "sortValue" });
+
+  const search = useDebounce(searchVal.trim(), 250);
 
   const canSeeMenu = canManageMenuAvailability(currentUser?.role);
   const canSeeTables = canManageTableSessions(currentUser?.role);
   const canSeeOrders = canHandleWaiterOrders(currentUser?.role);
   const canSeeKitchen = canHandleKitchenOrders(currentUser?.role);
   const branchQuery = useMyBranchDetailQuery(branchId, canSeeMenu);
-  const [sortBy, sortDirection] = sortValue.split(":") as [string, "asc" | "desc"];
+  const [sortBy, sortDirection] = sortValueVal.split(":") as [string, "asc" | "desc"];
   const menuQueryParams = useMemo<MyMenuQuery>(
     () => ({
       pageNumber,
       pageSize: 10,
       search: search || undefined,
-      isAvailable: getAvailabilityQueryValue(availabilityFilter),
-      categoryId: categoryId === "all" ? undefined : categoryId,
+      isAvailable: getAvailabilityQueryValue(availabilityFilterVal),
+      categoryId: categoryIdVal === "all" ? undefined : categoryIdVal,
       sortBy,
       sortDirection,
     }),
-    [availabilityFilter, categoryId, pageNumber, search, sortBy, sortDirection]
+    [availabilityFilterVal, categoryIdVal, pageNumber, search, sortBy, sortDirection]
   );
   const categoryQueryParams = useMemo<MyMenuQuery>(
     () => ({
@@ -162,7 +174,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
 
   useEffect(() => {
     setPageNumber(1);
-  }, [availabilityFilter, categoryId, search, sortValue]);
+  }, [availabilityFilterVal, categoryIdVal, search, sortValueVal]);
 
   useEffect(() => {
     setSelectedIds((current) =>
@@ -271,8 +283,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
+              {...register("search")}
               placeholder="Tìm món ăn, đồ uống..."
               className="h-11 rounded-2xl border-[#e8e4dc] bg-[#f8f7f4] pl-10 text-sm shadow-none lg:bg-white"
             />
@@ -281,8 +292,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
           <label className="relative hidden lg:block">
             <SlidersHorizontal className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <select
-              value={availabilityFilter}
-              onChange={(event) => setAvailabilityFilter(event.target.value as AvailabilityFilter)}
+              {...register("availabilityFilter")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 w-full appearance-none rounded-2xl border pr-3 pl-10 text-sm font-semibold outline-none focus:ring-3"
             >
               {AVAILABILITY_FILTER_OPTIONS.map((option) => (
@@ -302,7 +312,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               >
                 <Store className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <span className="flex-1 truncate text-left">
-                  {categoryId === "all" ? "Tất cả danh mục" : (categories.find((c) => c.id === categoryId)?.name ?? "Danh mục")}
+                  {categoryIdVal === "all" ? "Tất cả danh mục" : (categories.find((c) => c.id === categoryIdVal)?.name ?? "Danh mục")}
                 </span>
                 <ChevronDown className="text-muted-foreground size-4 shrink-0" />
               </button>
@@ -313,10 +323,10 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
             >
               <button
                 type="button"
-                onClick={() => setCategoryId("all")}
+                onClick={() => setValue("categoryId", "all")}
                 className={cn(
                   "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
-                  categoryId === "all" ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
+                  categoryIdVal === "all" ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
                 )}
               >
                 Tất cả danh mục
@@ -325,10 +335,10 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                 <button
                   key={category.id}
                   type="button"
-                  onClick={() => setCategoryId(category.id)}
+                  onClick={() => setValue("categoryId", category.id)}
                   className={cn(
                     "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
-                    categoryId === category.id ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
+                    categoryIdVal === category.id ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {category.name}
@@ -346,7 +356,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               >
                 <ArrowUpDown className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <span className="flex-1 truncate text-left">
-                  {SORT_OPTIONS.find((o) => o.value === sortValue)?.label ?? "Sắp xếp"}
+                  {SORT_OPTIONS.find((o) => o.value === sortValueVal)?.label ?? "Sắp xếp"}
                 </span>
                 <ChevronDown className="text-muted-foreground size-4 shrink-0" />
               </button>
@@ -359,10 +369,10 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setSortValue(option.value)}
+                  onClick={() => setValue("sortValue", option.value)}
                   className={cn(
                     "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
-                    sortValue === option.value ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
+                    sortValueVal === option.value ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {option.label}
@@ -377,10 +387,10 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
             <button
               key={option.value}
               type="button"
-              onClick={() => setAvailabilityFilter(option.value)}
+              onClick={() => setValue("availabilityFilter", option.value)}
               className={cn(
                 "flex-none rounded-full px-4 py-2 text-xs font-bold transition",
-                availabilityFilter === option.value
+                availabilityFilterVal === option.value
                   ? "bg-primary-container shadow-primary-container/20 text-white shadow-sm"
                   : "bg-[#f1efe9] text-stone-500"
               )}
@@ -388,7 +398,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               {option.label}
             </button>
           ))}
-          </div>
+        </div>
 
         <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl bg-[#f8f7f4] px-3 py-2 lg:hidden">
           <label className="flex min-w-0 items-center gap-2 text-xs font-bold text-stone-600">

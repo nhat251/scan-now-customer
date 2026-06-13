@@ -1,3 +1,5 @@
+import type { FieldErrors,UseFormRegister } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -5,14 +7,13 @@ import type { OwnerBranchFormValues } from "@/types/user-management";
 
 type OwnerBranchFormProps = {
   mode: "create" | "edit";
-  value: OwnerBranchFormValues;
-  errors: Partial<Record<keyof OwnerBranchFormValues, string>>;
+  register: UseFormRegister<OwnerBranchFormValues>;
+  errors: FieldErrors<OwnerBranchFormValues>;
   submitting: boolean;
-  onChange: <Key extends keyof OwnerBranchFormValues>(key: Key, value: OwnerBranchFormValues[Key]) => void;
   onSubmit: () => void;
 };
 
-export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onSubmit }: OwnerBranchFormProps) => {
+export const OwnerBranchForm = ({ mode, register, errors, submitting, onSubmit }: OwnerBranchFormProps) => {
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-6">
@@ -25,30 +26,28 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
       <FieldGroup className="gap-6">
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="branch-name">Tên chi nhánh</FieldLabel>
+            <FieldLabel htmlFor="branch-name" required>Tên chi nhánh</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-name"
-                value={value.name}
-                onChange={(event) => onChange("name", event.target.value)}
                 placeholder="Nhập tên chi nhánh"
                 aria-invalid={!!errors.name}
+                {...register("name")}
               />
-              <FieldError>{errors.name}</FieldError>
+              <FieldError>{errors.name?.message}</FieldError>
             </FieldContent>
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="branch-slug">Slug</FieldLabel>
+            <FieldLabel htmlFor="branch-slug" required>Slug</FieldLabel>
             <FieldContent>
               <Input
                 id="branch-slug"
-                value={value.slug}
-                onChange={(event) => onChange("slug", event.target.value)}
                 placeholder="branch-slug"
                 aria-invalid={!!errors.slug}
+                {...register("slug")}
               />
-              <FieldError>{errors.slug}</FieldError>
+              <FieldError>{errors.slug?.message}</FieldError>
             </FieldContent>
           </Field>
         </div>
@@ -60,12 +59,11 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
               <Input
                 id="branch-email"
                 type="email"
-                value={value.email}
-                onChange={(event) => onChange("email", event.target.value)}
                 placeholder="branch@example.com"
                 aria-invalid={!!errors.email}
+                {...register("email")}
               />
-              <FieldError>{errors.email}</FieldError>
+              <FieldError>{errors.email?.message}</FieldError>
             </FieldContent>
           </Field>
 
@@ -74,12 +72,11 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
             <FieldContent>
               <Input
                 id="branch-phone"
-                value={value.phone}
-                onChange={(event) => onChange("phone", event.target.value)}
                 placeholder="Số điện thoại liên hệ"
                 aria-invalid={!!errors.phone}
+                {...register("phone")}
               />
-              <FieldError>{errors.phone}</FieldError>
+              <FieldError>{errors.phone?.message}</FieldError>
             </FieldContent>
           </Field>
         </div>
@@ -89,12 +86,11 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
           <FieldContent>
             <Input
               id="branch-address"
-              value={value.address}
-              onChange={(event) => onChange("address", event.target.value)}
               placeholder="Đường, phường/xã, quận/huyện, thành phố"
               aria-invalid={!!errors.address}
+              {...register("address")}
             />
-            <FieldError>{errors.address}</FieldError>
+            <FieldError>{errors.address?.message}</FieldError>
           </FieldContent>
         </Field>
 
@@ -105,11 +101,10 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
               <Input
                 id="branch-open-time"
                 type="time"
-                value={value.openTime}
-                onChange={(event) => onChange("openTime", event.target.value)}
                 aria-invalid={!!errors.openTime}
+                {...register("openTime")}
               />
-              <FieldError>{errors.openTime}</FieldError>
+              <FieldError>{errors.openTime?.message}</FieldError>
             </FieldContent>
           </Field>
 
@@ -119,11 +114,10 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
               <Input
                 id="branch-close-time"
                 type="time"
-                value={value.closeTime}
-                onChange={(event) => onChange("closeTime", event.target.value)}
                 aria-invalid={!!errors.closeTime}
+                {...register("closeTime")}
               />
-              <FieldError>{errors.closeTime}</FieldError>
+              <FieldError>{errors.closeTime?.message}</FieldError>
             </FieldContent>
           </Field>
         </div>
@@ -137,11 +131,10 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
                 type="number"
                 min="0"
                 step="0.01"
-                value={value.vatPercent}
-                onChange={(event) => onChange("vatPercent", event.target.value)}
                 aria-invalid={!!errors.vatPercent}
+                {...register("vatPercent")}
               />
-              <FieldError>{errors.vatPercent}</FieldError>
+              <FieldError>{errors.vatPercent?.message}</FieldError>
             </FieldContent>
           </Field>
 
@@ -153,11 +146,10 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
                 type="number"
                 min="0"
                 step="0.01"
-                value={value.serviceChargePercent}
-                onChange={(event) => onChange("serviceChargePercent", event.target.value)}
                 aria-invalid={!!errors.serviceChargePercent}
+                {...register("serviceChargePercent")}
               />
-              <FieldError>{errors.serviceChargePercent}</FieldError>
+              <FieldError>{errors.serviceChargePercent?.message}</FieldError>
             </FieldContent>
           </Field>
 
@@ -169,11 +161,10 @@ export const OwnerBranchForm = ({ mode, value, errors, submitting, onChange, onS
                 type="number"
                 min="0"
                 step="0.01"
-                value={value.serviceChargeFixed}
-                onChange={(event) => onChange("serviceChargeFixed", event.target.value)}
                 aria-invalid={!!errors.serviceChargeFixed}
+                {...register("serviceChargeFixed")}
               />
-              <FieldError>{errors.serviceChargeFixed}</FieldError>
+              <FieldError>{errors.serviceChargeFixed?.message}</FieldError>
             </FieldContent>
           </Field>
         </div>

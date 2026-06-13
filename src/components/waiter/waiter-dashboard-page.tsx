@@ -18,9 +18,11 @@ import {
   XCircle,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useForm } from "react-hook-form";
 
 import { formatCurrency } from "@/components/customer/customer-session-utils";
 import { formatDateTime } from "@/components/owner/tables/helpers";
+import { Label } from "@/components/ui/label";
 import { useCloseMyTableSessionMutation, useOpenMyTableSessionMutation } from "@/hooks/mutations/useMyTableMutations";
 import {
   useConfirmWaiterOrderMutation,
@@ -126,12 +128,22 @@ export const WaiterDashboardPage = () => {
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("all");
   const [orderSearchInput, setOrderSearchInput] = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
-  const [categorySearch, setCategorySearch] = useState("");
+  const { watch: watchOrder, setValue: setValueOrder, reset: resetOrderForm } = useForm({
+    defaultValues: {
+      selectedTableId: null as string | null,
+      categorySearch: "",
+      customerName: "",
+      customerNote: "",
+    },
+  });
+
+  const selectedTableId = watchOrder("selectedTableId");
+  const categorySearch = watchOrder("categorySearch");
+  const customerName = watchOrder("customerName");
+  const customerNote = watchOrder("customerNote");
+
   const [activeCategory, setActiveCategory] = useState("all");
   const [cartItems, setCartItems] = useState<WaiterCartItem[]>([]);
-  const [customerName, setCustomerName] = useState("");
-  const [customerNote, setCustomerNote] = useState("");
   const [selectedTableModal, setSelectedTableModal] = useState<MyTableResponse | null>(null);
 
   const activeBranchId = branchId || branches[0]?.branchId;
@@ -261,11 +273,13 @@ export const WaiterDashboardPage = () => {
   );
 
   const setCreateMode = (tableId: string | null) => {
-    setSelectedTableId(tableId);
+    resetOrderForm({
+      selectedTableId: tableId,
+      customerName: "",
+      customerNote: "",
+      categorySearch: "",
+    });
     setCartItems([]);
-    setCustomerName("");
-    setCustomerNote("");
-    setCategorySearch("");
     setActiveCategory("all");
     setCurrentView("create-order");
   };
@@ -345,8 +359,12 @@ export const WaiterDashboardPage = () => {
     });
 
     setCartItems([]);
-    setCustomerName("");
-    setCustomerNote("");
+    resetOrderForm({
+      selectedTableId: null,
+      customerName: "",
+      customerNote: "",
+      categorySearch: "",
+    });
     setSelectedOrderId(response.result.orderId);
     setCurrentView("orders");
     await refreshWaiterData();
@@ -409,7 +427,12 @@ export const WaiterDashboardPage = () => {
                   onChange={(event) => {
                     setBranchId(event.target.value);
                     setSelectedOrderId(null);
-                    setSelectedTableId(null);
+                    resetOrderForm({
+                      selectedTableId: null,
+                      customerName: "",
+                      customerNote: "",
+                      categorySearch: "",
+                    });
                   }}
                   className="h-10 min-w-0 flex-1 rounded-2xl border border-[#e8e4dc] bg-[#f8f7f4] px-3 text-[13px] font-bold outline-none"
                 >
@@ -471,21 +494,21 @@ export const WaiterDashboardPage = () => {
                 tables={tables}
                 selectedTable={selectedTable}
                 selectedTableOrders={selectedTableOrders}
-                onSelectTable={(tableId) => setSelectedTableId(tableId)}
+                onSelectTable={(tableId) => setValueOrder("selectedTableId", tableId)}
                 menuItems={menuItems}
                 categories={categoryOptions}
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}
                 search={categorySearch}
-                onSearchChange={setCategorySearch}
+                onSearchChange={(value) => setValueOrder("categorySearch", value)}
                 cartItems={cartItems}
                 onAddToCart={addToCart}
                 onUpdateQty={updateCartQty}
                 cartTotal={cartTotal}
                 customerName={customerName}
-                onCustomerNameChange={setCustomerName}
+                onCustomerNameChange={(value) => setValueOrder("customerName", value)}
                 customerNote={customerNote}
-                onCustomerNoteChange={setCustomerNote}
+                onCustomerNoteChange={(value) => setValueOrder("customerNote", value)}
                 onSubmit={submitOrder}
                 isSubmitting={createOrderMutation.isPending || openTableMutation.isPending}
               />
@@ -498,7 +521,7 @@ export const WaiterDashboardPage = () => {
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}
                 search={categorySearch}
-                onSearchChange={setCategorySearch}
+                onSearchChange={(value) => setValueOrder("categorySearch", value)}
               />
             ) : null}
 
@@ -1073,24 +1096,31 @@ function CreateOrderView({
     <>
       <div className="flex h-full flex-col">
         <div className="flex-1 overflow-y-auto pb-32">
-          <button
-            type="button"
-            onClick={() => setTableSheetOpen(true)}
-            className="mx-4 mt-4 flex w-[calc(100%-2rem)] items-center justify-between rounded-[22px] border border-[#e8e4dc] bg-white px-4 py-4 text-left shadow-sm active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-container/10 text-primary-container flex size-10 items-center justify-center rounded-2xl">
-                <Table2 className="size-5" />
+          <div className="mx-4 mt-4 space-y-2">
+            <Label required className="text-xs font-bold text-stone-600">
+              Chon ban phuc vu
+            </Label>
+            <button
+              type="button"
+              onClick={() => setTableSheetOpen(true)}
+              className="flex w-full items-center justify-between rounded-[22px] border border-[#e8e4dc] bg-white px-4 py-4 text-left shadow-sm active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary-container/10 text-primary-container flex size-10 items-center justify-center rounded-2xl">
+                  <Table2 className="size-5" />
+                </div>
+                <div>
+                  <p className="flex items-center gap-1 text-sm font-black">
+                    {selectedTableLabel}
+                  </p>
+                  <p className="mt-1 text-xs text-stone-500">
+                    {selectedTableOrders.length > 0 ? "Ban dang co order, co the them mon" : "Nhan de chon ban phuc vu"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-black">{selectedTableLabel}</p>
-                <p className="mt-1 text-xs text-stone-500">
-                  {selectedTableOrders.length > 0 ? "Ban dang co order, co the them mon" : "Nhan de chon ban phuc vu"}
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="size-4 text-stone-400" />
-          </button>
+              <ArrowRight className="size-4 text-stone-400" />
+            </button>
+          </div>
 
           <div className="px-4 pt-4">
             <label className="relative block">

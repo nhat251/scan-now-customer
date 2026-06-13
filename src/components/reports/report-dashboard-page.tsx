@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { forwardRef, type ReactNode, useMemo, useState } from "react";
 import type { Row, Worksheet } from "exceljs";
 import {
   BarChart3,
@@ -15,6 +15,7 @@ import {
   Target,
   Trophy,
 } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
@@ -291,10 +292,20 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal);
   const defaultRange = useMemo(() => getPresetRange("month"), []);
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("month");
-  const [fromDate, setFromDate] = useState(defaultRange.fromDate);
-  const [toDate, setToDate] = useState(defaultRange.toDate);
-  const [branchId, setBranchId] = useState("");
+
+  const { register, control, setValue } = useForm({
+    defaultValues: {
+      periodPreset: "month" as PeriodPreset,
+      fromDate: defaultRange.fromDate,
+      toDate: defaultRange.toDate,
+      branchId: "",
+    },
+  });
+
+  const periodPresetVal = useWatch({ control, name: "periodPreset" });
+  const fromDateVal = useWatch({ control, name: "fromDate" });
+  const toDateVal = useWatch({ control, name: "toDate" });
+  const branchIdVal = useWatch({ control, name: "branchId" });
 
   const ownerBranchesQuery = useOwnerBranchListQuery(
     { pageNumber: 1, pageSize: 100, sortBy: "name", sortDirection: "asc" },
@@ -307,9 +318,9 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
   }, [managerBranchesQuery.data, ownerBranchesQuery.data?.items, portal]);
 
   const reportQuery = useReportOverviewQuery(portal, {
-    branchId: branchId || undefined,
-    fromDate,
-    toDate,
+    branchId: branchIdVal || undefined,
+    fromDate: fromDateVal,
+    toDate: toDateVal,
   });
 
   const report = reportQuery.data;
@@ -318,20 +329,20 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
   const paidRevenueRate = report?.totalRevenue ? (report.paidRevenue / report.totalRevenue) * 100 : 0;
   const bestRevenueDay = report?.revenueByDay.reduce((best, item) => (item.revenue > best.revenue ? item : best), report.revenueByDay[0]) ?? null;
   const busiestHour = report?.peakHours.reduce((best, item) => (item.orders > best.orders ? item : best), report.peakHours[0]) ?? null;
-  const revenueSeries = report ? getRevenueSeries({ preset: periodPreset, fromDate, toDate, revenueByDay: report.revenueByDay, peakHours: report.peakHours }) : null;
+  const revenueSeries = report ? getRevenueSeries({ preset: periodPresetVal, fromDate: fromDateVal, toDate: toDateVal, revenueByDay: report.revenueByDay, peakHours: report.peakHours }) : null;
 
   const setPreset = (preset: Exclude<PeriodPreset, "custom">) => {
     const range = getPresetRange(preset);
-    setPeriodPreset(preset);
-    setFromDate(range.fromDate);
-    setToDate(range.toDate);
+    setValue("periodPreset", preset);
+    setValue("fromDate", range.fromDate);
+    setValue("toDate", range.toDate);
   };
 
   const exportRevenueReport = async () => {
     if (!report || !revenueSeries) return;
 
-    const selectedBranch = branches.find((branch) => branch.branchId === branchId)?.name ?? "Tất cả chi nhánh";
-    const subtitle = `Chi nhánh: ${selectedBranch} | Từ ${fromDate} đến ${toDate} | Giờ Việt Nam`;
+    const selectedBranch = branches.find((branch) => branch.branchId === branchIdVal)?.name ?? "Tất cả chi nhánh";
+    const subtitle = `Chi nhánh: ${selectedBranch} | Từ ${fromDateVal} đến ${toDateVal} | Giờ Việt Nam`;
     const ExcelJS = await import("exceljs");
     const workbook = new ExcelJS.Workbook();
 
@@ -415,7 +426,7 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
 
     const buffer = await workbook.xlsx.writeBuffer();
     downloadBlob(
-      `scannow-bao-cao-doanh-thu-${fromDate}_${toDate}.xlsx`,
+      `scannow-bao-cao-doanh-thu-${fromDateVal}_${toDateVal}.xlsx`,
       new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
     );
   };
@@ -426,7 +437,7 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
       description="Theo dõi doanh thu, số đơn, giờ cao điểm và hiệu quả chi nhánh theo giờ Việt Nam."
       portalLabel={copy.label}
       portalName={copy.name}
-      navItems={getManageMenuNavItems(portal, "dashboard", branchId || undefined)}
+      navItems={getManageMenuNavItems(portal, "dashboard", branchIdVal || undefined)}
       topbarTitle={currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
       stats={
@@ -446,11 +457,11 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
               Khoảng thời gian
             </p>
             <div className="bg-muted/50 grid grid-cols-5 gap-1 rounded-lg p-1">
-              <PeriodButton active={periodPreset === "today"} onClick={() => setPreset("today")}>Ngày</PeriodButton>
-              <PeriodButton active={periodPreset === "week"} onClick={() => setPreset("week")}>Tuần</PeriodButton>
-              <PeriodButton active={periodPreset === "month"} onClick={() => setPreset("month")}>Tháng</PeriodButton>
-              <PeriodButton active={periodPreset === "quarter"} onClick={() => setPreset("quarter")}>Quý</PeriodButton>
-              <PeriodButton active={periodPreset === "year"} onClick={() => setPreset("year")}>Năm</PeriodButton>
+              <PeriodButton active={periodPresetVal === "today"} onClick={() => setPreset("today")}>Ngày</PeriodButton>
+              <PeriodButton active={periodPresetVal === "week"} onClick={() => setPreset("week")}>Tuần</PeriodButton>
+              <PeriodButton active={periodPresetVal === "month"} onClick={() => setPreset("month")}>Tháng</PeriodButton>
+              <PeriodButton active={periodPresetVal === "quarter"} onClick={() => setPreset("quarter")}>Quý</PeriodButton>
+              <PeriodButton active={periodPresetVal === "year"} onClick={() => setPreset("year")}>Năm</PeriodButton>
             </div>
           </div>
 
@@ -458,8 +469,7 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
             <label className="text-sm font-semibold">
               Chi nhánh
               <select
-                value={branchId}
-                onChange={(event) => setBranchId(event.target.value)}
+                {...register("branchId")}
                 className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
               >
                 <option value="">Tất cả chi nhánh</option>
@@ -472,19 +482,15 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
             </label>
             <DateField
               label="Từ ngày"
-              value={fromDate}
-              onChange={(value) => {
-                setPeriodPreset("custom");
-                setFromDate(value);
-              }}
+              {...register("fromDate", {
+                onChange: () => setValue("periodPreset", "custom"),
+              })}
             />
             <DateField
               label="Đến ngày"
-              value={toDate}
-              onChange={(value) => {
-                setPeriodPreset("custom");
-                setToDate(value);
-              }}
+              {...register("toDate", {
+                onChange: () => setValue("periodPreset", "custom"),
+              })}
             />
           </div>
 
@@ -600,17 +606,24 @@ export const ReportDashboardPage = ({ portal }: ReportDashboardPageProps) => {
   );
 };
 
-const DateField = ({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) => (
+const DateField = forwardRef<
+  HTMLInputElement,
+  { label: string } & React.InputHTMLAttributes<HTMLInputElement>
+>(({ label, className, ...rest }, ref) => (
   <label className="text-sm font-semibold">
     {label}
     <input
+      ref={ref}
       type="date"
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
+      className={cn(
+        "border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none",
+        className
+      )}
+      {...rest}
     />
   </label>
-);
+));
+DateField.displayName = "DateField";
 
 const PeriodButton = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) => (
   <button
@@ -864,21 +877,21 @@ const RankedListRow = ({
       onBlur={() => setTooltipPosition(null)}
       tabIndex={0}
     >
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-              <div className="min-w-0 overflow-hidden">
-                <p className="truncate text-sm font-bold">{index + 1}. {item.label}</p>
-                <p className="text-muted-foreground truncate text-xs">{item.helper}</p>
-              </div>
-              <span className="max-w-32 text-right text-sm leading-snug font-bold break-words">{item.value}</span>
-            </div>
-            <div className="bg-muted mt-2 h-1.5 overflow-hidden rounded-full">
-              <div className="h-full rounded-full" style={{ width: `${Math.max(4, (item.score / max) * 100)}%`, backgroundColor: color }} />
-            </div>
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0 overflow-hidden">
+          <p className="truncate text-sm font-bold">{index + 1}. {item.label}</p>
+          <p className="text-muted-foreground truncate text-xs">{item.helper}</p>
+        </div>
+        <span className="max-w-32 text-right text-sm leading-snug font-bold break-words">{item.value}</span>
+      </div>
+      <div className="bg-muted mt-2 h-1.5 overflow-hidden rounded-full">
+        <div className="h-full rounded-full" style={{ width: `${Math.max(4, (item.score / max) * 100)}%`, backgroundColor: color }} />
+      </div>
       {tooltipPosition ? (
         <FixedTooltip x={tooltipPosition.x} y={tooltipPosition.y}>
-              <p className="font-bold">{item.label}</p>
-              <p>{item.helper}</p>
-              <p>{item.value}</p>
+          <p className="font-bold">{item.label}</p>
+          <p>{item.helper}</p>
+          <p>{item.value}</p>
         </FixedTooltip>
       ) : null}
     </div>

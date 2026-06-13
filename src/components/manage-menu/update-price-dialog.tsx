@@ -1,6 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { type FieldErrors,useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateManageMenuItemPriceMutation } from "@/hooks/mutations/useManageMenuMutations";
 import { showNotify } from "@/stores/global";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { formatCurrency } from "./helpers";
 
@@ -25,34 +27,55 @@ type UpdatePriceDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+type PriceFormValues = {
+  price: string;
+  note: string;
+};
+
+const priceSchema = z.object({
+  price: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num > 0;
+  }, { message: "New price must be greater than 0." }),
+  note: z.string(),
+});
+
 export const UpdatePriceDialog = ({ menuItemId, currentPrice, open, onOpenChange }: UpdatePriceDialogProps) => {
   const updatePriceMutation = useUpdateManageMenuItemPriceMutation();
-  const [price, setPrice] = useState("");
-  const [note, setNote] = useState("");
+
+  const { register, handleSubmit, reset } = useForm<PriceFormValues>({
+    resolver: zodResolver(priceSchema),
+    defaultValues: {
+      price: "",
+      note: "",
+    },
+  });
 
   useEffect(() => {
     if (open) {
-      setPrice(String(currentPrice));
-      setNote("");
+      reset({
+        price: String(currentPrice),
+        note: "",
+      });
     }
-  }, [currentPrice, open]);
+  }, [currentPrice, open, reset]);
 
-  const submit = async () => {
-    const nextPrice = Number(price);
-
-    if (!price || nextPrice <= 0) {
-      showNotify({ type: "warning", message: "New price must be greater than 0." });
-      return;
-    }
-
+  const submit = async (values: PriceFormValues) => {
     await updatePriceMutation.mutateAsync({
       menuItemId,
       data: {
-        price: nextPrice,
-        note: note.trim() || null,
+        price: Number(values.price),
+        note: values.note.trim() || null,
       },
     });
     onOpenChange(false);
+  };
+
+  const onValidationError = (errors: FieldErrors<PriceFormValues>) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      showNotify({ type: "warning", message: firstError.message });
+    }
   };
 
   return (
@@ -68,13 +91,15 @@ export const UpdatePriceDialog = ({ menuItemId, currentPrice, open, onOpenChange
             <p className="text-muted-foreground text-sm font-semibold">Current Price</p>
             <p className="mt-1 text-2xl font-bold">{formatCurrency(currentPrice)}</p>
           </div>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold">New Price</span>
-            <Input type="number" min={1} value={price} onChange={(event) => setPrice(event.target.value)} />
-          </label>
+          <div className="space-y-2">
+            <Label htmlFor="new-price" required>
+              New Price
+            </Label>
+            <Input id="new-price" type="number" min={1} {...register("price")} />
+          </div>
           <label className="space-y-2">
             <span className="text-sm font-semibold">Note</span>
-            <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
+            <Textarea {...register("note")} />
           </label>
         </div>
 
@@ -82,7 +107,7 @@ export const UpdatePriceDialog = ({ menuItemId, currentPrice, open, onOpenChange
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={updatePriceMutation.isPending}>
+          <Button onClick={handleSubmit(submit, onValidationError)} disabled={updatePriceMutation.isPending}>
             {updatePriceMutation.isPending ? "Updating..." : "Update Price"}
           </Button>
         </DialogFooter>

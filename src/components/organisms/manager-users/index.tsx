@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ReceiptText, Settings, Soup, UserPlus, Users } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import {
@@ -38,6 +40,7 @@ import type {
   UpdateManagerUserRequest,
   UserStatusFilter,
 } from "@/types/user-management";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 
 const ROLE_OPTIONS = ["STAFF", "KITCHEN", "CASHIER"] as const;
@@ -50,6 +53,20 @@ const EMPTY_FORM: ManagerUserFormValues = {
   password: "",
   role: "STAFF",
   branchIds: [],
+};
+
+const getManagerUserSchema = (mode: FormMode) => {
+  return z.object({
+    fullName: z.string().trim().min(1, "Họ tên là bắt buộc."),
+    username: z.string().trim().min(1, "Tên đăng nhập là bắt buộc."),
+    email: z.string().trim().min(1, "Email là bắt buộc.").email("Email không hợp lệ."),
+    phoneNumber: z.string(),
+    password: mode === "create"
+      ? z.string().min(1, "Mật khẩu là bắt buộc.")
+      : z.string(),
+    role: z.enum(["STAFF", "KITCHEN", "CASHIER"]),
+    branchIds: z.array(z.string()).min(1, "Chọn ít nhất một chi nhánh."),
+  });
 };
 
 export const ManagerUsersPage = () => {
@@ -72,7 +89,13 @@ export const ManagerUsersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [editingUser, setEditingUser] = useState<ManagerScopedUserResponse | null>(null);
-  const [form, setForm] = useState<ManagerUserFormValues>(EMPTY_FORM);
+
+  const { register, control, handleSubmit: handleFormSubmit, reset, setValue, formState: { errors } } = useForm<ManagerUserFormValues>({
+    resolver: (values, context, options) => {
+      return zodResolver(getManagerUserSchema(formMode))(values, context, options);
+    },
+    defaultValues: EMPTY_FORM,
+  });
 
   useEffect(() => {
     if (!isAuthInitialized) {
@@ -135,13 +158,12 @@ export const ManagerUsersPage = () => {
   };
 
   const resetForm = () => {
-    setForm(EMPTY_FORM);
+    reset(EMPTY_FORM);
     setEditingUser(null);
   };
 
   const openCreateDialog = () => {
-    resetForm();
-    setForm({
+    reset({
       ...EMPTY_FORM,
       branchIds: branches.map((branch) => branch.branchId),
     });
@@ -152,7 +174,7 @@ export const ManagerUsersPage = () => {
   const openEditDialog = (user: ManagerScopedUserResponse) => {
     setEditingUser(user);
     setFormMode("edit");
-    setForm({
+    reset({
       fullName: user.fullName,
       username: user.username,
       email: user.email,
@@ -200,34 +222,19 @@ export const ManagerUsersPage = () => {
     onSuccess();
   };
 
-  const handleSubmit = async () => {
+  const onSubmitForm = async (values: ManagerUserFormValues) => {
     setForbiddenMessage("");
-
-    if (
-      !form.fullName.trim() ||
-      !form.username.trim() ||
-      !form.email.trim() ||
-      !form.role ||
-      form.branchIds.length === 0 ||
-      (formMode === "create" && !form.password.trim())
-    ) {
-      showNotify({
-        type: "warning",
-        message: "Please complete all required fields.",
-      });
-      return;
-    }
 
     try {
       if (formMode === "create") {
         await createMutation.mutateAsync({
-          fullName: form.fullName.trim(),
-          username: form.username.trim(),
-          email: form.email.trim(),
-          phoneNumber: form.phoneNumber.trim() || undefined,
-          password: form.password.trim(),
-          role: form.role,
-          branchIds: form.branchIds,
+          fullName: values.fullName.trim(),
+          username: values.username.trim(),
+          email: values.email.trim(),
+          phoneNumber: values.phoneNumber.trim() || undefined,
+          password: values.password.trim(),
+          role: values.role,
+          branchIds: values.branchIds,
         });
 
         await handleRefreshAfterMutation("User created successfully.", closeDialog);
@@ -246,12 +253,12 @@ export const ManagerUsersPage = () => {
       }
 
       const payload: UpdateManagerUserRequest = {
-        fullName: form.fullName.trim(),
-        username: form.username.trim(),
-        email: form.email.trim(),
-        phoneNumber: form.phoneNumber.trim() || undefined,
-        role: form.role,
-        branchIds: form.branchIds,
+        fullName: values.fullName.trim(),
+        username: values.username.trim(),
+        email: values.email.trim(),
+        phoneNumber: values.phoneNumber.trim() || undefined,
+        role: values.role,
+        branchIds: values.branchIds,
       };
 
       await updateMutation.mutateAsync({ id: editingUser.userId, data: payload });
@@ -276,22 +283,6 @@ export const ManagerUsersPage = () => {
     } catch (error) {
       handleApiError(error);
     }
-  };
-
-  const handleFieldChange = (field: keyof ManagerUserFormValues, value: string) => {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  };
-
-  const handleBranchToggle = (nextBranchId: string) => {
-    setForm((current) => ({
-      ...current,
-      branchIds: current.branchIds.includes(nextBranchId)
-        ? current.branchIds.filter((branch) => branch !== nextBranchId)
-        : [...current.branchIds, nextBranchId],
-    }));
   };
 
   useEffect(() => {
@@ -442,14 +433,15 @@ export const ManagerUsersPage = () => {
 
       <UserFormDialog
         branches={branches}
-        form={form}
+        register={register}
+        control={control}
+        errors={errors}
+        setValue={setValue}
         mode={formMode}
         open={dialogOpen}
         showBranchSelection={false}
-        onBranchToggle={handleBranchToggle}
         onClose={closeDialog}
-        onSubmit={handleSubmit}
-        onChange={handleFieldChange}
+        onSubmit={handleFormSubmit(onSubmitForm)}
         pending={pending}
       />
     </PortalShell>
