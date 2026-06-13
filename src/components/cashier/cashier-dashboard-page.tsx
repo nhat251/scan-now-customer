@@ -19,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useForm } from "react-hook-form";
 
 import { formatCurrency } from "@/components/customer/customer-session-utils";
 import { formatDateTime, getOwnerTableErrorMessage } from "@/components/owner/tables/helpers";
@@ -258,16 +259,34 @@ export const CashierDashboardPage = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const { watch: watchOrder, setValue: setValueOrder, reset: resetOrderForm } = useForm({
+    defaultValues: {
+      selectedTableId: null as string | null,
+      categorySearch: "",
+      customerName: "",
+      customerNote: "",
+    },
+  });
+
+  const selectedTableId = watchOrder("selectedTableId");
+  const categorySearch = watchOrder("categorySearch");
+  const customerName = watchOrder("customerName");
+  const customerNote = watchOrder("customerNote");
+
   const [voucherCode, setVoucherCode] = useState("");
   const [cashDialogOpen, setCashDialogOpen] = useState(false);
-  const [amountReceivedInput, setAmountReceivedInput] = useState("");
+  
+  const { register: registerCash, watch: watchCash, setValue: setValueCash } = useForm({
+    defaultValues: {
+      amountReceivedInput: "",
+    },
+  });
+
+  const amountReceivedInput = watchCash("amountReceivedInput");
+
   const [payOsPayment, setPayOsPayment] = useState<CashierPaymentResponse | null>(null);
-  const [categorySearch, setCategorySearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [cartItems, setCartItems] = useState<CashierCartItem[]>([]);
-  const [customerName, setCustomerName] = useState("");
-  const [customerNote, setCustomerNote] = useState("");
   const [clock, setClock] = useState(() => new Date());
 
   const activeBranchId = branchId || branches[0]?.branchId;
@@ -460,18 +479,20 @@ export const CashierDashboardPage = () => {
   const setView = (view: CashierView) => {
     setCurrentView(view);
     if (view !== "create") {
-      setCategorySearch("");
+      setValueOrder("categorySearch", "");
       setActiveCategory("all");
     }
   };
 
   const setCreateModeForTable = (tableId: string | null) => {
-    setSelectedTableId(tableId);
+    resetOrderForm({
+      selectedTableId: tableId,
+      customerName: "",
+      customerNote: "",
+      categorySearch: "",
+    });
     setCartItems([]);
-    setCustomerName("");
-    setCustomerNote("");
     setActiveCategory("all");
-    setCategorySearch("");
     setView("create");
   };
 
@@ -491,7 +512,7 @@ export const CashierDashboardPage = () => {
     });
 
     setVoucherCode("");
-    setAmountReceivedInput("");
+    setValueCash("amountReceivedInput", "");
     setCashDialogOpen(false);
     setSelectedOrderId(response.result.order.orderId);
     setPayOsPayment(response.result.paymentMethod === "PAYOS" ? response.result : null);
@@ -503,7 +524,7 @@ export const CashierDashboardPage = () => {
       return;
     }
 
-    setAmountReceivedInput(String(selectedOrder.totalAmount));
+    setValueCash("amountReceivedInput", String(selectedOrder.totalAmount));
     setCashDialogOpen(true);
   };
 
@@ -582,8 +603,12 @@ export const CashierDashboardPage = () => {
     });
 
     setCartItems([]);
-    setCustomerName("");
-    setCustomerNote("");
+    resetOrderForm({
+      selectedTableId: null,
+      customerName: "",
+      customerNote: "",
+      categorySearch: "",
+    });
     setSelectedOrderId(response.result.orderId);
     setPayOsPayment(null);
     setView("orders");
@@ -713,7 +738,12 @@ export const CashierDashboardPage = () => {
                       onChange={(event) => {
                         setBranchId(event.target.value);
                         setSelectedOrderId(null);
-                        setSelectedTableId(null);
+                        resetOrderForm({
+                          selectedTableId: null,
+                          customerName: "",
+                          customerNote: "",
+                          categorySearch: "",
+                        });
                       }}
                       className="h-11 rounded-xl border border-[#e8e4dc] bg-white px-3 text-sm font-semibold outline-none"
                     >
@@ -778,7 +808,12 @@ export const CashierDashboardPage = () => {
                       onChange={(event) => {
                         setBranchId(event.target.value);
                         setSelectedOrderId(null);
-                        setSelectedTableId(null);
+                        resetOrderForm({
+                          selectedTableId: null,
+                          customerName: "",
+                          customerNote: "",
+                          categorySearch: "",
+                        });
                       }}
                       className="h-11 rounded-xl border border-[#e8e4dc] bg-white px-3 text-sm font-semibold outline-none"
                     >
@@ -867,21 +902,21 @@ export const CashierDashboardPage = () => {
                   tables={tables}
                   selectedTable={selectedTable}
                   selectedTableOrders={selectedTableOrders}
-                  onSelectTable={setSelectedTableId}
+                  onSelectTable={(val) => setValueOrder("selectedTableId", val)}
                   menuItems={menuItems}
                   categories={categoryOptions}
                   activeCategory={activeCategory}
                   onCategoryChange={setActiveCategory}
                   search={categorySearch}
-                  onSearchChange={setCategorySearch}
+                  onSearchChange={(val) => setValueOrder("categorySearch", val)}
                   cartItems={cartItems}
                   onAddToCart={addToCart}
                   onUpdateQty={updateCartQty}
                   cartTotal={cartTotal}
                   customerName={customerName}
-                  onCustomerNameChange={setCustomerName}
+                  onCustomerNameChange={(val) => setValueOrder("customerName", val)}
                   customerNote={customerNote}
-                  onCustomerNoteChange={setCustomerNote}
+                  onCustomerNoteChange={(val) => setValueOrder("customerNote", val)}
                   onSubmit={submitManualOrder}
                   isSubmitting={createOrderMutation.isPending || openTableMutation.isPending}
                 />
@@ -990,13 +1025,14 @@ export const CashierDashboardPage = () => {
                 </div>
               </div>
               <label className="block space-y-2">
-                <span className="text-sm font-semibold">Tiền khách đưa</span>
+                <span className="text-sm font-semibold">
+                  Tiền khách đưa <span className="text-destructive font-black">*</span>
+                </span>
                 <Input
                   type="number"
                   min={0}
                   step={1000}
-                  value={amountReceivedInput}
-                  onChange={(event) => setAmountReceivedInput(event.target.value)}
+                  {...registerCash("amountReceivedInput")}
                   className="h-12 text-lg font-bold"
                   autoFocus
                 />
@@ -1587,7 +1623,9 @@ function CreateOrderPanel({
         <div className="border-b border-[#e8e4dc] px-5 py-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xl font-black">Tao don thu cong</p>
+              <p className="text-xl font-black">
+                Tao don thu cong <span className="text-destructive font-black">*</span>
+              </p>
               <p className="mt-1 text-sm text-stone-500">Thu ngân có thể tạo đơn hoặc thêm món cho bàn đang phục vụ.</p>
             </div>
             <select
