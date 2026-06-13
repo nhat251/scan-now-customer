@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dialog";
 import { FooterPagination } from "@/components/ui/footer-pagination";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useCashierCancelPaymentMutation, useCashierCheckoutMutation } from "@/hooks/mutations/useCashierMutations";
 import { useCloseMyTableSessionMutation, useOpenMyTableSessionMutation } from "@/hooks/mutations/useMyTableMutations";
@@ -1024,11 +1025,12 @@ export const CashierDashboardPage = () => {
                   </strong>
                 </div>
               </div>
-              <label className="block space-y-2">
-                <span className="text-sm font-semibold">
-                  Tiền khách đưa <span className="text-destructive font-black">*</span>
-                </span>
+              <div className="space-y-2">
+                <Label htmlFor="amount-received" required>
+                  Tiền khách đưa
+                </Label>
                 <Input
+                  id="amount-received"
                   type="number"
                   min={0}
                   step={1000}
@@ -1036,7 +1038,7 @@ export const CashierDashboardPage = () => {
                   className="h-12 text-lg font-bold"
                   autoFocus
                 />
-              </label>
+              </div>
               {amountReceivedInput && !canConfirmCash ? (
                 <p className="text-sm text-red-600">Tiền khách đưa phải lớn hơn hoặc bằng tổng đơn.</p>
               ) : null}
@@ -1623,16 +1625,19 @@ function CreateOrderPanel({
         <div className="border-b border-[#e8e4dc] px-5 py-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xl font-black">
-                Tao don thu cong <span className="text-destructive font-black">*</span>
-              </p>
+              <p className="text-xl font-black">Tao don thu cong</p>
               <p className="mt-1 text-sm text-stone-500">Thu ngân có thể tạo đơn hoặc thêm món cho bàn đang phục vụ.</p>
             </div>
-            <select
-              value={selectedTable?.tableId ?? ""}
-              onChange={(event) => onSelectTable(event.target.value || null)}
-              className="h-11 rounded-xl border border-[#e8e4dc] bg-white px-3 text-sm font-semibold outline-none"
-            >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="cashier-table-select" required className="text-xs font-bold text-stone-600">
+                Chon ban phuc vu
+              </Label>
+              <select
+                id="cashier-table-select"
+                value={selectedTable?.tableId ?? ""}
+                onChange={(event) => onSelectTable(event.target.value || null)}
+                className="h-11 rounded-xl border border-[#e8e4dc] bg-white px-3 text-sm font-semibold outline-none"
+              >
               <option value="">Chon ban</option>
               {tables
                 .filter((table) => table.status !== "DISABLED")
@@ -1644,6 +1649,7 @@ function CreateOrderPanel({
             </select>
           </div>
         </div>
+      </div>
 
         <div className="border-b border-[#e8e4dc] bg-stone-50/70 px-4 py-3">
           <div className="flex flex-wrap gap-2">

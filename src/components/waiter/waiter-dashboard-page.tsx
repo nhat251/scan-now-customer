@@ -22,6 +22,7 @@ import { useForm } from "react-hook-form";
 
 import { formatCurrency } from "@/components/customer/customer-session-utils";
 import { formatDateTime } from "@/components/owner/tables/helpers";
+import { Label } from "@/components/ui/label";
 import { useCloseMyTableSessionMutation, useOpenMyTableSessionMutation } from "@/hooks/mutations/useMyTableMutations";
 import {
   useConfirmWaiterOrderMutation,
@@ -1095,27 +1096,31 @@ function CreateOrderView({
     <>
       <div className="flex h-full flex-col">
         <div className="flex-1 overflow-y-auto pb-32">
-          <button
-            type="button"
-            onClick={() => setTableSheetOpen(true)}
-            className="mx-4 mt-4 flex w-[calc(100%-2rem)] items-center justify-between rounded-[22px] border border-[#e8e4dc] bg-white px-4 py-4 text-left shadow-sm active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-container/10 text-primary-container flex size-10 items-center justify-center rounded-2xl">
-                <Table2 className="size-5" />
+          <div className="mx-4 mt-4 space-y-2">
+            <Label required className="text-xs font-bold text-stone-600">
+              Chon ban phuc vu
+            </Label>
+            <button
+              type="button"
+              onClick={() => setTableSheetOpen(true)}
+              className="flex w-full items-center justify-between rounded-[22px] border border-[#e8e4dc] bg-white px-4 py-4 text-left shadow-sm active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary-container/10 text-primary-container flex size-10 items-center justify-center rounded-2xl">
+                  <Table2 className="size-5" />
+                </div>
+                <div>
+                  <p className="flex items-center gap-1 text-sm font-black">
+                    {selectedTableLabel}
+                  </p>
+                  <p className="mt-1 text-xs text-stone-500">
+                    {selectedTableOrders.length > 0 ? "Ban dang co order, co the them mon" : "Nhan de chon ban phuc vu"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="flex items-center gap-1 text-sm font-black">
-                  {selectedTableLabel}
-                  {!selectedTable ? <span className="text-destructive font-black">*</span> : null}
-                </p>
-                <p className="mt-1 text-xs text-stone-500">
-                  {selectedTableOrders.length > 0 ? "Ban dang co order, co the them mon" : "Nhan de chon ban phuc vu"}
-                </p>
-              </div>
-            </div>
-            <ArrowRight className="size-4 text-stone-400" />
-          </button>
+              <ArrowRight className="size-4 text-stone-400" />
+            </button>
+          </div>
 
           <div className="px-4 pt-4">
             <label className="relative block">
