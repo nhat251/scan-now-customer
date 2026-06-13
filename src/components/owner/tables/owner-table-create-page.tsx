@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Eye, QrCode } from "lucide-react";
+import { type FieldErrors,useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import { useCreateOwnerTableMutation, useDownloadOwnerTableQrMutation } from "@/
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
 import type { OwnerTableFormValues, OwnerTableResponse } from "@/types/owner-table";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   downloadQrBlob,
@@ -29,43 +32,40 @@ type OwnerTableCreatePageProps = {
   portal?: TableManagementPortal;
 };
 
+const ownerTableSchema = z.object({
+  tableNumber: z.string().trim().min(1, "Table number is required."),
+  capacity: z.string().refine((val) => {
+    const num = Number(val);
+    return !isNaN(num) && num >= 1;
+  }, { message: "Capacity must be greater than or equal to 1." }),
+});
+
 export const OwnerTableCreatePage = ({ branchId, portal = "owner" }: OwnerTableCreatePageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getTablePortalCopy(portal);
-  const [form, setForm] = useState<OwnerTableFormValues>(emptyOwnerTableForm);
   const [createdTable, setCreatedTable] = useState<OwnerTableResponse | null>(null);
   const createMutation = useCreateOwnerTableMutation();
   const downloadMutation = useDownloadOwnerTableQrMutation();
 
-  const onChange = <Key extends keyof OwnerTableFormValues>(key: Key, value: OwnerTableFormValues[Key]) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
+  const { register, handleSubmit, formState: { errors } } = useForm<OwnerTableFormValues>({
+    resolver: zodResolver(ownerTableSchema),
+    defaultValues: emptyOwnerTableForm,
+  });
 
-  const validate = () => {
-    if (!form.tableNumber.trim()) {
-      showNotify({ type: "warning", message: "Table number is required." });
-      return false;
-    }
-
-    if (!Number.isFinite(Number(form.capacity)) || Number(form.capacity) < 1) {
-      showNotify({ type: "warning", message: "Capacity must be greater than or equal to 1." });
-      return false;
-    }
-
-    return true;
-  };
-
-  const submit = async () => {
-    if (!validate()) {
-      return;
-    }
-
+  const submit = async (values: OwnerTableFormValues) => {
     const response = await createMutation.mutateAsync({
       branchId,
-      data: getOwnerTablePayload(form),
+      data: getOwnerTablePayload(values),
     });
 
     setCreatedTable(response.result);
+  };
+
+  const onValidationError = (errors: FieldErrors<OwnerTableFormValues>) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      showNotify({ type: "warning", message: firstError.message });
+    }
   };
 
   const downloadQr = async () => {
@@ -132,11 +132,11 @@ export const OwnerTableCreatePage = ({ branchId, portal = "owner" }: OwnerTableC
       ) : null}
 
       <OwnerTableForm
-        value={form}
+        register={register}
+        errors={errors}
         submitting={createMutation.isPending}
         submitLabel="Create Table"
-        onChange={onChange}
-        onSubmit={submit}
+        onSubmit={handleSubmit(submit, onValidationError)}
       />
     </PortalShell>
   );

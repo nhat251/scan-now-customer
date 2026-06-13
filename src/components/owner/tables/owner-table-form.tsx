@@ -1,22 +1,23 @@
 import { Hash, Save, Users } from "lucide-react";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { OwnerTableFormValues } from "@/types/owner-table";
 
 type OwnerTableFormProps = {
-  value: OwnerTableFormValues;
+  register: UseFormRegister<OwnerTableFormValues>;
+  errors: FieldErrors<OwnerTableFormValues>;
   submitting?: boolean;
   submitLabel?: string;
-  onChange: <Key extends keyof OwnerTableFormValues>(key: Key, value: OwnerTableFormValues[Key]) => void;
   onSubmit: () => void;
 };
 
 export const OwnerTableForm = ({
-  value,
+  register,
+  errors,
   submitting = false,
   submitLabel = "Save Table",
-  onChange,
   onSubmit,
 }: OwnerTableFormProps) => {
   return (
@@ -35,25 +36,25 @@ export const OwnerTableForm = ({
         <label className="space-y-2">
           <span className="flex items-center gap-1.5 text-sm font-semibold">
             <Hash className="text-muted-foreground size-3.5" />
-            Table Number
+            Table Number <span className="text-destructive">*</span>
           </span>
           <Input
-            value={value.tableNumber}
-            onChange={(event) => onChange("tableNumber", event.target.value)}
             placeholder="A7"
+            aria-invalid={!!errors.tableNumber}
+            {...register("tableNumber")}
           />
         </label>
         <label className="space-y-2">
           <span className="flex items-center gap-1.5 text-sm font-semibold">
             <Users className="text-muted-foreground size-3.5" />
-            Capacity
+            Capacity <span className="text-destructive">*</span>
           </span>
           <Input
             type="number"
             min={1}
-            value={value.capacity}
-            onChange={(event) => onChange("capacity", event.target.value)}
             placeholder="4"
+            aria-invalid={!!errors.capacity}
+            {...register("capacity")}
           />
         </label>
       </div>
