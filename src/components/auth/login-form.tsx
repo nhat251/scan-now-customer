@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LockKeyhole, Sparkles, UserRound } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -24,16 +25,23 @@ export const LoginForm = () => {
   const router = useRouter();
   const isAuthInitialized = useUserStore((state) => state.isAuthInitialized);
   const user = useUserStore((state) => state.user);
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
 
-  const isDisabled = useMemo(() => {
-    return loginMutation.isPending || !identifier.trim() || !password.trim();
-  }, [identifier, loginMutation.isPending, password]);
+  const { control, register } = useForm({
+    defaultValues: {
+      identifier: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
+
+  const values = useWatch({ control });
+  const identifier = values.identifier ?? "";
+  const password = values.password ?? "";
+
+  const isDisabled = loginMutation.isPending || !identifier.trim() || !password.trim();
 
   useEffect(() => {
     if (!isAuthInitialized || !shouldBlockLoginAccess(user)) {
@@ -122,7 +130,7 @@ export const LoginForm = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="identifier">Identifier</FieldLabel>
+                <FieldLabel htmlFor="identifier" required>Identifier</FieldLabel>
                 <FieldContent>
                   <InputGroup>
                     <InputGroupAddon>
@@ -134,16 +142,15 @@ export const LoginForm = () => {
                       id="identifier"
                       autoComplete="username"
                       placeholder="Enter username or email"
-                      value={identifier}
-                      onChange={(event) => setIdentifier(event.target.value)}
                       className="h-12"
+                      {...register("identifier")}
                     />
                   </InputGroup>
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password" required>Password</FieldLabel>
                 <FieldContent>
                   <InputGroup>
                     <InputGroupAddon>
@@ -156,9 +163,8 @@ export const LoginForm = () => {
                       type={showPassword ? "text" : "password"}
                       autoComplete="current-password"
                       placeholder="Enter password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
                       className="h-12"
+                      {...register("password")}
                     />
                     <InputGroupAddon align="inline-end">
                       <InputGroupButton
@@ -178,9 +184,8 @@ export const LoginForm = () => {
               <label className="text-muted-foreground flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
                   className="border-border text-primary focus:ring-primary h-4 w-4 rounded"
+                  {...register("rememberMe")}
                 />
                 Remember me
               </label>
