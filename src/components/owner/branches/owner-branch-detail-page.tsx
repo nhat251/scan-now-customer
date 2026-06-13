@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Soup, Table2, Tags } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
+import { getManageMenuNavItems } from "@/components/manage-menu/helpers";
 import {
   getBranchStatusLabel,
   getDefaultOwnerBranchFormValues,
@@ -60,9 +62,9 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
   const validateForm = () => {
     const nextErrors: Partial<Record<keyof OwnerBranchFormValues, string>> = {};
 
-    if (!value.name.trim()) nextErrors.name = "Branch name is required.";
-    if (!value.slug.trim()) nextErrors.slug = "Slug is required.";
-    if (value.email && !value.email.includes("@")) nextErrors.email = "Enter a valid email address.";
+    if (!value.name.trim()) nextErrors.name = "Tên chi nhánh là bắt buộc.";
+    if (!value.slug.trim()) nextErrors.slug = "Slug là bắt buộc.";
+    if (value.email && !value.email.includes("@")) nextErrors.email = "Email không hợp lệ.";
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -93,16 +95,16 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
 
     return (
       <PortalShell
-        title="Branch Detail"
-        description="Review and update branch information."
-        portalLabel="Management Suite"
-        portalName="Owner Portal"
+        title="Chi tiết chi nhánh"
+        description="Xem và cập nhật thông tin chi nhánh."
+        portalLabel="Bộ quản lý"
+        portalName="Cổng chủ quán"
         navItems={getOwnerPortalNavItems("branches")}
-        topbarTitle={currentUser?.fullName ?? "Owner Portal"}
+        topbarTitle={currentUser?.fullName ?? "Cổng chủ quán"}
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Owner portal</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">{errorState.heading}</h2>
           <p className="text-muted-foreground mt-3 text-sm md:text-base">{errorState.description}</p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -111,7 +113,7 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
             </Button>
             {errorState.shouldRouteToLogin ? (
               <Button variant="outline" onClick={() => router.push(PATH.auth.login)}>
-                Go to login
+                Về trang đăng nhập
               </Button>
             ) : null}
           </div>
@@ -125,25 +127,50 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
 
   return (
     <PortalShell
-      title={mode === "create" ? "Create Branch" : branch?.name ?? "Branch Detail"}
-      description={mode === "create" ? "Create a new branch for your restaurant." : "Review and update branch information, contact details, and fees."}
-      portalLabel="Management Suite"
-      portalName="Owner Portal"
-      navItems={getOwnerPortalNavItems("branches")}
-      topbarTitle={branch?.name ?? currentUser?.fullName ?? "Owner Portal"}
+      title={mode === "create" ? "Tạo chi nhánh" : branch?.name ?? "Chi tiết chi nhánh"}
+      description={mode === "create" ? "Tạo chi nhánh mới cho nhà hàng." : "Xem và cập nhật thông tin, liên hệ, giờ mở cửa và phí của chi nhánh."}
+      portalLabel="Bộ quản lý"
+      portalName="Cổng chủ quán"
+      navItems={branchId ? getManageMenuNavItems("owner", "branches", branchId) : getOwnerPortalNavItems("branches")}
+      topbarTitle={branch?.name ?? currentUser?.fullName ?? "Cổng chủ quán"}
       currentUser={currentUser}
+      branchName={branch?.name}
+      branchId={branchId}
       headerAction={
-        <Button variant="outline" onClick={() => router.push(PATH.owner.branches)}>
-          Back to branches
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={() => router.push(PATH.owner.branches)}>
+            Quay lại chi nhánh
+          </Button>
+          {branchId ? (
+            <>
+              <Button variant="outline" onClick={() => router.push(PATH.owner.branchCategories(branchId))}>
+                <Tags className="size-4" />
+                Danh mục
+              </Button>
+              <Button onClick={() => router.push(PATH.owner.branchMenuItems(branchId))}>
+                <Soup className="size-4" />
+                Món ăn
+              </Button>
+              <Button variant="outline" onClick={() => router.push(PATH.owner.branchTables(branchId))}>
+                <Table2 className="size-4" />
+                Sơ đồ bàn & QR
+              </Button>
+            </>
+          ) : null}
+        </div>
       }
       stats={
         mode === "edit" ? (
           <>
-            <PortalStatCard label="Branch" value={branch?.name ?? "-"} helper={branch?.slug ? `/${branch.slug}` : "Slug pending"} />
-            <PortalStatCard label="Status" value={branch ? getBranchStatusLabel(branch) : "-"} helper={branch?.managerName ?? "No manager assigned"} />
-            <PortalStatCard label="Contact" value={branch?.email ?? "-"} helper={branch?.phone ?? "No phone on file"} />
-            <PortalStatCard label="Hours" value={branch?.openTime ?? "-"} helper={branch?.closeTime ?? "No closing time"} />
+            <PortalStatCard label="Chi nhánh" value={branch?.name ?? "-"} helper={branch?.slug ? `/${branch.slug}` : "Chưa có slug"} />
+            <PortalStatCard label="Trạng thái" value={branch ? getBranchStatusLabel(branch) : "-"} helper={branch?.managerName ?? "Chưa gán quản lý"} />
+            <PortalStatCard
+              label="Liên hệ"
+              value={branch?.email ?? "-"}
+              helper={branch?.phone ?? "Chưa có số điện thoại"}
+              valueClassName="break-all text-2xl xl:text-3xl"
+            />
+            <PortalStatCard label="Giờ mở cửa" value={branch?.openTime ?? "-"} helper={branch?.closeTime ?? "Chưa có giờ đóng cửa"} />
           </>
         ) : undefined
       }

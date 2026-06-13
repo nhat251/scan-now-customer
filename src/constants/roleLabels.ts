@@ -5,6 +5,7 @@ export const ROLE_LABELS = {
   BRANCH_MANAGER: "Branch Manager",
   STAFF: "Staff",
   KITCHEN: "Kitchen",
+  CASHIER: "Cashier",
 } as const;
 
 export const getRoleLabel = (role?: string | null) => {

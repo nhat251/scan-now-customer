@@ -9,7 +9,7 @@ import { FilterDropdown } from "./filter-dropdown";
 
 export type FormMode = "create" | "edit";
 
-const ROLE_OPTIONS: ManagerUserRoleOption[] = ["STAFF", "KITCHEN"];
+const ROLE_OPTIONS: ManagerUserRoleOption[] = ["STAFF", "KITCHEN", "CASHIER"];
 
 type UserFormDialogProps = {
   branches: BranchResponse[];
@@ -44,7 +44,7 @@ export const UserFormDialog = ({
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Create user" : "Update user"}</DialogTitle>
           <DialogDescription>
-            Branch Managers can manage STAFF and KITCHEN users within their managed branches.
+            Branch Managers can manage STAFF, KITCHEN, and CASHIER users within their managed branches.
           </DialogDescription>
         </DialogHeader>
 

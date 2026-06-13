@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Nunito_Sans } from "next/font/google";
 
 import { AppChrome } from "@/components/auth/app-chrome";
 import { GlobalLoading } from "@/components/molecules/globals/global-loading";
@@ -15,6 +15,12 @@ import "@/styles/globals.css";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const nunitoSans = Nunito_Sans({
+  subsets: ["latin"],
+  variable: "--font-nunito-sans",
   display: "swap",
 });
 
@@ -36,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={SITE_CONFIG.defaultLocale} suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${nunitoSans.variable} font-sans antialiased`}>
         <NextIntlProvider>
           <ReactQueryProvider>
             <AppChrome>{children}</AppChrome>

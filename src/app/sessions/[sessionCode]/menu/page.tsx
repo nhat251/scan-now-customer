@@ -1,15 +1,15 @@
-import { SessionMenuPageClient } from "@/components/customer/session-menu-page-client";
+import { SessionMenuPage } from "@/components/customer/session-menu-page";
 
-type SessionMenuRouteProps = {
+type Props = {
   params: Promise<{
     sessionCode: string;
   }>;
 };
 
-const SessionMenuRoute = async ({ params }: SessionMenuRouteProps) => {
+const PublicSessionMenuRoute = async ({ params }: Props) => {
   const { sessionCode } = await params;
 
-  return <SessionMenuPageClient sessionCode={sessionCode} />;
+  return <SessionMenuPage sessionCode={decodeURIComponent(sessionCode)} />;
 };
 
-export default SessionMenuRoute;
+export default PublicSessionMenuRoute;

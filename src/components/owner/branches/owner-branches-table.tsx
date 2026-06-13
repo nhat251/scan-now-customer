@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { ArrowDownAZ, ArrowUpAZ, ChevronsUpDown,Eye, MoreHorizontal, Power, PowerOff } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, ChevronsUpDown, Eye, MoreHorizontal, Power, PowerOff, Soup, Tags } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -59,9 +59,9 @@ export const OwnerBranchesTable = ({
     <section className="border-border/60 bg-card overflow-hidden rounded-xl border shadow-sm">
       <div className="border-border/60 flex flex-col gap-3 border-b px-6 py-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Branches</h2>
+          <h2 className="text-lg font-semibold">Danh sách chi nhánh</h2>
           <p className="text-muted-foreground text-sm">
-            Showing {visibleRangeStart}-{visibleRangeEnd} of {totalItems} branches
+            Đang hiển thị {visibleRangeStart}-{visibleRangeEnd} trong {totalItems} chi nhánh
           </p>
         </div>
 
@@ -90,37 +90,49 @@ export const OwnerBranchesTable = ({
         <table className="divide-border/60 min-w-full divide-y text-left">
           <thead className="bg-muted/60">
             <tr>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Branch</th>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Contact</th>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Address</th>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Hours</th>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Fees</th>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Status</th>
-              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Created At</th>
-              <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">Actions</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Chi nhánh</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Liên hệ</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Địa chỉ</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Giờ mở cửa</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Phí</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Trạng thái</th>
+              <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Ngày tạo</th>
+              <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-border/40 divide-y">
             {isLoading ? (
               <tr>
                 <td colSpan={8} className="text-muted-foreground px-6 py-10 text-center text-sm">
-                  Loading branches...
+                  Đang tải chi nhánh...
                 </td>
               </tr>
             ) : !branches || branches.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-muted-foreground px-6 py-10 text-center text-sm">
-                  No branches match the selected filters.
+                  Không có chi nhánh phù hợp với bộ lọc.
                 </td>
               </tr>
             ) : (
               branches.map((branch) => (
-                <tr key={branch.branchId} className="hover:bg-muted/30 transition-colors">
+                <tr
+                  key={branch.branchId}
+                  tabIndex={0}
+                  role="button"
+                  onClick={() => onOpenBranch(PATH.owner.branchDetail(branch.branchId))}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onOpenBranch(PATH.owner.branchDetail(branch.branchId));
+                    }
+                  }}
+                  className="hover:bg-muted/40 focus-visible:ring-primary/40 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                >
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-foreground font-bold">{branch.name}</p>
                       <p className="text-muted-foreground text-xs font-medium">/{branch.slug}</p>
-                      {branch.managerName ? <p className="text-muted-foreground mt-1 text-xs">Manager: {branch.managerName}</p> : null}
+                      {branch.managerName ? <p className="text-muted-foreground mt-1 text-xs">Quản lý: {branch.managerName}</p> : null}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">
@@ -136,15 +148,15 @@ export const OwnerBranchesTable = ({
                   <td className="px-6 py-4 text-sm">
                     <div className="space-y-1">
                       <p>VAT: {branch.vatPercent}%</p>
-                      <p>Service %: {branch.serviceChargePercent}%</p>
-                      <p>Fixed: {branch.serviceChargeFixed}</p>
+                      <p>Phí DV: {branch.serviceChargePercent}%</p>
+                      <p>Phí cố định: {branch.serviceChargeFixed}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <Tag tagString={getBranchStatusLabel(branch)} variant={branch.isActive ? "success" : "warning"} />
                   </td>
-                  <td className="text-muted-foreground px-6 py-4 text-sm">{dayjs(branch.createdAt).format("MMM D, YYYY")}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="text-muted-foreground px-6 py-4 text-sm">{dayjs(branch.createdAt).format("DD/MM/YYYY")}</td>
+                  <td className="px-6 py-4 text-right" onClick={(event) => event.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -154,7 +166,15 @@ export const OwnerBranchesTable = ({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchDetail(branch.branchId))}>
                           <Eye />
-                          View branch
+                          Xem chi nhánh
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchCategories(branch.branchId))}>
+                          <Tags />
+                          Danh mục
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchMenuItems(branch.branchId))}>
+                          <Soup />
+                          Món ăn
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -162,7 +182,7 @@ export const OwnerBranchesTable = ({
                           onClick={() => onToggleActive(branch)}
                         >
                           {branch.isActive ? <PowerOff /> : <Power />}
-                          {branch.isActive ? "Deactivate branch" : "Activate branch"}
+                          {branch.isActive ? "Tắt chi nhánh" : "Kích hoạt chi nhánh"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

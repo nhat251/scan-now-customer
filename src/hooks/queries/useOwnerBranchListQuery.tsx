@@ -21,7 +21,7 @@ const getOwnerBranchListErrorMessage = (error: unknown) => {
   return "Unable to load branches.";
 };
 
-export const useOwnerBranchListQuery = (query: OwnerBranchListQuery) => {
+export const useOwnerBranchListQuery = (query: OwnerBranchListQuery, enabled = true) => {
   return useQuery<ApiResponse<PagedResult<BranchResponse>>, PagedResult<BranchResponse>>({
     queryKey: [
       QUERY_KEY.OWNER_BRANCHES,
@@ -34,6 +34,7 @@ export const useOwnerBranchListQuery = (query: OwnerBranchListQuery) => {
     ],
     queryFn: () => getOwnerBranchList(query),
     select: (res) => res.data.result,
+    enabled,
     onError: (error) => {
       showNotify({ type: "error", message: getOwnerBranchListErrorMessage(error) });
     },

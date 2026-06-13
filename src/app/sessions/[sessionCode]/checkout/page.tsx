@@ -1,15 +1,15 @@
-import { SessionCheckoutPageClient } from "@/components/customer/session-checkout-page-client";
+import { SessionCheckoutPage } from "@/components/customer/session-checkout-page";
 
-type SessionCheckoutRouteProps = {
+type Props = {
   params: Promise<{
     sessionCode: string;
   }>;
 };
 
-const SessionCheckoutRoute = async ({ params }: SessionCheckoutRouteProps) => {
+const PublicSessionCheckoutRoute = async ({ params }: Props) => {
   const { sessionCode } = await params;
 
-  return <SessionCheckoutPageClient sessionCode={sessionCode} />;
+  return <SessionCheckoutPage sessionCode={decodeURIComponent(sessionCode)} />;
 };
 
-export default SessionCheckoutRoute;
+export default PublicSessionCheckoutRoute;

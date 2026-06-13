@@ -8,7 +8,7 @@ import type { BranchResponse, ManagedUserRole, UserStatusFilter } from "@/types/
 
 import { getBranchFilterLabel, getRoleFilterLabel, getStatusFilterLabel, STATUS_FILTER_OPTIONS } from "./helpers";
 
-const ROLE_OPTIONS: ManagedUserRole[] = ["BRANCH_MANAGER", "STAFF", "KITCHEN"];
+const ROLE_OPTIONS: ManagedUserRole[] = ["BRANCH_MANAGER", "STAFF", "KITCHEN", "CASHIER"];
 
 type OwnerUsersToolbarProps = {
   branches: BranchResponse[];

@@ -10,6 +10,7 @@ import { PATH } from "@/constants/path";
 const HIDE_PUBLIC_CHROME_PREFIXES = [
   PATH.owner.root,
   PATH.manager.root,
+  PATH.me.root,
   PATH.staff.root,
   PATH.kitchen.root,
   PATH.cashier.root,
