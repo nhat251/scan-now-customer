@@ -1,13 +1,14 @@
+import { getTenantSlugFromHostname, normalizeTenantSlug } from "@/lib/tenant-slug";
+
 /**
  * Extracts the tenant slug from the current browser hostname and sends it to
  * the backend via the X-Tenant-Slug request header.
  *
  * Production:  tenant1.scannow.site  →  "tenant1"
  * Local dev:   localhost:3000       →  falls back to NEXT_PUBLIC_DEV_TENANT_SLUG
- * Reserved:    www / app / admin   →  returns null (no tenant filter applied)
+ * Reserved:    www / app / api / admin / business / staging / localhost
+ *              → returns null (no tenant filter applied)
  */
-
-const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "admin", "staging", "localhost"]);
 
 /**
  * Returns the tenant slug for the current request, or null when there is none.
@@ -18,18 +19,9 @@ export function getTenantSlug(): string | null {
   if (typeof window === "undefined") return null;
 
   const hostname = window.location.hostname; // e.g. "tenant1.scannow.site"
-  const parts = hostname.split(".");
-
-  // Need at least <subdomain>.<domain>.<tld> (3 parts).
-  if (parts.length >= 3) {
-    const subdomain = parts[0];
-
-    if (!RESERVED_SUBDOMAINS.has(subdomain)) {
-      return subdomain;
-    }
-  }
+  const tenantSlug = getTenantSlugFromHostname(hostname);
+  if (tenantSlug) return tenantSlug;
 
   // Fallback for local development where there is no real subdomain.
-  const devSlug = process.env.NEXT_PUBLIC_DEV_TENANT_SLUG;
-  return devSlug && devSlug.trim() !== "" ? devSlug.trim() : null;
+  return normalizeTenantSlug(process.env.NEXT_PUBLIC_DEV_TENANT_SLUG);
 }

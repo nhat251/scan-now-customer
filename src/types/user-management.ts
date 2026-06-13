@@ -1,4 +1,4 @@
-export type UserRole = "OWNER" | "BRANCH_MANAGER" | "STAFF" | "KITCHEN";
+export type UserRole = "OWNER" | "BRANCH_MANAGER" | "STAFF" | "KITCHEN" | "CASHIER";
 
 export type ManagedUserRole = Exclude<UserRole, "OWNER">;
 export type ManagerUserRoleOption = Extract<ManagedUserRole, "KITCHEN" | "STAFF">;

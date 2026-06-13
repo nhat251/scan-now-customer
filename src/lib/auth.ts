@@ -11,6 +11,7 @@ const ROLE_REDIRECTS = {
   BRANCH_MANAGER: PATH.manager.users,
   STAFF: PATH.dashboards.staff,
   KITCHEN: PATH.dashboards.kitchen,
+  CASHIER: PATH.cashier.dashboard,
 } as const;
 
 const isBrowser = () => typeof window !== "undefined";
