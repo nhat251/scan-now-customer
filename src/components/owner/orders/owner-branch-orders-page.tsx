@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Calendar,
   ChevronLeft,
@@ -15,13 +15,28 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
-import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
-import { formatDateTime, getOwnerTableErrorMessage, isForbiddenError, type TableManagementPortal } from "@/components/owner/tables/helpers";
+import {
+  formatCurrency,
+  getManageMenuNavItems,
+  getPortalCopy,
+  type ManagePortal,
+} from "@/components/manage-menu/helpers";
+import {
+  formatDateTime,
+  getOwnerTableErrorMessage,
+  isForbiddenError,
+  type TableManagementPortal,
+} from "@/components/owner/tables/helpers";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Tag } from "@/components/ui/tag";
+import {
+  getOrderStatusLabel,
+  getPaymentMethodLabel,
+  getPaymentStatusLabel,
+} from "@/helpers/presentation";
 import { useOwnerBranchDetailQuery } from "@/hooks/queries/useOwnerBranchDetailQuery";
 import { useOwnerBranchOrdersQuery } from "@/hooks/queries/useOwnerTableQueries";
 import { useBranchOrderUpdates } from "@/hooks/useBranchOrderUpdates";
@@ -31,87 +46,52 @@ import { useUserStore } from "@/stores/user";
 import type { OrderStatus } from "@/types/order";
 import type { OwnerOrderInvoiceQuery, OwnerTableOrderHistoryResponse } from "@/types/owner-table";
 
+import { OrderFilterSelect } from "./order-filter-select";
+
 type OwnerBranchOrdersPageProps = {
   branchId: string;
   portal?: TableManagementPortal;
 };
 
 const ORDER_STATUS_OPTIONS: Array<{ label: string; value: "" | OrderStatus }> = [
-  { label: "All statuses", value: "" },
-  { label: "Pending confirmation", value: "PendingConfirmation" },
-  { label: "Confirmed", value: "Confirmed" },
-  { label: "Ready to serve", value: "ReadyToServe" },
-  { label: "Served", value: "Served" },
-  { label: "Completed", value: "Completed" },
-  { label: "Cancelled", value: "Cancelled" },
+  { label: "Tất cả trạng thái", value: "" },
+  { label: "Chờ xác nhận", value: "PendingConfirmation" },
+  { label: "Đã xác nhận", value: "Confirmed" },
+  { label: "Sẵn sàng phục vụ", value: "ReadyToServe" },
+  { label: "Đã phục vụ", value: "Served" },
+  { label: "Hoàn thành", value: "Completed" },
+  { label: "Đã hủy", value: "Cancelled" },
 ];
 
 const PAYMENT_STATUS_OPTIONS = [
-  { label: "All payments", value: "" },
-  { label: "Pending", value: "PENDING" },
-  { label: "Success", value: "SUCCESS" },
-  { label: "Failed", value: "FAILED" },
-  { label: "Refunded", value: "REFUNDED" },
+  { label: "Tất cả thanh toán", value: "" },
+  { label: "Đang chờ", value: "PENDING" },
+  { label: "Thành công", value: "SUCCESS" },
+  { label: "Thất bại", value: "FAILED" },
+  { label: "Đã hoàn tiền", value: "REFUNDED" },
 ] as const;
 
 const PAYMENT_METHOD_OPTIONS = [
-  { label: "All methods", value: "" },
+  { label: "Tất cả phương thức", value: "" },
   { label: "PayOS", value: "PAYOS" },
-  { label: "Cash", value: "CASH" },
+  { label: "Tiền mặt", value: "CASH" },
 ] as const;
 
 const SORT_OPTIONS = [
-  { label: "Newest", value: "createdAt:desc" },
-  { label: "Oldest", value: "createdAt:asc" },
-  { label: "Highest total", value: "totalAmount:desc" },
-  { label: "Lowest total", value: "totalAmount:asc" },
-  { label: "Table number", value: "tableNumber:asc" },
+  { label: "Mới nhất", value: "createdAt:desc" },
+  { label: "Cũ nhất", value: "createdAt:asc" },
+  { label: "Tổng tiền cao nhất", value: "totalAmount:desc" },
+  { label: "Tổng tiền thấp nhất", value: "totalAmount:asc" },
+  { label: "Số bàn", value: "tableNumber:asc" },
 ] as const;
-
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  PendingConfirmation: "Chờ xác nhận",
-  Confirmed: "Bếp đã nhận",
-  Preparing: "Bếp đã nhận",
-  PartiallyReady: "Một số món sẵn sàng",
-  ReadyToServe: "Sẵn sàng phục vụ",
-  PartiallyServed: "Đã phục vụ một phần",
-  Served: "Đã phục vụ",
-  Completed: "Đã thanh toán",
-  Cancelled: "Đã hủy",
-};
 
 const getStatusVariant = (status: string): "success" | "warning" | "destructive" | "default" => {
   if (["Completed", "Served", "ReadyToServe"].includes(status)) return "success";
   if (["Cancelled"].includes(status)) return "destructive";
-  if (["PendingConfirmation", "PartiallyReady", "PartiallyServed"].includes(status)) return "warning";
+  if (["PendingConfirmation", "PartiallyReady", "PartiallyServed"].includes(status))
+    return "warning";
   return "default";
 };
-
-const FilterSelect = forwardRef<
-  HTMLSelectElement,
-  {
-    options: ReadonlyArray<{ label: string; value: string }>;
-    className?: string;
-  } & React.SelectHTMLAttributes<HTMLSelectElement>
->(({ options, className, ...rest }, ref) => (
-  <select
-    ref={ref}
-    className={cn(
-      "border-input bg-card h-10 w-full rounded-lg border px-3 pr-8 text-sm font-medium outline-none",
-      "focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
-      "appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23666%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.17l3.71-3.94a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200L5.21%208.27a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.5rem_center] bg-no-repeat",
-      className,
-    )}
-    {...rest}
-  >
-    {options.map((opt) => (
-      <option key={opt.value} value={opt.value}>
-        {opt.label}
-      </option>
-    ))}
-  </select>
-));
-FilterSelect.displayName = "FilterSelect";
 
 const getVisiblePages = (page: number, totalPages: number) => {
   const pages = new Set<number>([1, totalPages, page, page - 1, page + 1]);
@@ -131,7 +111,10 @@ const getVisiblePages = (page: number, totalPages: number) => {
     .sort((a, b) => a - b);
 };
 
-export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranchOrdersPageProps) => {
+export const OwnerBranchOrdersPage = ({
+  branchId,
+  portal = "owner",
+}: OwnerBranchOrdersPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal as ManagePortal);
   const [pageNumber, setPageNumber] = useState(1);
@@ -163,7 +146,16 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
 
   useEffect(() => {
     setPageNumber(1);
-  }, [search, tableNumberVal, statusVal, paymentStatusVal, paymentMethodVal, fromDateVal, toDateVal, sortValueVal]);
+  }, [
+    search,
+    tableNumberVal,
+    statusVal,
+    paymentStatusVal,
+    paymentMethodVal,
+    fromDateVal,
+    toDateVal,
+    sortValueVal,
+  ]);
 
   const [sortBy, sortDirection] = sortValueVal.split(":") as [string, "asc" | "desc"];
   const pageSize = 10;
@@ -181,7 +173,19 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
       sortBy,
       sortDirection,
     }),
-    [fromDateVal, pageNumber, pageSize, paymentMethodVal, paymentStatusVal, search, sortBy, sortDirection, statusVal, tableNumberVal, toDateVal]
+    [
+      fromDateVal,
+      pageNumber,
+      pageSize,
+      paymentMethodVal,
+      paymentStatusVal,
+      search,
+      sortBy,
+      sortDirection,
+      statusVal,
+      tableNumberVal,
+      toDateVal,
+    ]
   );
   const ordersQuery = useOwnerBranchOrdersQuery(branchId, query);
   const branchDetailQuery = useOwnerBranchDetailQuery(branchId);
@@ -200,8 +204,8 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
 
   return (
     <PortalShell
-      title="Orders & Invoices"
-      description="Search, filter, and review all invoices created in this branch."
+      title="Đơn hàng và hóa đơn"
+      description="Tìm kiếm, lọc và xem các hóa đơn của chi nhánh."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal as ManagePortal, "orders", branchId)}
@@ -211,47 +215,50 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
       branchId={branchId}
       stats={
         <>
-          <PortalStatCard label="Invoices" value={String(result?.totalOrders ?? 0)} helper="Matching filters" />
-          <PortalStatCard label="Total revenue" value={formatCurrency(result?.totalAmount ?? 0)} helper="All matching invoices" />
-          <PortalStatCard label="Paid" value={formatCurrency(result?.paidAmount ?? 0)} helper="Successful payments" />
-          <PortalStatCard label="Pending" value={formatCurrency(result?.pendingAmount ?? 0)} helper="Pending payments" />
+          <PortalStatCard
+            label="Hóa đơn"
+            value={String(result?.totalOrders ?? 0)}
+            helper="Khớp bộ lọc"
+          />
+          <PortalStatCard
+            label="Tổng doanh thu"
+            value={formatCurrency(result?.totalAmount ?? 0)}
+            helper="Tất cả hóa đơn khớp bộ lọc"
+          />
+          <PortalStatCard
+            label="Đã thanh toán"
+            value={formatCurrency(result?.paidAmount ?? 0)}
+            helper="Thanh toán thành công"
+          />
+          <PortalStatCard
+            label="Đang chờ"
+            value={formatCurrency(result?.pendingAmount ?? 0)}
+            helper="Thanh toán đang chờ"
+          />
         </>
       }
     >
       <section className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <Filter className="text-muted-foreground size-4" />
-          <span className="text-sm font-semibold">Filters</span>
+          <span className="text-sm font-semibold">Bộ lọc</span>
         </div>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
           <div className="relative lg:col-span-2">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               {...register("search")}
-              placeholder="Search order, session, customer..."
+              placeholder="Tìm đơn, phiên hoặc khách hàng..."
               className="h-10 pl-10"
             />
           </div>
           <div className="relative">
             <Hash className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input
-              {...register("tableNumber")}
-              placeholder="Table"
-              className="h-10 pl-10"
-            />
+            <Input {...register("tableNumber")} placeholder="Bàn" className="h-10 pl-10" />
           </div>
-          <FilterSelect
-            options={ORDER_STATUS_OPTIONS}
-            {...register("status")}
-          />
-          <FilterSelect
-            options={PAYMENT_STATUS_OPTIONS}
-            {...register("paymentStatus")}
-          />
-          <FilterSelect
-            options={[...SORT_OPTIONS]}
-            {...register("sortValue")}
-          />
+          <OrderFilterSelect options={ORDER_STATUS_OPTIONS} {...register("status")} />
+          <OrderFilterSelect options={PAYMENT_STATUS_OPTIONS} {...register("paymentStatus")} />
+          <OrderFilterSelect options={[...SORT_OPTIONS]} {...register("sortValue")} />
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
           <div className="relative">
@@ -270,10 +277,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-10 w-full rounded-lg border pr-3 pl-10 text-sm font-medium outline-none focus:ring-[3px]"
             />
           </div>
-          <FilterSelect
-            options={PAYMENT_METHOD_OPTIONS}
-            {...register("paymentMethod")}
-          />
+          <OrderFilterSelect options={PAYMENT_METHOD_OPTIONS} {...register("paymentMethod")} />
           <div className="flex items-center gap-2 lg:col-span-2">
             <Button
               variant="soft"
@@ -282,9 +286,15 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
               className="w-full"
             >
               <RefreshCw className={cn("size-4", ordersQuery.isFetching && "animate-spin")} />
-              Refresh
+              Tải lại
             </Button>
-            {(search || tableNumberVal || statusVal || paymentStatusVal || paymentMethodVal || fromDateVal || toDateVal) ? (
+            {search ||
+            tableNumberVal ||
+            statusVal ||
+            paymentStatusVal ||
+            paymentMethodVal ||
+            fromDateVal ||
+            toDateVal ? (
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -292,7 +302,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                   setPageNumber(1);
                 }}
               >
-                Clear
+                Xóa bộ lọc
               </Button>
             ) : null}
           </div>
@@ -302,15 +312,15 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
       {ordersQuery.isLoading ? (
         <div className="bg-card border-border/60 flex items-center gap-3 rounded-xl border p-6 shadow-sm">
           <Spinner className="text-primary size-5" />
-          <span className="text-sm font-medium">Loading invoices...</span>
+          <span className="text-sm font-medium">Đang tải hóa đơn...</span>
         </div>
       ) : null}
 
       {ordersQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(ordersQuery.error)
-            ? "You do not have permission to view invoices for this branch."
-            : getOwnerTableErrorMessage(ordersQuery.error, "Unable to load invoices.")}
+            ? "Bạn không có quyền xem hóa đơn của chi nhánh này."
+            : getOwnerTableErrorMessage(ordersQuery.error, "Không thể tải danh sách hóa đơn.")}
         </div>
       ) : null}
 
@@ -319,11 +329,17 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
           {orders.length === 0 ? (
             <div className="flex flex-col items-center px-5 py-16 text-center">
               <Wallet className="text-muted-foreground size-10" />
-              <h3 className="mt-4 text-lg font-bold">No invoices found</h3>
+              <h3 className="mt-4 text-lg font-bold">Không tìm thấy hóa đơn</h3>
               <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-                {search || tableNumberVal || statusVal || paymentStatusVal || paymentMethodVal || fromDateVal || toDateVal
-                  ? "Try adjusting your filters to find what you're looking for."
-                  : "Orders from customers seated at tables in this branch will appear here."}
+                {search ||
+                tableNumberVal ||
+                statusVal ||
+                paymentStatusVal ||
+                paymentMethodVal ||
+                fromDateVal ||
+                toDateVal
+                  ? "Hãy điều chỉnh bộ lọc để tìm dữ liệu phù hợp."
+                  : "Đơn của khách tại các bàn trong chi nhánh sẽ xuất hiện ở đây."}
               </p>
             </div>
           ) : (
@@ -332,21 +348,26 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                 <table className="w-full min-w-[900px] text-left">
                   <thead className="bg-surface-container-low text-muted-foreground text-xs font-bold tracking-wider uppercase">
                     <tr>
-                      <th className="px-5 py-3.5">Order</th>
-                      <th className="px-5 py-3.5">Table</th>
-                      <th className="px-5 py-3.5">Status</th>
-                      <th className="px-5 py-3.5">Payment</th>
-                      <th className="px-5 py-3.5 text-right">Total</th>
-                      <th className="px-5 py-3.5">Date</th>
-                      <th className="px-5 py-3.5 text-right">Action</th>
+                      <th className="px-5 py-3.5">Đơn hàng</th>
+                      <th className="px-5 py-3.5">Bàn</th>
+                      <th className="px-5 py-3.5">Trạng thái</th>
+                      <th className="px-5 py-3.5">Thanh toán</th>
+                      <th className="px-5 py-3.5 text-right">Tổng cộng</th>
+                      <th className="px-5 py-3.5">Thời gian</th>
+                      <th className="px-5 py-3.5 text-right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orders.map((order) => (
-                      <tr key={order.orderId} className="border-border/60 hover:bg-muted/30 border-t transition-colors">
+                      <tr
+                        key={order.orderId}
+                        className="border-border/60 hover:bg-muted/30 border-t transition-colors"
+                      >
                         <td className="px-5 py-3.5">
                           <p className="font-bold">{order.orderNumber}</p>
-                          <p className="text-muted-foreground mt-0.5 text-xs">Session {order.sessionCode ?? "-"}</p>
+                          <p className="text-muted-foreground mt-0.5 text-xs">
+                            Phiên {order.sessionCode ?? "-"}
+                          </p>
                         </td>
                         <td className="px-5 py-3.5">
                           {order.tableNumber ? (
@@ -354,17 +375,21 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                               <Hash className="text-muted-foreground size-3.5" />
                               {order.tableNumber}
                             </span>
-                          ) : <span className="text-muted-foreground text-sm">-</span>}
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
                         </td>
                         <td className="px-5 py-3.5">
                           <Tag
-                            tagString={ORDER_STATUS_LABEL[order.status] ?? order.status}
+                            tagString={getOrderStatusLabel(order.status)}
                             variant={getStatusVariant(order.status)}
                           />
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-medium">{order.paymentMethod ?? "-"}</span>
+                            <span className="text-sm font-medium">
+                              {getPaymentMethodLabel(order.paymentMethod)}
+                            </span>
                             {order.paymentStatus ? (
                               <span
                                 className={cn(
@@ -373,25 +398,33 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                                   order.paymentStatus === "FAILED" && "text-destructive",
                                   order.paymentStatus === "REFUNDED" && "text-destructive",
                                   order.paymentStatus === "PENDING" && "text-warning-foreground",
-                                  !order.paymentStatus && "text-muted-foreground",
+                                  !order.paymentStatus && "text-muted-foreground"
                                 )}
                               >
-                                <span className={cn("size-1.5 rounded-full", order.paymentStatus === "SUCCESS" ? "bg-success-foreground" : order.paymentStatus === "FAILED" || order.paymentStatus === "REFUNDED" ? "bg-destructive" : order.paymentStatus === "PENDING" ? "bg-warning-foreground" : "bg-muted-foreground")} />
-                                {order.paymentStatus === "SUCCESS"
-                                  ? "Paid"
-                                  : order.paymentStatus === "PENDING"
-                                    ? "Pending"
-                                    : order.paymentStatus === "FAILED"
-                                      ? "Failed"
-                                      : order.paymentStatus === "REFUNDED"
-                                        ? "Refunded"
-                                        : "-"}
+                                <span
+                                  className={cn(
+                                    "size-1.5 rounded-full",
+                                    order.paymentStatus === "SUCCESS"
+                                      ? "bg-success-foreground"
+                                      : order.paymentStatus === "FAILED" ||
+                                          order.paymentStatus === "REFUNDED"
+                                        ? "bg-destructive"
+                                        : order.paymentStatus === "PENDING"
+                                          ? "bg-warning-foreground"
+                                          : "bg-muted-foreground"
+                                  )}
+                                />
+                                {getPaymentStatusLabel(order.paymentStatus)}
                               </span>
-                            ) : <span className="text-muted-foreground text-xs">No payment</span>}
+                            ) : (
+                              <span className="text-muted-foreground text-xs">Chưa thanh toán</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <span className="text-base font-black">{formatCurrency(order.totalAmount)}</span>
+                          <span className="text-base font-black">
+                            {formatCurrency(order.totalAmount)}
+                          </span>
                         </td>
                         <td className="text-muted-foreground px-5 py-3.5 text-sm whitespace-nowrap">
                           {formatDateTime(order.createdAt)}
@@ -401,7 +434,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                             variant="ghost"
                             size="icon-sm"
                             onClick={() => setSelectedOrder(order)}
-                            title="View details"
+                            title="Xem chi tiết"
                           >
                             <Eye className="size-4" />
                           </Button>
@@ -413,9 +446,9 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
               </div>
               <div className="border-border/60 flex flex-col gap-3 border-t px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-muted-foreground text-sm">
-                  Page {Math.min(pageNumber, totalPages)} of {totalPages}
+                  Đang ở trang {Math.min(pageNumber, totalPages)} trên {totalPages}
                   <span className="mx-1.5">·</span>
-                  {result?.orders.totalItems ?? 0} invoices
+                  {result?.orders.totalItems ?? 0} hóa đơn
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -425,16 +458,19 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                     onClick={() => setPageNumber((value) => Math.max(1, value - 1))}
                   >
                     <ChevronLeft className="size-3.5" />
-                    Previous
+                    Trang trước
                   </Button>
                   <div className="hidden items-center gap-1 sm:flex">
                     {visiblePages.map((visiblePage, index) => {
                       const previousPage = visiblePages[index - 1];
-                      const shouldShowGap = previousPage !== undefined && visiblePage - previousPage > 1;
+                      const shouldShowGap =
+                        previousPage !== undefined && visiblePage - previousPage > 1;
 
                       return (
                         <span key={visiblePage} className="flex items-center gap-1">
-                          {shouldShowGap ? <span className="text-muted-foreground px-1 text-sm">...</span> : null}
+                          {shouldShowGap ? (
+                            <span className="text-muted-foreground px-1 text-sm">...</span>
+                          ) : null}
                           <Button
                             variant={visiblePage === pageNumber ? "default" : "soft"}
                             size="icon-sm"
@@ -453,7 +489,7 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                     disabled={pageNumber >= totalPages || ordersQuery.isFetching}
                     onClick={() => setPageNumber((value) => value + 1)}
                   >
-                    Next
+                    Tiếp theo
                     <ChevronRight className="size-3.5" />
                   </Button>
                 </div>
@@ -463,14 +499,17 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
         </section>
       ) : null}
 
-      <Dialog open={Boolean(selectedOrder)} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+      <Dialog
+        open={Boolean(selectedOrder)}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span>{selectedOrder?.orderNumber ?? "Invoice detail"}</span>
+              <span>{selectedOrder?.orderNumber ?? "Chi tiết hóa đơn"}</span>
               {selectedOrder ? (
                 <Tag
-                  tagString={ORDER_STATUS_LABEL[selectedOrder.status] ?? selectedOrder.status}
+                  tagString={getOrderStatusLabel(selectedOrder.status)}
                   variant={getStatusVariant(selectedOrder.status)}
                 />
               ) : null}
@@ -480,36 +519,53 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
             <div className="space-y-5">
               <div className="bg-muted/30 grid gap-3 rounded-xl p-4 text-sm sm:grid-cols-3">
                 <div>
-                  <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Table</p>
+                  <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                    Bàn
+                  </p>
                   <p className="mt-0.5 font-bold">{selectedOrder.tableNumber ?? "-"}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Session</p>
+                  <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                    Phiên
+                  </p>
                   <p className="mt-0.5 font-bold">{selectedOrder.sessionCode ?? "-"}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Date</p>
+                  <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                    Thời gian
+                  </p>
                   <p className="mt-0.5 font-bold">{formatDateTime(selectedOrder.createdAt)}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-semibold">Items</p>
+                <p className="text-sm font-semibold">Món</p>
                 {selectedOrder.items.map((item) => (
-                  <div key={item.orderItemId} className="bg-muted/20 flex items-center justify-between gap-3 rounded-lg px-3.5 py-2.5">
+                  <div
+                    key={item.orderItemId}
+                    className="bg-muted/20 flex items-center justify-between gap-3 rounded-lg px-3.5 py-2.5"
+                  >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="text-muted-foreground shrink-0 text-xs font-bold">{item.quantity}x</span>
+                      <span className="text-muted-foreground shrink-0 text-xs font-bold">
+                        {item.quantity}x
+                      </span>
                       <p className="truncate text-sm font-semibold">{item.menuItemName}</p>
-                      {item.note ? <span className="text-muted-foreground truncate text-xs">({item.note})</span> : null}
+                      {item.note ? (
+                        <span className="text-muted-foreground truncate text-xs">
+                          ({item.note})
+                        </span>
+                      ) : null}
                     </div>
-                    <span className="shrink-0 text-sm font-bold">{formatCurrency(item.subTotal)}</span>
+                    <span className="shrink-0 text-sm font-bold">
+                      {formatCurrency(item.subTotal)}
+                    </span>
                   </div>
                 ))}
               </div>
 
               <div className="border-border/60 space-y-1.5 border-t pt-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">Tạm tính</span>
                   <span className="font-medium">{formatCurrency(selectedOrder.subTotal)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -517,18 +573,20 @@ export const OwnerBranchOrdersPage = ({ branchId, portal = "owner" }: OwnerBranc
                   <span className="font-medium">{formatCurrency(selectedOrder.vatAmount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service charge</span>
-                  <span className="font-medium">{formatCurrency(selectedOrder.serviceChargeAmount)}</span>
+                  <span className="text-muted-foreground">Phí phục vụ</span>
+                  <span className="font-medium">
+                    {formatCurrency(selectedOrder.serviceChargeAmount)}
+                  </span>
                 </div>
                 <div className="border-border/60 flex justify-between border-t pt-2 text-base font-black">
-                  <span>Total</span>
+                  <span>Tổng cộng</span>
                   <span>{formatCurrency(selectedOrder.totalAmount)}</span>
                 </div>
               </div>
 
               {selectedOrder.customerNote ? (
                 <div className="bg-warning/15 text-warning-foreground rounded-lg px-3.5 py-2.5 text-sm font-medium">
-                  Note: {selectedOrder.customerNote}
+                  Ghi chú: {selectedOrder.customerNote}
                 </div>
               ) : null}
             </div>

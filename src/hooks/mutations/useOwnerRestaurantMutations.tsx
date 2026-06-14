@@ -1,6 +1,5 @@
-import defaultAxios from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import { axiosBasic } from "@/services/axiosBasic";
 import { showNotify } from "@/stores/global";
@@ -10,14 +9,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const updateOwnerRestaurant = async (payload: UpdateRestaurantRequest) => {
   return await axiosBasic.put<ApiResponse<RestaurantResponse>>("/api/owner/restaurant/me", payload);
-};
-
-const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (defaultAxios.isAxiosError(error)) {
-    return error.response?.data?.message ?? fallbackMessage;
-  }
-
-  return fallbackMessage;
 };
 
 const useOwnerRestaurantMutationHelpers = () => {
@@ -31,7 +22,8 @@ const useOwnerRestaurantMutationHelpers = () => {
     } catch {
       showNotify({
         type: "warning",
-        message: "The restaurant was updated, but we could not refresh the latest details. Please refresh the page.",
+        message:
+          "Đã cập nhật nhà hàng nhưng chưa thể tải dữ liệu mới nhất. Vui lòng tải lại trang.",
       });
     }
   };
@@ -46,10 +38,13 @@ export const useUpdateOwnerRestaurantMutation = () => {
     mutationFn: updateOwnerRestaurant,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerRestaurant("Restaurant updated successfully.");
+      await refreshOwnerRestaurant("Đã cập nhật nhà hàng.");
     },
     onError: (error) => {
-      showNotify({ type: "error", message: getApiErrorMessage(error, "Unable to update this restaurant.") });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật nhà hàng."),
+      });
     },
   });
 };

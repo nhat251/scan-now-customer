@@ -28,7 +28,7 @@ export const TableQrTokenPageClient = ({ qrCodeToken }: { qrCodeToken: string })
           setTableInfo(tableRes.result);
         }
       } catch (err) {
-        Log.error({ prefix: "TableQrToken", message: "Fetch table info error", data: err });
+        Log.error({ prefix: "TableQrToken", message: "Không thể tải thông tin bàn.", data: err });
       }
 
       const joinRes = await joinTableByQr(qrCodeToken);
@@ -39,7 +39,7 @@ export const TableQrTokenPageClient = ({ qrCodeToken }: { qrCodeToken: string })
         setLoading(false);
       }
     } catch (err: unknown) {
-      Log.error({ prefix: "TableQrToken", message: "Join table error", data: err });
+      Log.error({ prefix: "TableQrToken", message: "Không thể tham gia bàn.", data: err });
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
         if (status === 404) {

@@ -1,6 +1,5 @@
-import { isAxiosError } from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import type { CreateWaiterOrderRequest } from "@/services/order";
 import {
@@ -15,7 +14,7 @@ import {
   placePublicOrder,
 } from "@/services/order";
 import { showNotify } from "@/stores/global";
-import type { ApiErrorResponse, ApiResponse } from "@/types/api";
+import type { ApiResponse } from "@/types/api";
 import type {
   CheckoutResponse,
   ConfirmKitchenItemsResponse,
@@ -54,21 +53,16 @@ type CancelPaymentPayload = {
   sessionCode: string;
 };
 
-const getOrderErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError<ApiErrorResponse>(error)) {
-    return fallback;
-  }
-
-  return error.response?.data?.message ?? error.response?.data?.detail ?? error.response?.data?.title ?? fallback;
-};
-
 export const usePlacePublicOrderMutation = () => {
   return useMutation<PlaceOrderPayload, ApiResponse<CustomerOrderResponse>>({
     mutationFn: placePublicOrder,
     hasLoading: true,
-    onSuccess: () => showNotify({ type: "success", message: "Your order was submitted for confirmation." }),
+    onSuccess: () => showNotify({ type: "success", message: "Đơn hàng đã được gửi để xác nhận." }),
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to submit this order.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể gửi đơn hàng."),
+      }),
   });
 };
 
@@ -81,10 +75,13 @@ export const useCreatePublicCheckoutMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PUBLIC_ORDER] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PUBLIC_PAYMENT_STATUS] });
-      showNotify({ type: "success", message: "Payment request created." });
+      showNotify({ type: "success", message: "Đã tạo yêu cầu thanh toán." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to create payment request.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo yêu cầu thanh toán."),
+      }),
   });
 };
 
@@ -96,10 +93,13 @@ export const useConfirmWaiterOrderMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.WAITER_PENDING_ORDERS] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
-      showNotify({ type: "success", message: "Order confirmed and sent to kitchen." });
+      showNotify({ type: "success", message: "Đã xác nhận đơn và gửi đến bếp." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to confirm this order.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể xác nhận đơn hàng."),
+      }),
   });
 };
 
@@ -112,10 +112,13 @@ export const useCancelPublicPaymentMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PUBLIC_ORDER] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.PUBLIC_PAYMENT_STATUS] });
-      showNotify({ type: "success", message: "Payment QR cancelled." });
+      showNotify({ type: "success", message: "Đã hủy mã QR thanh toán." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to cancel payment QR.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể hủy mã QR thanh toán."),
+      }),
   });
 };
 
@@ -127,10 +130,13 @@ export const useConfirmKitchenOrderMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_PENDING_ORDERS] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
-      showNotify({ type: "success", message: "Order confirmed and added to kitchen queue." });
+      showNotify({ type: "success", message: "Đã xác nhận đơn và thêm vào hàng chờ của bếp." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to confirm this order.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể xác nhận đơn hàng."),
+      }),
   });
 };
 
@@ -142,10 +148,13 @@ export const useConfirmKitchenItemsMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_PENDING_ORDERS] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
-      showNotify({ type: "success", message: "Selected dishes confirmed." });
+      showNotify({ type: "success", message: "Đã xác nhận các món được chọn." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to confirm selected dishes.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể xác nhận các món đã chọn."),
+      }),
   });
 };
 
@@ -156,10 +165,16 @@ export const useMarkWaiterItemsServedMutation = () => {
     mutationFn: markWaiterItemsServed,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.WAITER_READY_ITEMS] });
-      showNotify({ type: "success", message: "Selected dishes marked as served." });
+      showNotify({ type: "success", message: "Đã đánh dấu các món được chọn là đã phục vụ." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to mark selected dishes served.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(
+          error,
+          "Không thể đánh dấu các món đã chọn là đã phục vụ."
+        ),
+      }),
   });
 };
 
@@ -174,10 +189,13 @@ export const useCreateWaiterOrderMutation = () => {
     hasLoading: true,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.WAITER_PENDING_ORDERS] });
-      showNotify({ type: "success", message: "Order created successfully!" });
+      showNotify({ type: "success", message: "Đã tạo đơn hàng." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to create this order.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo đơn hàng."),
+      }),
   });
 };
 
@@ -189,9 +207,15 @@ export const useMarkKitchenItemsReadyMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.KITCHEN_GROUPED_ITEMS] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.WAITER_READY_ITEMS] });
-      showNotify({ type: "success", message: "Selected dishes are ready to serve." });
+      showNotify({ type: "success", message: "Các món được chọn đã sẵn sàng phục vụ." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOrderErrorMessage(error, "Unable to mark selected dishes ready.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(
+          error,
+          "Không thể đánh dấu các món đã chọn là sẵn sàng."
+        ),
+      }),
   });
 };

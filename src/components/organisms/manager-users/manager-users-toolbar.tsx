@@ -97,14 +97,14 @@ export const ManagerUsersToolbar = ({
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="grid gap-4 lg:grid-cols-[2fr_repeat(3,1fr)]">
         <Field>
-          <FieldLabel htmlFor="search">Search</FieldLabel>
+          <FieldLabel htmlFor="search">Tìm kiếm</FieldLabel>
           <FieldContent>
             <div className="relative flex-1">
               <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 id="search"
                 className="bg-muted/50 h-12 pl-9"
-                placeholder="Search by name, username, email, phone, branch..."
+                placeholder="Tìm theo tên, tên đăng nhập, email, số điện thoại hoặc chi nhánh..."
                 {...register("search")}
               />
             </div>
@@ -113,7 +113,7 @@ export const ManagerUsersToolbar = ({
 
         <FilterDropdown
           id="role-filter"
-          label="Role"
+          label="Vai trò"
           value={roleVal}
           displayValue={roleFilterLabel}
           options={roleFilterOptions}
@@ -122,7 +122,7 @@ export const ManagerUsersToolbar = ({
 
         <FilterDropdown
           id="branch-filter"
-          label="Branch"
+          label="Chi nhánh"
           value={branchVal}
           displayValue={branchFilterLabel}
           options={branchFilterOptions}
@@ -131,7 +131,7 @@ export const ManagerUsersToolbar = ({
 
         <FilterDropdown
           id="status-filter"
-          label="Status"
+          label="Trạng thái"
           value={statusVal}
           displayValue={statusFilterLabel}
           options={STATUS_OPTIONS}

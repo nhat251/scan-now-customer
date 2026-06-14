@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, DollarSign, Layers, PackageCheck } from "lucide-react";
 
@@ -16,7 +14,6 @@ import {
   canHandleKitchenOrders,
   canHandleWaiterOrders,
   canManageTableSessions,
-  FALLBACK_MENU_IMAGE,
   formatCurrency,
   getActiveLabel,
   getApiErrorMessage,
@@ -24,37 +21,12 @@ import {
   getMyPortalNavItems,
   isForbiddenError,
 } from "./helpers";
+import { MeInfoRow } from "./me-info-row";
 import { MeRoleShell as PortalShell } from "./me-role-shell";
+import { MenuItemDetailImage } from "./menu-item-detail-image";
 
 type MyMenuItemDetailPageProps = {
   menuItemId: string;
-};
-
-const DetailRow = ({ label, value }: { label: string; value?: React.ReactNode }) => (
-  <div className="border-border/60 flex flex-col gap-1 border-b py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
-    <dt className="text-muted-foreground text-sm font-semibold">{label}</dt>
-    <dd className="text-on-surface text-sm font-medium sm:text-right">{value || "-"}</dd>
-  </div>
-);
-
-const MenuItemDetailImage = ({ src, alt }: { src?: string | null; alt: string }) => {
-  const [imageSrc, setImageSrc] = useState(src || FALLBACK_MENU_IMAGE);
-
-  useEffect(() => {
-    setImageSrc(src || FALLBACK_MENU_IMAGE);
-  }, [src]);
-
-  return (
-    <Image
-      src={imageSrc}
-      alt={alt}
-      fill
-      unoptimized
-      sizes="(max-width: 1280px) 100vw, 480px"
-      className="object-cover"
-      onError={() => setImageSrc(FALLBACK_MENU_IMAGE)}
-    />
-  );
 };
 
 export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) => {
@@ -88,7 +60,7 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
           <Button asChild variant="outline">
             <Link href={PATH.me.branchMenu(branchId)}>
               <ArrowLeft className="size-4" />
-              Menu
+              Thực đơn
             </Link>
           </Button>
         ) : null
@@ -100,8 +72,16 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
             value={item ? getAvailabilityLabel(item) : "-"}
             helper="Cập nhật từ danh sách menu"
           />
-          <PortalStatCard label="Hoạt động" value={item ? getActiveLabel(item.isActive) : "-"} helper="Chỉ xem" />
-          <PortalStatCard label="Giá" value={item ? formatCurrency(item.price) : "-"} helper="Không chỉnh giá tại đây" />
+          <PortalStatCard
+            label="Hoạt động"
+            value={item ? getActiveLabel(item.isActive) : "-"}
+            helper="Chỉ xem"
+          />
+          <PortalStatCard
+            label="Giá"
+            value={item ? formatCurrency(item.price) : "-"}
+            helper="Không chỉnh giá tại đây"
+          />
           <PortalStatCard
             label="Chuẩn bị"
             value={item ? `${item.preparationTime} phút` : "-"}
@@ -129,7 +109,11 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
               ? "Bạn không có quyền truy cập chi nhánh này"
               : getApiErrorMessage(itemQuery.error, "Vui lòng thử tải lại món này.")}
           </p>
-          <Button className="mt-5" onClick={() => itemQuery.refetch()} disabled={itemQuery.isRefetching}>
+          <Button
+            className="mt-5"
+            onClick={() => itemQuery.refetch()}
+            disabled={itemQuery.isRefetching}
+          >
             Thử lại
           </Button>
         </div>
@@ -173,13 +157,13 @@ export const MyMenuItemDetailPage = ({ menuItemId }: MyMenuItemDetailPageProps) 
             </div>
 
             <dl className="mt-6">
-              <DetailRow label="Tên món" value={item.name} />
-              <DetailRow label="Mô tả" value={item.description || "-"} />
-              <DetailRow label="Danh mục" value={item.categoryName || "-"} />
-              <DetailRow label="Giá" value={formatCurrency(item.price)} />
-              <DetailRow label="Thời gian chuẩn bị" value={`${item.preparationTime} phút`} />
-              <DetailRow label="Trạng thái bán" value={getAvailabilityLabel(item)} />
-              <DetailRow label="Trạng thái hoạt động" value={getActiveLabel(item.isActive)} />
+              <MeInfoRow label="Tên món" value={item.name} />
+              <MeInfoRow label="Mô tả" value={item.description || "-"} />
+              <MeInfoRow label="Danh mục" value={item.categoryName || "-"} />
+              <MeInfoRow label="Giá" value={formatCurrency(item.price)} />
+              <MeInfoRow label="Thời gian chuẩn bị" value={`${item.preparationTime} phút`} />
+              <MeInfoRow label="Trạng thái bán" value={getAvailabilityLabel(item)} />
+              <MeInfoRow label="Trạng thái hoạt động" value={getActiveLabel(item.isActive)} />
             </dl>
           </div>
         </section>

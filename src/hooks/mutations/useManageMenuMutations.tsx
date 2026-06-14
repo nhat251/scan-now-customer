@@ -1,6 +1,5 @@
-import { isAxiosError } from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import {
   bulkManageAvailability,
@@ -32,14 +31,6 @@ import type {
 } from "@/types/manage-menu";
 import { useQueryClient } from "@tanstack/react-query";
 
-const getMutationErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError(error)) {
-    return fallback;
-  }
-
-  return error.response?.data?.message ?? fallback;
-};
-
 const useRefreshManageMenu = () => {
   const queryClient = useQueryClient();
 
@@ -65,9 +56,13 @@ export const useCreateManageCategoryMutation = () => {
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Category created successfully." });
+      showNotify({ type: "success", message: "Đã tạo danh mục." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to create category.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo danh mục."),
+      }),
   });
 };
 
@@ -82,9 +77,13 @@ export const useUpdateManageCategoryMutation = () => {
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Category updated successfully." });
+      showNotify({ type: "success", message: "Đã cập nhật danh mục." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update category.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật danh mục."),
+      }),
   });
 };
 
@@ -98,22 +97,33 @@ export const useSetManageCategoryActiveMutation = () => {
     mutationFn: async (payload) => (await setManageCategoryActive(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Category status updated." });
+      showNotify({ type: "success", message: "Đã cập nhật trạng thái danh mục." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update category status.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật trạng thái danh mục."),
+      }),
   });
 };
 
 export const useReorderManageCategoriesMutation = () => {
   const { refresh } = useRefreshManageMenu();
 
-  return useMutation<{ branchId: string; data: ReorderRequest }, ApiResponse<ManageCategoryResponse[]>>({
+  return useMutation<
+    { branchId: string; data: ReorderRequest },
+    ApiResponse<ManageCategoryResponse[]>
+  >({
     mutationFn: async (payload) => (await reorderManageCategories(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Categories reordered successfully." });
+      showNotify({ type: "success", message: "Đã sắp xếp lại danh mục." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to reorder categories.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể sắp xếp lại danh mục."),
+      }),
   });
 };
 
@@ -128,23 +138,34 @@ export const useCreateManageMenuItemMutation = () => {
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Menu item created successfully." });
+      showNotify({ type: "success", message: "Đã tạo món." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to create menu item.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo món."),
+      }),
   });
 };
 
 export const useUpdateManageMenuItemMutation = () => {
   const { refresh } = useRefreshManageMenu();
 
-  return useMutation<{ menuItemId: string; data: UpdateMenuItemRequest }, ApiResponse<ManageMenuItemResponse>>({
+  return useMutation<
+    { menuItemId: string; data: UpdateMenuItemRequest },
+    ApiResponse<ManageMenuItemResponse>
+  >({
     mutationFn: async (payload) => (await updateManageMenuItem(payload)).data,
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Menu item updated successfully." });
+      showNotify({ type: "success", message: "Đã cập nhật món." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update menu item.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật món."),
+      }),
   });
 };
 
@@ -153,35 +174,53 @@ export const useUploadManageMenuItemImagesMutation = () => {
     mutationFn: async (files) => (await uploadManageMenuItemImages(files)).data,
     hasLoading: true,
     onSuccess: () => {
-      showNotify({ type: "success", message: "Image uploaded successfully." });
+      showNotify({ type: "success", message: "Đã tải hình ảnh lên." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to upload image.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tải hình ảnh lên."),
+      }),
   });
 };
 
 export const useSetManageMenuItemActiveMutation = () => {
   const { refresh } = useRefreshManageMenu();
 
-  return useMutation<{ menuItemId: string; isActive: boolean }, ApiResponse<ManageMenuItemResponse>>({
+  return useMutation<
+    { menuItemId: string; isActive: boolean },
+    ApiResponse<ManageMenuItemResponse>
+  >({
     mutationFn: async (payload) => (await setManageMenuItemActive(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Menu item status updated." });
+      showNotify({ type: "success", message: "Đã cập nhật trạng thái món." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update item status.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật trạng thái món."),
+      }),
   });
 };
 
 export const useReorderManageMenuItemsMutation = () => {
   const { refresh } = useRefreshManageMenu();
 
-  return useMutation<{ branchId: string; data: ReorderRequest }, ApiResponse<ManageMenuItemResponse[]>>({
+  return useMutation<
+    { branchId: string; data: ReorderRequest },
+    ApiResponse<ManageMenuItemResponse[]>
+  >({
     mutationFn: async (payload) => (await reorderManageMenuItems(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Menu items reordered successfully." });
+      showNotify({ type: "success", message: "Đã sắp xếp lại món." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to reorder menu items.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể sắp xếp lại món."),
+      }),
   });
 };
 
@@ -192,22 +231,33 @@ export const useToggleManageMenuItemAvailableMutation = () => {
     mutationFn: async (menuItemId) => (await toggleManageMenuItemAvailable(menuItemId)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Availability updated." });
+      showNotify({ type: "success", message: "Đã cập nhật tình trạng phục vụ." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update availability.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật tình trạng phục vụ."),
+      }),
   });
 };
 
 export const useBulkManageAvailabilityMutation = () => {
   const { refresh } = useRefreshManageMenu();
 
-  return useMutation<{ branchId: string; data: BulkAvailabilityRequest }, ApiResponse<ManageMenuItemResponse[]>>({
+  return useMutation<
+    { branchId: string; data: BulkAvailabilityRequest },
+    ApiResponse<ManageMenuItemResponse[]>
+  >({
     mutationFn: async (payload) => (await bulkManageAvailability(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Selected items updated." });
+      showNotify({ type: "success", message: "Đã cập nhật các món đã chọn." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update selected items.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật các món đã chọn."),
+      }),
   });
 };
 
@@ -218,22 +268,33 @@ export const useToggleManageMenuItemFeaturedMutation = () => {
     mutationFn: async (menuItemId) => (await toggleManageMenuItemFeatured(menuItemId)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Featured status updated." });
+      showNotify({ type: "success", message: "Đã cập nhật trạng thái nổi bật." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update featured status.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật trạng thái nổi bật."),
+      }),
   });
 };
 
 export const useUpdateManageMenuItemPriceMutation = () => {
   const { refresh } = useRefreshManageMenu();
 
-  return useMutation<{ menuItemId: string; data: UpdatePriceRequest }, ApiResponse<ManageMenuItemResponse>>({
+  return useMutation<
+    { menuItemId: string; data: UpdatePriceRequest },
+    ApiResponse<ManageMenuItemResponse>
+  >({
     mutationFn: async (payload) => (await updateManageMenuItemPrice(payload)).data,
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Price updated successfully." });
+      showNotify({ type: "success", message: "Đã cập nhật giá." });
     },
-    onError: (error) => showNotify({ type: "error", message: getMutationErrorMessage(error, "Unable to update price.") }),
+    onError: (error) =>
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật giá."),
+      }),
   });
 };

@@ -16,7 +16,7 @@ const CashierOrdersPage = () => {
               </Link>
               <div>
                 <span className="text-xs font-semibold tracking-wider text-indigo-400 uppercase">
-                  ScanNow Cashier
+                  Khu vực thu ngân ScanNow
                 </span>
                 <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-white">
                   Danh sách hóa đơn

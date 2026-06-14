@@ -1,12 +1,20 @@
 import { axiosBasic } from "@/services/axiosBasic";
 import type { ApiResponse } from "@/types/api";
-import type { CashierCheckoutRequest, CashierOrderQuery, CashierOrdersResult, CashierPaymentResponse } from "@/types/cashier";
+import type {
+  CashierCheckoutRequest,
+  CashierOrderQuery,
+  CashierOrdersResult,
+  CashierPaymentResponse,
+} from "@/types/cashier";
 import type { OwnerTableOrderHistoryResponse } from "@/types/owner-table";
 
 export const getCashierOrders = async (branchId: string, query: CashierOrderQuery) => {
-  return await axiosBasic.get<ApiResponse<CashierOrdersResult>>(`/api/cashier/branches/${branchId}/orders`, {
-    params: query,
-  });
+  return await axiosBasic.get<ApiResponse<CashierOrdersResult>>(
+    `/api/cashier/branches/${branchId}/orders`,
+    {
+      params: query,
+    }
+  );
 };
 
 export const getCashierOrder = async (branchId: string, orderId: string) => {

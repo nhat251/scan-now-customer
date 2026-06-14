@@ -1,6 +1,5 @@
-import { isAxiosError } from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import { bulkUpdateMyMenuAvailability, toggleMyMenuItemAvailable } from "@/services/me";
 import { showNotify } from "@/stores/global";
@@ -11,14 +10,6 @@ import { useQueryClient } from "@tanstack/react-query";
 type BulkAvailabilityPayload = {
   branchId: string;
   request: BulkAvailabilityRequest;
-};
-
-const getMeMenuErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError(error)) {
-    return fallback;
-  }
-
-  return error.response?.data?.message ?? fallback;
 };
 
 export const useToggleMyMenuItemAvailabilityMutation = () => {
@@ -32,12 +23,15 @@ export const useToggleMyMenuItemAvailabilityMutation = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.MY_BRANCH_MENU] });
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.MY_MENU_ITEM] });
-      showNotify({ type: "success", message: "Availability updated successfully." });
+      showNotify({ type: "success", message: "Đã cập nhật tình trạng phục vụ." });
     },
     onError: (error) => {
       showNotify({
         type: "error",
-        message: getMeMenuErrorMessage(error, "Unable to update item availability."),
+        message: getVietnameseApiErrorMessage(
+          error,
+          "Không thể cập nhật tình trạng phục vụ của món."
+        ),
       });
     },
   });
@@ -53,12 +47,12 @@ export const useBulkMyMenuAvailabilityMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.MY_BRANCH_MENU] });
-      showNotify({ type: "success", message: "Selected items updated successfully." });
+      showNotify({ type: "success", message: "Đã cập nhật các món đã chọn." });
     },
     onError: (error) => {
       showNotify({
         type: "error",
-        message: getMeMenuErrorMessage(error, "Unable to update selected items."),
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật các món đã chọn."),
       });
     },
   });

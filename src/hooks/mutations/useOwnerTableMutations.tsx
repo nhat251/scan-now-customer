@@ -1,6 +1,5 @@
-import { isAxiosError } from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import {
   createOwnerTable,
@@ -26,16 +25,6 @@ type BranchTablePayload<TData> = {
   data: TData;
 };
 
-const getOwnerTableErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError(error)) {
-    return fallback;
-  }
-
-  const data = error.response?.data as { message?: string; detail?: string; title?: string } | undefined;
-
-  return data?.message ?? data?.detail ?? data?.title ?? fallback;
-};
-
 const useRefreshOwnerTables = () => {
   const queryClient = useQueryClient();
 
@@ -55,39 +44,54 @@ export const useCreateOwnerTableMutation = () => {
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Table created successfully." });
+      showNotify({ type: "success", message: "Đã tạo bàn." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOwnerTableErrorMessage(error, "Unable to create table.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo bàn."),
+      }),
   });
 };
 
 export const useUpdateOwnerTableMutation = () => {
   const { refresh } = useRefreshOwnerTables();
 
-  return useMutation<{ tableId: string; data: UpdateOwnerTableRequest }, ApiResponse<OwnerTableResponse>>({
+  return useMutation<
+    { tableId: string; data: UpdateOwnerTableRequest },
+    ApiResponse<OwnerTableResponse>
+  >({
     mutationFn: async (payload) => (await updateOwnerTable(payload)).data,
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Table updated successfully." });
+      showNotify({ type: "success", message: "Đã cập nhật bàn." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOwnerTableErrorMessage(error, "Unable to update table.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật bàn."),
+      }),
   });
 };
 
 export const useUpdateOwnerTableStatusMutation = () => {
   const { refresh } = useRefreshOwnerTables();
 
-  return useMutation<{ tableId: string; data: UpdateOwnerTableStatusRequest }, ApiResponse<OwnerTableResponse>>({
+  return useMutation<
+    { tableId: string; data: UpdateOwnerTableStatusRequest },
+    ApiResponse<OwnerTableResponse>
+  >({
     mutationFn: async (payload) => (await updateOwnerTableStatus(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Table status updated." });
+      showNotify({ type: "success", message: "Đã cập nhật trạng thái bàn." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOwnerTableErrorMessage(error, "Unable to update table status.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật trạng thái bàn."),
+      }),
   });
 };
 
@@ -98,10 +102,16 @@ export const useSetOwnerTableActiveMutation = () => {
     mutationFn: async (payload) => (await setOwnerTableActive(payload)).data,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "Table active state updated." });
+      showNotify({ type: "success", message: "Đã cập nhật trạng thái hoạt động của bàn." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOwnerTableErrorMessage(error, "Unable to update table active state.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(
+          error,
+          "Không thể cập nhật trạng thái hoạt động của bàn."
+        ),
+      }),
   });
 };
 
@@ -113,10 +123,13 @@ export const useRegenerateOwnerTableQrMutation = () => {
     hasLoading: true,
     onSuccess: async () => {
       await refresh();
-      showNotify({ type: "success", message: "QR regenerated successfully." });
+      showNotify({ type: "success", message: "Đã tạo lại mã QR." });
     },
     onError: (error) =>
-      showNotify({ type: "error", message: getOwnerTableErrorMessage(error, "Cannot regenerate QR.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo lại mã QR."),
+      }),
   });
 };
 
@@ -124,6 +137,9 @@ export const useDownloadOwnerTableQrMutation = () => {
   return useMutation<string, Blob>({
     mutationFn: async (tableId) => (await downloadOwnerTableQrImage(tableId)).data,
     onError: (error) =>
-      showNotify({ type: "error", message: getOwnerTableErrorMessage(error, "Cannot download QR image.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tải hình ảnh mã QR."),
+      }),
   });
 };

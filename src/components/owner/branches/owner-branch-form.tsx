@@ -1,4 +1,4 @@
-import type { FieldErrors,UseFormRegister } from "react-hook-form";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -13,11 +13,19 @@ type OwnerBranchFormProps = {
   onSubmit: () => void;
 };
 
-export const OwnerBranchForm = ({ mode, register, errors, submitting, onSubmit }: OwnerBranchFormProps) => {
+export const OwnerBranchForm = ({
+  mode,
+  register,
+  errors,
+  submitting,
+  onSubmit,
+}: OwnerBranchFormProps) => {
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">{mode === "create" ? "Tạo chi nhánh" : "Cập nhật chi nhánh"}</h2>
+        <h2 className="text-lg font-semibold">
+          {mode === "create" ? "Tạo chi nhánh" : "Cập nhật chi nhánh"}
+        </h2>
         <p className="text-muted-foreground mt-1 text-sm">
           Cấu hình thông tin nhận diện, liên hệ, giờ mở cửa và các khoản phí của chi nhánh.
         </p>
@@ -26,7 +34,9 @@ export const OwnerBranchForm = ({ mode, register, errors, submitting, onSubmit }
       <FieldGroup className="gap-6">
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="branch-name" required>Tên chi nhánh</FieldLabel>
+            <FieldLabel htmlFor="branch-name" required>
+              Tên chi nhánh
+            </FieldLabel>
             <FieldContent>
               <Input
                 id="branch-name"
@@ -39,7 +49,9 @@ export const OwnerBranchForm = ({ mode, register, errors, submitting, onSubmit }
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="branch-slug" required>Slug</FieldLabel>
+            <FieldLabel htmlFor="branch-slug" required>
+              Đường dẫn định danh
+            </FieldLabel>
             <FieldContent>
               <Input
                 id="branch-slug"

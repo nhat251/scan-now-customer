@@ -2,9 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight,Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PATH } from "@/constants/path";
 import { cn } from "@/lib/utils";
 import type { CartDto, CartItemDto } from "@/types/cart";
@@ -47,7 +54,9 @@ export const SessionCartSheet = ({
         <div className="bg-outline-variant/50 mx-auto mt-3 h-1.5 w-12 rounded-full" />
         <DialogHeader className="border-outline-variant/30 flex-row items-center justify-between gap-3 border-b px-5 pt-4 pb-4 text-left">
           <div>
-            <DialogTitle className="font-headline-sm text-headline-sm text-on-surface">Giỏ hàng của bạn</DialogTitle>
+            <DialogTitle className="font-headline-sm text-headline-sm text-on-surface">
+              Giỏ hàng của bạn
+            </DialogTitle>
             <DialogDescription className="font-label-sm text-on-surface-variant mt-1 flex items-center gap-1.5">
               <span className="bg-primary-container text-on-primary-container inline-flex h-5 items-center justify-center rounded-full px-2 text-[11px] font-bold">
                 {totalItems} món
@@ -56,7 +65,10 @@ export const SessionCartSheet = ({
             </DialogDescription>
           </div>
           <DialogClose asChild>
-            <button aria-label="Đóng giỏ hàng" className="bg-surface-variant text-on-surface hover:bg-outline-variant/50 flex h-10 w-10 items-center justify-center rounded-full transition-colors">
+            <button
+              aria-label="Đóng giỏ hàng"
+              className="bg-surface-variant text-on-surface hover:bg-outline-variant/50 flex h-10 w-10 items-center justify-center rounded-full transition-colors"
+            >
               <X className="size-5" />
             </button>
           </DialogClose>
@@ -69,12 +81,17 @@ export const SessionCartSheet = ({
                 <ShoppingBag className="size-10" />
               </div>
               <p className="font-headline-sm text-on-surface">Giỏ hàng đang trống</p>
-              <p className="font-body-sm text-on-surface-variant mt-1">Chọn món trong menu để bắt đầu đặt món.</p>
+              <p className="font-body-sm text-on-surface-variant mt-1">
+                Chọn món trong menu để bắt đầu đặt món.
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
               {cart.items.map((item) => (
-                <article key={item.menuItemId} className="border-outline-variant/30 flex flex-col gap-3 rounded-2xl border bg-white p-3 shadow-sm">
+                <article
+                  key={item.menuItemId}
+                  className="border-outline-variant/30 flex flex-col gap-3 rounded-2xl border bg-white p-3 shadow-sm"
+                >
                   <div className="flex gap-3">
                     <Link
                       href={PATH.customer.sessionMenuItem(sessionCode, item.menuItemId)}
@@ -99,7 +116,9 @@ export const SessionCartSheet = ({
                         {item.menuItemName}
                       </Link>
                       <div className="flex items-center justify-between">
-                        <p className="font-headline-sm text-primary">{formatCurrency(item.price)}</p>
+                        <p className="font-headline-sm text-primary">
+                          {formatCurrency(item.price)}
+                        </p>
                         <div className="border-primary/20 bg-surface flex items-center gap-2 rounded-full border px-1 py-1">
                           <button
                             type="button"
@@ -110,7 +129,9 @@ export const SessionCartSheet = ({
                           >
                             <Minus className="size-3.5" strokeWidth={2.5} />
                           </button>
-                          <span className="font-label-md text-on-surface min-w-4 text-center">{item.quantity}</span>
+                          <span className="font-label-md text-on-surface min-w-4 text-center">
+                            {item.quantity}
+                          </span>
                           <button
                             type="button"
                             disabled={isUpdating}
@@ -146,11 +167,13 @@ export const SessionCartSheet = ({
               </div>
               <div className="border-outline-variant/30 mt-1 flex items-center justify-between border-t pt-2">
                 <span className="font-headline-sm text-on-surface text-base">Tổng cộng</span>
-                <span className="font-headline-sm text-primary text-xl">{formatCurrency(cart.totalAmount)}</span>
+                <span className="font-headline-sm text-primary text-xl">
+                  {formatCurrency(cart.totalAmount)}
+                </span>
               </div>
             </div>
           )}
-          
+
           <div className="flex gap-3">
             {cart.items.length > 0 ? (
               <button

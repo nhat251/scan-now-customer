@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { type FieldErrors,useForm } from "react-hook-form";
+import { type FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -33,14 +33,22 @@ type PriceFormValues = {
 };
 
 const priceSchema = z.object({
-  price: z.string().refine((val) => {
-    const num = Number(val);
-    return !isNaN(num) && num > 0;
-  }, { message: "New price must be greater than 0." }),
+  price: z.string().refine(
+    (val) => {
+      const num = Number(val);
+      return !isNaN(num) && num > 0;
+    },
+    { message: "Giá mới phải lớn hơn 0." }
+  ),
   note: z.string(),
 });
 
-export const UpdatePriceDialog = ({ menuItemId, currentPrice, open, onOpenChange }: UpdatePriceDialogProps) => {
+export const UpdatePriceDialog = ({
+  menuItemId,
+  currentPrice,
+  open,
+  onOpenChange,
+}: UpdatePriceDialogProps) => {
   const updatePriceMutation = useUpdateManageMenuItemPriceMutation();
 
   const { register, handleSubmit, reset } = useForm<PriceFormValues>({
@@ -82,33 +90,36 @@ export const UpdatePriceDialog = ({ menuItemId, currentPrice, open, onOpenChange
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Update Price</DialogTitle>
-          <DialogDescription>Record a new price and optional audit note.</DialogDescription>
+          <DialogTitle>Cập nhật giá</DialogTitle>
+          <DialogDescription>Lưu giá mới và ghi chú thay đổi nếu cần.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="bg-surface-container-low rounded-xl p-4">
-            <p className="text-muted-foreground text-sm font-semibold">Current Price</p>
+            <p className="text-muted-foreground text-sm font-semibold">Giá hiện tại</p>
             <p className="mt-1 text-2xl font-bold">{formatCurrency(currentPrice)}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="new-price" required>
-              New Price
+              Giá mới
             </Label>
             <Input id="new-price" type="number" min={1} {...register("price")} />
           </div>
           <label className="space-y-2">
-            <span className="text-sm font-semibold">Note</span>
+            <span className="text-sm font-semibold">Ghi chú</span>
             <Textarea {...register("note")} />
           </label>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
-          <Button onClick={handleSubmit(submit, onValidationError)} disabled={updatePriceMutation.isPending}>
-            {updatePriceMutation.isPending ? "Updating..." : "Update Price"}
+          <Button
+            onClick={handleSubmit(submit, onValidationError)}
+            disabled={updatePriceMutation.isPending}
+          >
+            {updatePriceMutation.isPending ? "Đang cập nhật..." : "Cập nhật giá"}
           </Button>
         </DialogFooter>
       </DialogContent>

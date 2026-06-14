@@ -3,7 +3,7 @@ import { LayoutDashboard, Settings, Store, Users } from "lucide-react";
 import type { PortalNavItem } from "@/components/auth/portal-shell";
 import { PATH } from "@/constants/path";
 
-export type OwnerPortalSection = "dashboard" | "restaurant" | "branches" | "users" | "settings";
+export type OwnerPortalSection = "dashboard" | "restaurant" | "branches" | "nhân sự" | "settings";
 
 export const getOwnerPortalNavItems = (activeSection: OwnerPortalSection): PortalNavItem[] => {
   return [
@@ -29,7 +29,7 @@ export const getOwnerPortalNavItems = (activeSection: OwnerPortalSection): Porta
       label: "Nhân sự",
       href: PATH.owner.users,
       icon: <Users className="size-4" />,
-      active: activeSection === "users",
+      active: activeSection === "nhân sự",
     },
     {
       label: "Cài đặt",

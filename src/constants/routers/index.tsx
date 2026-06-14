@@ -12,7 +12,7 @@ export type navType = {
 export const nav_items: navType[] = [
   {
     id: "home",
-    text: "Home",
+    text: "Trang chủ",
     path: BASE_URL.HOME,
     createPath: () => `${BASE_URL.HOME}`,
     isShow: true,
@@ -20,7 +20,7 @@ export const nav_items: navType[] = [
   },
   {
     id: "login",
-    text: "Login",
+    text: "Đăng nhập",
     path: BASE_URL.LOGIN,
     createPath: () => `${BASE_URL.LOGIN}`,
     isShow: true,

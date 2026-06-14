@@ -15,7 +15,10 @@ import { OwnerBranchesToolbar } from "@/components/owner/branches/owner-branches
 import { getOwnerPortalNavItems } from "@/components/owner/users/owner-portal-nav";
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
-import { useActivateOwnerBranchMutation, useInactivateOwnerBranchMutation } from "@/hooks/mutations/useOwnerBranchMutations";
+import {
+  useActivateOwnerBranchMutation,
+  useInactivateOwnerBranchMutation,
+} from "@/hooks/mutations/useOwnerBranchMutations";
 import { useOwnerBranchListQuery } from "@/hooks/queries/useOwnerBranchListQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useUserStore } from "@/stores/user";
@@ -96,9 +99,13 @@ export const OwnerBranchesPage = () => {
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">
+            Cổng chủ quán
+          </p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">{errorState.heading}</h2>
-          <p className="text-muted-foreground mt-3 text-sm md:text-base">{errorState.description}</p>
+          <p className="text-muted-foreground mt-3 text-sm md:text-base">
+            {errorState.description}
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button onClick={() => branchesQuery.refetch()} disabled={branchesQuery.isRefetching}>
               {errorState.retryLabel}
@@ -124,17 +131,37 @@ export const OwnerBranchesPage = () => {
       topbarTitle={currentUser?.fullName ?? "Cổng chủ quán"}
       currentUser={currentUser}
       headerAction={
-        <Button size="lg" className="h-12 px-8" onClick={() => router.push(PATH.owner.branchCreate)}>
+        <Button
+          size="lg"
+          className="h-12 px-8"
+          onClick={() => router.push(PATH.owner.branchCreate)}
+        >
           <Plus />
           Tạo chi nhánh
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Tổng chi nhánh" value={String(totalItems)} helper="Số chi nhánh trong hệ thống" />
-          <PortalStatCard label="Hoạt động" value={String(activeBranches)} helper="Chi nhánh đang bật trên trang này" />
-          <PortalStatCard label="Tạm tắt" value={String(inactiveBranches)} helper="Chi nhánh hiện đang tắt" />
-          <PortalStatCard label="Có quản lý" value={String(managedBranches)} helper="Chi nhánh đã gán quản lý" />
+          <PortalStatCard
+            label="Tổng chi nhánh"
+            value={String(totalItems)}
+            helper="Số chi nhánh trong hệ thống"
+          />
+          <PortalStatCard
+            label="Hoạt động"
+            value={String(activeBranches)}
+            helper="Chi nhánh đang bật trên trang này"
+          />
+          <PortalStatCard
+            label="Tạm tắt"
+            value={String(inactiveBranches)}
+            helper="Chi nhánh hiện đang tắt"
+          />
+          <PortalStatCard
+            label="Có quản lý"
+            value={String(managedBranches)}
+            helper="Chi nhánh đã gán quản lý"
+          />
         </>
       }
     >

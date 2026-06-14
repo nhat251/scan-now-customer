@@ -1,8 +1,18 @@
 import { isAxiosError } from "axios";
-import { LayoutDashboard, ListOrdered, Settings, Soup, Store, Table2, Tags, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  ListOrdered,
+  Settings,
+  Soup,
+  Store,
+  Table2,
+  Tags,
+  Users,
+} from "lucide-react";
 
 import type { PortalNavItem } from "@/components/auth/portal-shell";
 import { PATH } from "@/constants/path";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import type {
   ManageCategoryFormValues,
   ManageCategoryResponse,
@@ -38,7 +48,7 @@ export const formatDateTime = (value?: string | null) => {
     return "-";
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("vi-VN", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -47,9 +57,11 @@ export const formatDateTime = (value?: string | null) => {
   }).format(date);
 };
 
-export const getStatusLabel = (isActive: boolean) => (isActive ? "Active" : "Inactive");
-export const getAvailabilityLabel = (isAvailable: boolean) => (isAvailable ? "Available" : "Out of Stock");
-export const getFeaturedLabel = (isFeatured: boolean) => (isFeatured ? "Featured" : "Normal");
+export const getStatusLabel = (isActive: boolean) =>
+  isActive ? "Đang hoạt động" : "Ngừng hoạt động";
+export const getAvailabilityLabel = (isAvailable: boolean) =>
+  isAvailable ? "Còn hàng" : "Hết hàng";
+export const getFeaturedLabel = (isFeatured: boolean) => (isFeatured ? "Nổi bật" : "Thông thường");
 
 export const statusFilterToQuery = (status: StatusFilter) => {
   if (status === "active") return true;
@@ -69,22 +81,18 @@ export const featuredFilterToQuery = (status: FeaturedFilter) => {
   return undefined;
 };
 
-export const getManageApiErrorMessage = (error: unknown, fallback = "Please try again.") => {
-  if (!isAxiosError(error)) {
-    return fallback;
-  }
+export const getManageApiErrorMessage = (error: unknown, fallback = "Vui lòng thử lại.") =>
+  getVietnameseApiErrorMessage(error, fallback);
 
-  return error.response?.data?.message ?? error.response?.data?.detail ?? error.message ?? fallback;
-};
-
-export const isForbiddenError = (error: unknown) => isAxiosError(error) && error.response?.status === 403;
+export const isForbiddenError = (error: unknown) =>
+  isAxiosError(error) && error.response?.status === 403;
 
 export const getPortalCopy = (portal: ManagePortal) => {
   if (portal === "manager") {
     return {
-      label: "Branch Portal",
-      name: "Branch Manager Console",
-      topbar: "Branch Manager Console",
+      label: "Khu vực chi nhánh",
+      name: "Cổng quản lý chi nhánh",
+      topbar: "Cổng quản lý chi nhánh",
       role: "BRANCH_MANAGER" as const,
     };
   }
@@ -99,38 +107,56 @@ export const getPortalCopy = (portal: ManagePortal) => {
 
 export const getManageMenuNavItems = (
   portal: ManagePortal,
-  active: "dashboard" | "branches" | "categories" | "menu-items" | "tables" | "orders" | "users" | "settings",
+  active:
+    | "dashboard"
+    | "branches"
+    | "categories"
+    | "menu-items"
+    | "tables"
+    | "orders"
+    | "nhân sự"
+    | "settings",
   branchId?: string
 ): PortalNavItem[] => {
   if (portal === "manager") {
     return [
-      { label: "Dashboard", href: PATH.dashboards.manager, icon: <LayoutDashboard className="size-4" />, active: active === "dashboard" },
-      { label: "Staff Management", href: PATH.manager.users, icon: <Users className="size-4" />, active: active === "users" },
+      {
+        label: "Tổng quan",
+        href: PATH.dashboards.manager,
+        icon: <LayoutDashboard className="size-4" />,
+        active: active === "dashboard",
+      },
+      {
+        label: "Quản lý nhân viên",
+        href: PATH.manager.users,
+        icon: <Users className="size-4" />,
+        active: active === "nhân sự",
+      },
       ...(branchId
         ? [
             {
-              label: "Categories",
+              label: "Danh mục",
               href: PATH.manager.branchCategories(branchId),
               icon: <Tags className="size-4" />,
               active: active === "categories",
               section: "branch" as const,
             },
             {
-              label: "Menu Items",
+              label: "Món trong thực đơn",
               href: PATH.manager.branchMenuItems(branchId),
               icon: <Soup className="size-4" />,
               active: active === "menu-items",
               section: "branch" as const,
             },
             {
-              label: "Tables & QR",
+              label: "Bàn và mã QR",
               href: PATH.manager.branchTables(branchId),
               icon: <Table2 className="size-4" />,
               active: active === "tables",
               section: "branch" as const,
             },
             {
-              label: "Orders & Invoices",
+              label: "Đơn hàng và hóa đơn",
               href: PATH.manager.branchOrders(branchId),
               icon: <ListOrdered className="size-4" />,
               active: active === "orders",
@@ -138,14 +164,29 @@ export const getManageMenuNavItems = (
             },
           ]
         : []),
-      { label: "Settings", href: PATH.manager.settings, icon: <Settings className="size-4" />, active: active === "settings" },
+      {
+        label: "Cài đặt",
+        href: PATH.manager.settings,
+        icon: <Settings className="size-4" />,
+        active: active === "settings",
+      },
     ];
   }
 
   return [
-    { label: "Tổng quan", href: PATH.dashboards.owner, icon: <LayoutDashboard className="size-4" />, active: active === "dashboard" },
+    {
+      label: "Tổng quan",
+      href: PATH.dashboards.owner,
+      icon: <LayoutDashboard className="size-4" />,
+      active: active === "dashboard",
+    },
     { label: "Nhà hàng", href: PATH.owner.restaurant, icon: <Store className="size-4" /> },
-    { label: "Chi nhánh", href: PATH.owner.branches, icon: <Store className="size-4" />, active: active === "branches" },
+    {
+      label: "Chi nhánh",
+      href: PATH.owner.branches,
+      icon: <Store className="size-4" />,
+      active: active === "branches",
+    },
     ...(branchId
       ? [
           {
@@ -178,33 +219,59 @@ export const getManageMenuNavItems = (
           },
         ]
       : []),
-    { label: "Nhân sự", href: PATH.owner.users, icon: <Users className="size-4" />, active: active === "users" },
-    { label: "Cài đặt", href: PATH.owner.settings, icon: <Settings className="size-4" />, active: active === "settings" },
+    {
+      label: "Nhân sự",
+      href: PATH.owner.users,
+      icon: <Users className="size-4" />,
+      active: active === "nhân sự",
+    },
+    {
+      label: "Cài đặt",
+      href: PATH.owner.settings,
+      icon: <Settings className="size-4" />,
+      active: active === "settings",
+    },
   ];
 };
 
 export const getCategoryListPath = (portal: ManagePortal, branchId: string) =>
-  portal === "owner" ? PATH.owner.branchCategories(branchId) : PATH.manager.branchCategories(branchId);
+  portal === "owner"
+    ? PATH.owner.branchCategories(branchId)
+    : PATH.manager.branchCategories(branchId);
 
 export const getCategoryCreatePath = (portal: ManagePortal, branchId: string) =>
-  portal === "owner" ? PATH.owner.branchCategoryCreate(branchId) : PATH.manager.branchCategoryCreate(branchId);
+  portal === "owner"
+    ? PATH.owner.branchCategoryCreate(branchId)
+    : PATH.manager.branchCategoryCreate(branchId);
 
-export const getCategoryDetailPath = (portal: ManagePortal, branchId: string, categoryId: string) =>
+export const getCategoryDetailPath = (
+  portal: ManagePortal,
+  branchId: string,
+  categoryId: string
+) =>
   portal === "owner"
     ? PATH.owner.branchCategoryDetail(branchId, categoryId)
     : PATH.manager.branchCategoryDetail(branchId, categoryId);
 
 export const getMenuItemListPath = (portal: ManagePortal, branchId: string) =>
-  portal === "owner" ? PATH.owner.branchMenuItems(branchId) : PATH.manager.branchMenuItems(branchId);
+  portal === "owner"
+    ? PATH.owner.branchMenuItems(branchId)
+    : PATH.manager.branchMenuItems(branchId);
 
 export const getMenuItemCreatePath = (portal: ManagePortal, branchId: string) =>
-  portal === "owner" ? PATH.owner.branchMenuItemCreate(branchId) : PATH.manager.branchMenuItemCreate(branchId);
+  portal === "owner"
+    ? PATH.owner.branchMenuItemCreate(branchId)
+    : PATH.manager.branchMenuItemCreate(branchId);
 
 export const getMenuItemDetailPath = (portal: ManagePortal, menuItemId: string) =>
-  portal === "owner" ? PATH.owner.menuItemDetail(menuItemId) : PATH.manager.menuItemDetail(menuItemId);
+  portal === "owner"
+    ? PATH.owner.menuItemDetail(menuItemId)
+    : PATH.manager.menuItemDetail(menuItemId);
 
 export const getPriceHistoryPath = (portal: ManagePortal, menuItemId: string) =>
-  portal === "owner" ? PATH.owner.menuItemPriceHistory(menuItemId) : PATH.manager.menuItemPriceHistory(menuItemId);
+  portal === "owner"
+    ? PATH.owner.menuItemPriceHistory(menuItemId)
+    : PATH.manager.menuItemPriceHistory(menuItemId);
 
 export const emptyCategoryForm: ManageCategoryFormValues = {
   name: "",
@@ -213,7 +280,9 @@ export const emptyCategoryForm: ManageCategoryFormValues = {
   displayOrder: "0",
 };
 
-export const toCategoryFormValues = (category?: ManageCategoryResponse | null): ManageCategoryFormValues => ({
+export const toCategoryFormValues = (
+  category?: ManageCategoryResponse | null
+): ManageCategoryFormValues => ({
   name: category?.name ?? "",
   description: category?.description ?? "",
   imageUrl: category?.imageUrl ?? "",
@@ -233,7 +302,9 @@ export const emptyMenuItemForm: ManageMenuItemFormValues = {
   isFeatured: false,
 };
 
-export const toMenuItemFormValues = (item?: ManageMenuItemResponse | null): ManageMenuItemFormValues => ({
+export const toMenuItemFormValues = (
+  item?: ManageMenuItemResponse | null
+): ManageMenuItemFormValues => ({
   categoryId: item?.categoryId ?? "",
   name: item?.name ?? "",
   description: item?.description ?? "",

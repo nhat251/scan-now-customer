@@ -33,7 +33,11 @@ export const readCart = (tenantSlug: string | null, sessionCode: string): CartIt
   }
 };
 
-export const writeCart = (tenantSlug: string | null, sessionCode: string, items: CartItem[]): void => {
+export const writeCart = (
+  tenantSlug: string | null,
+  sessionCode: string,
+  items: CartItem[]
+): void => {
   if (typeof window === "undefined") {
     return;
   }

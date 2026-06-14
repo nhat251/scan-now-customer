@@ -1,26 +1,53 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Clock3, CreditCard, Gift, QrCode, RefreshCw, Save, TicketPercent, WalletCards } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  CalendarDays,
+  Clock3,
+  CreditCard,
+  Gift,
+  QrCode,
+  RefreshCw,
+  Save,
+  TicketPercent,
+  WalletCards,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
-import { formatCurrency, getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
+import {
+  formatCurrency,
+  getManageMenuNavItems,
+  getPortalCopy,
+  type ManagePortal,
+} from "@/components/manage-menu/helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { QUERY_KEY } from "@/constants/queryKeys";
-import { useCreatePaperVoucherMutation, useUpsertBranchPaymentConfigMutation } from "@/hooks/mutations/useBranchSettingsMutations";
-import { useBranchPaymentConfigQuery, usePaperVouchersQuery } from "@/hooks/queries/useBranchSettingsQueries";
+import {
+  useCreatePaperVoucherMutation,
+  useUpsertBranchPaymentConfigMutation,
+} from "@/hooks/mutations/useBranchSettingsMutations";
+import {
+  useBranchPaymentConfigQuery,
+  usePaperVouchersQuery,
+} from "@/hooks/queries/useBranchSettingsQueries";
 import { useMyBranchesListQuery } from "@/hooks/queries/useMeQueries";
 import { useOwnerBranchListQuery } from "@/hooks/queries/useOwnerBranchListQuery";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
-import type { PaperVoucherRequest, PaperVoucherResponse, UpsertBranchPaymentConfigRequest } from "@/types/branch-settings";
+import type {
+  PaperVoucherRequest,
+  PaperVoucherResponse,
+  UpsertBranchPaymentConfigRequest,
+} from "@/types/branch-settings";
 import type { BranchResponse } from "@/types/user-management";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { VoucherMetric } from "./voucher-metric";
 
 type BranchSettingsPageProps = {
   portal: ManagePortal;
@@ -40,8 +67,8 @@ const emptyVoucher: PaperVoucherRequest = {
   isActive: true,
 };
 
-const toDateStart = (value?: string | null) => value ? `${value}T00:00:00` : null;
-const toDateEnd = (value?: string | null) => value ? `${value}T23:59:59.999` : null;
+const toDateStart = (value?: string | null) => (value ? `${value}T00:00:00` : null);
+const toDateEnd = (value?: string | null) => (value ? `${value}T23:59:59.999` : null);
 
 const toVoucherPayload = (value: PaperVoucherRequest): PaperVoucherRequest => ({
   ...value,
@@ -70,8 +97,12 @@ const formatDate = (value?: string | null) => {
   }).format(date);
 };
 
-const formatVoucherDiscount = (voucher: Pick<PaperVoucherResponse, "discountType" | "discountValue">) => {
-  return voucher.discountType === "PERCENT" ? `${voucher.discountValue}%` : formatCurrency(voucher.discountValue);
+const formatVoucherDiscount = (
+  voucher: Pick<PaperVoucherResponse, "discountType" | "discountValue">
+) => {
+  return voucher.discountType === "PERCENT"
+    ? `${voucher.discountValue}%`
+    : formatCurrency(voucher.discountValue);
 };
 
 export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
@@ -87,7 +118,9 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
   const managerBranchesQuery = useMyBranchesListQuery(portal === "manager");
 
   const branches: BranchResponse[] = useMemo(() => {
-    return portal === "owner" ? ownerBranchesQuery.data?.items ?? [] : managerBranchesQuery.data ?? [];
+    return portal === "owner"
+      ? (ownerBranchesQuery.data?.items ?? [])
+      : (managerBranchesQuery.data ?? []);
   }, [managerBranchesQuery.data, ownerBranchesQuery.data?.items, portal]);
 
   useEffect(() => {
@@ -101,7 +134,13 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
   const savePaymentMutation = useUpsertBranchPaymentConfigMutation();
   const createVoucherMutation = useCreatePaperVoucherMutation();
 
-  const { register: registerPayment, handleSubmit: handleSubmitPayment, reset: resetPayment, watch: watchPayment, setValue: setValuePayment } = useForm<UpsertBranchPaymentConfigRequest>({
+  const {
+    register: registerPayment,
+    handleSubmit: handleSubmitPayment,
+    reset: resetPayment,
+    watch: watchPayment,
+    setValue: setValuePayment,
+  } = useForm<UpsertBranchPaymentConfigRequest>({
     defaultValues: {
       cashEnabled: true,
       payOsEnabled: false,
@@ -112,7 +151,11 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
     },
   });
 
-  const { register: registerVoucher, handleSubmit: handleSubmitVoucher, reset: resetVoucher } = useForm<PaperVoucherRequest>({
+  const {
+    register: registerVoucher,
+    handleSubmit: handleSubmitVoucher,
+    reset: resetVoucher,
+  } = useForm<PaperVoucherRequest>({
     defaultValues: emptyVoucher,
   });
 
@@ -153,7 +196,9 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
         defaultMethod: values.payOsEnabled ? values.defaultMethod : "CASH",
       },
     });
-    await queryClient.invalidateQueries({ queryKey: [QUERY_KEY.BRANCH_PAYMENT_CONFIG, portal, branchId] });
+    await queryClient.invalidateQueries({
+      queryKey: [QUERY_KEY.BRANCH_PAYMENT_CONFIG, portal, branchId],
+    });
     showNotify({ type: "success", message: "Đã lưu cấu hình thanh toán." });
   };
 
@@ -185,10 +230,22 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
       currentUser={currentUser}
       stats={
         <>
-          <PortalStatCard label="Chi nhánh" value={String(branches.length)} helper="Có thể cấu hình" />
+          <PortalStatCard
+            label="Chi nhánh"
+            value={String(branches.length)}
+            helper="Có thể cấu hình"
+          />
           <PortalStatCard label="Tiền mặt" value="Đang bật" helper="Phương thức mặc định" />
-          <PortalStatCard label="PayOS" value={paymentConfigQuery.data?.payOsEnabled ? "Đang bật" : "Đang tắt"} helper="Thanh toán QR theo chi nhánh" />
-          <PortalStatCard label="Voucher" value={String(activeVouchers)} helper="Voucher giấy đang hoạt động" />
+          <PortalStatCard
+            label="PayOS"
+            value={paymentConfigQuery.data?.payOsEnabled ? "Đang bật" : "Đang tắt"}
+            helper="Thanh toán QR theo chi nhánh"
+          />
+          <PortalStatCard
+            label="Phiếu giảm giá"
+            value={String(activeVouchers)}
+            helper="Voucher giấy đang hoạt động"
+          />
         </>
       }
     >
@@ -228,23 +285,18 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
           </div>
           <form onSubmit={handleSubmitPayment(savePaymentConfig)} className="mt-5 space-y-4">
             <label className="flex items-center gap-3 text-sm font-semibold">
-              <input
-                type="checkbox"
-                {...registerPayment("payOsEnabled")}
-              />
+              <input type="checkbox" {...registerPayment("payOsEnabled")} />
               Bật PayOS cho chi nhánh này
             </label>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-semibold">
-                PayOS Client ID
-                <Input
-                  {...registerPayment("payOsClientId")}
-                  className="mt-2 h-10"
-                />
+                Mã khách hàng PayOS
+                <Input {...registerPayment("payOsClientId")} className="mt-2 h-10" />
                 {paymentConfigQuery.data?.hasPayOsClientId ? (
                   <span className="text-muted-foreground mt-1 block text-xs font-medium">
-                    Đã cấu hình ({paymentConfigQuery.data.payOsClientIdPreview ?? "đã lưu"}) - để trống nếu muốn giữ Client ID hiện tại.
+                    Đã cấu hình ({paymentConfigQuery.data.payOsClientIdPreview ?? "đã lưu"}) - để
+                    trống nếu muốn giữ Client ID hiện tại.
                   </span>
                 ) : (
                   <span className="text-muted-foreground mt-1 block text-xs font-medium">
@@ -254,12 +306,8 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
               </label>
 
               <label className="text-sm font-semibold">
-                PayOS API Key
-                <Input
-                  type="password"
-                  {...registerPayment("payOsApiKey")}
-                  className="mt-2 h-10"
-                />
+                Khóa API PayOS
+                <Input type="password" {...registerPayment("payOsApiKey")} className="mt-2 h-10" />
                 {paymentConfigQuery.data?.hasPayOsApiKey ? (
                   <span className="text-muted-foreground mt-1 block text-xs font-medium">
                     Đã cấu hình - để trống nếu muốn giữ key hiện tại.
@@ -272,7 +320,7 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
               </label>
 
               <label className="text-sm font-semibold">
-                Checksum Key
+                Khóa kiểm tra PayOS
                 <Input
                   type="password"
                   {...registerPayment("payOsChecksumKey")}
@@ -296,7 +344,9 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
                   className="border-input bg-card mt-2 h-10 w-full rounded-lg border px-3 text-sm outline-none"
                 >
                   <option value="CASH">Tiền mặt</option>
-                  <option value="PAYOS" disabled={!payOsEnabled}>PayOS</option>
+                  <option value="PAYOS" disabled={!payOsEnabled}>
+                    PayOS
+                  </option>
                 </select>
               </label>
             </div>
@@ -343,7 +393,11 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
               </label>
               <label className="text-sm font-semibold">
                 Giảm tối đa
-                <Input type="number" {...registerVoucher("maxDiscountAmount")} className="mt-2 h-10" />
+                <Input
+                  type="number"
+                  {...registerVoucher("maxDiscountAmount")}
+                  className="mt-2 h-10"
+                />
               </label>
               <label className="text-sm font-semibold">
                 Số lượng
@@ -355,24 +409,24 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
               </label>
               <label className="text-sm font-semibold">
                 Ngày bắt đầu
-                <Input
-                  type="date"
-                  {...registerVoucher("validFrom")}
-                  className="mt-2 h-10"
-                />
-                <span className="text-muted-foreground mt-1 block text-xs font-medium">Voucher có hiệu lực từ 00:00 của ngày được chọn.</span>
+                <Input type="date" {...registerVoucher("validFrom")} className="mt-2 h-10" />
+                <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                  Voucher có hiệu lực từ 00:00 của ngày được chọn.
+                </span>
               </label>
               <label className="text-sm font-semibold">
                 Ngày kết thúc
-                <Input
-                  type="date"
-                  {...registerVoucher("validUntil")}
-                  className="mt-2 h-10"
-                />
-                <span className="text-muted-foreground mt-1 block text-xs font-medium">Voucher hết hạn lúc 23:59:59 của ngày này.</span>
+                <Input type="date" {...registerVoucher("validUntil")} className="mt-2 h-10" />
+                <span className="text-muted-foreground mt-1 block text-xs font-medium">
+                  Voucher hết hạn lúc 23:59:59 của ngày này.
+                </span>
               </label>
             </div>
-            <Button className="mt-4" type="submit" disabled={!branchId || createVoucherMutation.isPending}>
+            <Button
+              className="mt-4"
+              type="submit"
+              disabled={!branchId || createVoucherMutation.isPending}
+            >
               <Gift className="size-4" />
               Tạo voucher
             </Button>
@@ -384,9 +438,15 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold">Danh sách voucher giấy</h2>
-            <p className="text-muted-foreground mt-1 text-sm">Theo dõi thời hạn, số lượt dùng và mã QR dùng để in/phát cho khách.</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Theo dõi thời hạn, số lượt dùng và mã QR dùng để in/phát cho khách.
+            </p>
           </div>
-          <Button variant="soft" onClick={() => vouchersQuery.refetch()} disabled={vouchersQuery.isFetching}>
+          <Button
+            variant="soft"
+            onClick={() => vouchersQuery.refetch()}
+            disabled={vouchersQuery.isFetching}
+          >
             <RefreshCw className={cn("size-4", vouchersQuery.isFetching && "animate-spin")} />
             Làm mới
           </Button>
@@ -396,26 +456,47 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
             <div className="border-border/60 bg-muted/20 rounded-xl border border-dashed p-8 text-center">
               <TicketPercent className="text-muted-foreground mx-auto size-8" />
               <p className="mt-3 text-sm font-semibold">Chưa có voucher giấy</p>
-              <p className="text-muted-foreground mt-1 text-sm">Tạo voucher đầu tiên để áp dụng cho đơn hàng tại quầy.</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Tạo voucher đầu tiên để áp dụng cho đơn hàng tại quầy.
+              </p>
             </div>
           ) : (
             vouchers.map((voucher) => {
-              const usedPercent = voucher.quantity > 0 ? Math.min(100, Math.round((voucher.usedCount / voucher.quantity) * 100)) : 0;
+              const usedPercent =
+                voucher.quantity > 0
+                  ? Math.min(100, Math.round((voucher.usedCount / voucher.quantity) * 100))
+                  : 0;
 
               return (
-                <article key={voucher.voucherId} className="border-border/60 hover:border-primary/30 hover:bg-muted/20 rounded-xl border p-4 transition-colors">
+                <article
+                  key={voucher.voucherId}
+                  className="border-border/60 hover:border-primary/30 hover:bg-muted/20 rounded-xl border p-4 transition-colors"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="bg-primary/10 text-primary rounded-md px-2.5 py-1 font-mono text-sm font-black tracking-wide">
                           {voucher.code}
                         </span>
-                        <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", voucher.isActive ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground")}>
+                        <span
+                          className={cn(
+                            "rounded-full px-2.5 py-1 text-xs font-bold",
+                            voucher.isActive
+                              ? "bg-success text-success-foreground"
+                              : "bg-muted text-muted-foreground"
+                          )}
+                        >
                           {voucher.isActive ? "Đang hoạt động" : "Tạm tắt"}
                         </span>
                       </div>
-                      <p className="text-foreground mt-3 truncate text-base font-bold">{voucher.name}</p>
-                      {voucher.description ? <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{voucher.description}</p> : null}
+                      <p className="text-foreground mt-3 truncate text-base font-bold">
+                        {voucher.name}
+                      </p>
+                      {voucher.description ? (
+                        <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                          {voucher.description}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-black">{formatVoucherDiscount(voucher)}</p>
@@ -426,25 +507,48 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
                   </div>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <VoucherMetric icon={<WalletCards className="size-4" />} label="Đơn tối thiểu" value={formatCurrency(voucher.minOrderAmount)} />
-                    <VoucherMetric icon={<Gift className="size-4" />} label="Giảm tối đa" value={voucher.maxDiscountAmount ? formatCurrency(voucher.maxDiscountAmount) : "Không giới hạn"} />
-                    <VoucherMetric icon={<Clock3 className="size-4" />} label="Còn lại" value={`${voucher.remainingCount}/${voucher.quantity}`} />
+                    <VoucherMetric
+                      icon={<WalletCards className="size-4" />}
+                      label="Đơn tối thiểu"
+                      value={formatCurrency(voucher.minOrderAmount)}
+                    />
+                    <VoucherMetric
+                      icon={<Gift className="size-4" />}
+                      label="Giảm tối đa"
+                      value={
+                        voucher.maxDiscountAmount
+                          ? formatCurrency(voucher.maxDiscountAmount)
+                          : "Không giới hạn"
+                      }
+                    />
+                    <VoucherMetric
+                      icon={<Clock3 className="size-4" />}
+                      label="Còn lại"
+                      value={`${voucher.remainingCount}/${voucher.quantity}`}
+                    />
                   </div>
 
                   <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-xs font-semibold">
-                      <span className="text-muted-foreground">Đã dùng {voucher.usedCount} lượt</span>
+                      <span className="text-muted-foreground">
+                        Đã dùng {voucher.usedCount} lượt
+                      </span>
                       <span>{usedPercent}%</span>
                     </div>
                     <div className="bg-muted h-2 overflow-hidden rounded-full">
-                      <div className="bg-primary h-full rounded-full" style={{ width: `${usedPercent}%` }} />
+                      <div
+                        className="bg-primary h-full rounded-full"
+                        style={{ width: `${usedPercent}%` }}
+                      />
                     </div>
                   </div>
 
                   <div className="border-border/60 mt-4 grid gap-3 border-t pt-4 text-sm md:grid-cols-[1fr_1.2fr]">
                     <div className="text-muted-foreground flex items-center gap-2">
                       <CalendarDays className="size-4" />
-                      <span>{formatDate(voucher.validFrom)} - {formatDate(voucher.validUntil)}</span>
+                      <span>
+                        {formatDate(voucher.validFrom)} - {formatDate(voucher.validUntil)}
+                      </span>
                     </div>
                     <div className="text-muted-foreground flex min-w-0 items-center gap-2">
                       <QrCode className="size-4 shrink-0" />
@@ -460,21 +564,3 @@ export const BranchSettingsPage = ({ portal }: BranchSettingsPageProps) => {
     </PortalShell>
   );
 };
-
-const VoucherMetric = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) => (
-  <div className="bg-muted/40 rounded-lg p-3">
-    <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
-      {icon}
-      {label}
-    </div>
-    <p className="mt-1 truncate text-sm font-bold">{value}</p>
-  </div>
-);

@@ -1,6 +1,5 @@
-import defaultAxios from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import { axiosBasic } from "@/services/axiosBasic";
 import { showNotify } from "@/stores/global";
@@ -37,14 +36,6 @@ const unbanOwnerUser = async ({ id }: ToggleOwnerUserPayload) => {
   return await axiosBasic.patch<ApiResponse<null>>(`/api/owner/users/${id}/unban`);
 };
 
-const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (defaultAxios.isAxiosError(error)) {
-    return error.response?.data?.message ?? fallbackMessage;
-  }
-
-  return fallbackMessage;
-};
-
 const useOwnerUserMutationHelpers = () => {
   const queryClient = useQueryClient();
 
@@ -56,7 +47,8 @@ const useOwnerUserMutationHelpers = () => {
     } catch {
       showNotify({
         type: "warning",
-        message: "The change was saved, but we could not refresh the user list. Please refresh the page.",
+        message:
+          "Đã lưu thay đổi nhưng chưa thể tải lại danh sách nhân sự. Vui lòng tải lại trang.",
       });
     }
   };
@@ -71,10 +63,13 @@ export const useCreateOwnerUserMutation = () => {
     mutationFn: createOwnerUser,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerUsers("User created successfully.");
+      await refreshOwnerUsers("Đã tạo nhân sự.");
     },
     onError: (error) => {
-      showNotify({ type: "error", message: getApiErrorMessage(error, "Unable to create this user.") });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo nhân sự."),
+      });
     },
   });
 };
@@ -86,10 +81,13 @@ export const useUpdateOwnerUserMutation = () => {
     mutationFn: updateOwnerUser,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerUsers("User updated successfully.");
+      await refreshOwnerUsers("Đã cập nhật nhân sự.");
     },
     onError: (error) => {
-      showNotify({ type: "error", message: getApiErrorMessage(error, "Unable to update this user.") });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật nhân sự."),
+      });
     },
   });
 };
@@ -101,10 +99,13 @@ export const useBanOwnerUserMutation = () => {
     mutationFn: banOwnerUser,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerUsers("User banned successfully.");
+      await refreshOwnerUsers("Đã khóa nhân sự.");
     },
     onError: (error) => {
-      showNotify({ type: "error", message: getApiErrorMessage(error, "Unable to ban this user.") });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể khóa nhân sự."),
+      });
     },
   });
 };
@@ -116,10 +117,13 @@ export const useUnbanOwnerUserMutation = () => {
     mutationFn: unbanOwnerUser,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerUsers("User unbanned successfully.");
+      await refreshOwnerUsers("Đã mở khóa nhân sự.");
     },
     onError: (error) => {
-      showNotify({ type: "error", message: getApiErrorMessage(error, "Unable to unban this user.") });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể mở khóa nhân sự."),
+      });
     },
   });
 };

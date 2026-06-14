@@ -61,9 +61,7 @@ const getManagerUserSchema = (mode: FormMode) => {
     username: z.string().trim().min(1, "Tên đăng nhập là bắt buộc."),
     email: z.string().trim().min(1, "Email là bắt buộc.").email("Email không hợp lệ."),
     phoneNumber: z.string(),
-    password: mode === "create"
-      ? z.string().min(1, "Mật khẩu là bắt buộc.")
-      : z.string(),
+    password: mode === "create" ? z.string().min(1, "Mật khẩu là bắt buộc.") : z.string(),
     role: z.enum(["STAFF", "KITCHEN", "CASHIER"]),
     branchIds: z.array(z.string()).min(1, "Chọn ít nhất một chi nhánh."),
   });
@@ -90,7 +88,14 @@ export const ManagerUsersPage = () => {
   const [formMode, setFormMode] = useState<FormMode>("create");
   const [editingUser, setEditingUser] = useState<ManagerScopedUserResponse | null>(null);
 
-  const { register, control, handleSubmit: handleFormSubmit, reset, setValue, formState: { errors } } = useForm<ManagerUserFormValues>({
+  const {
+    register,
+    control,
+    handleSubmit: handleFormSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<ManagerUserFormValues>({
     resolver: (values, context, options) => {
       return zodResolver(getManagerUserSchema(formMode))(values, context, options);
     },
@@ -194,7 +199,7 @@ export const ManagerUsersPage = () => {
   const handleApiError = (error: unknown) => {
     const message = getErrorMessage(error);
 
-    if (message === "Branch is outside your managed scope.") {
+    if (message === "Chi nhánh nằm ngoài phạm vi quản lý của bạn.") {
       setForbiddenMessage(getScopeErrorBanner(message));
     }
 
@@ -214,7 +219,7 @@ export const ManagerUsersPage = () => {
     } catch (error) {
       showNotify({
         type: "warning",
-        message: `The action succeeded, but the latest user list could not be refreshed. ${getErrorMessage(error)}`,
+        message: `Thao tác đã thành công nhưng chưa thể tải lại danh sách nhân sự mới nhất. ${getErrorMessage(error)}`,
         duration: 4000,
       });
     }
@@ -237,7 +242,7 @@ export const ManagerUsersPage = () => {
           branchIds: values.branchIds,
         });
 
-        await handleRefreshAfterMutation("User created successfully.", closeDialog);
+        await handleRefreshAfterMutation("Đã tạo nhân sự.", closeDialog);
         return;
       }
 
@@ -245,7 +250,7 @@ export const ManagerUsersPage = () => {
         showNotify({
           type: "error",
           message:
-            "Unable to update this user because the selected record is missing. Please reopen the dialog and try again.",
+            "Không thể cập nhật vì thiếu dữ liệu nhân sự đã chọn. Vui lòng mở lại hộp thoại và thử lại.",
           duration: 4000,
         });
         closeDialog();
@@ -262,7 +267,7 @@ export const ManagerUsersPage = () => {
       };
 
       await updateMutation.mutateAsync({ id: editingUser.userId, data: payload });
-      await handleRefreshAfterMutation("User updated successfully.", closeDialog);
+      await handleRefreshAfterMutation("Đã cập nhật nhân sự.", closeDialog);
     } catch (error) {
       handleApiError(error);
     }
@@ -274,12 +279,12 @@ export const ManagerUsersPage = () => {
     try {
       if (user.isBanned) {
         await unbanMutation.mutateAsync(user.userId);
-        await handleRefreshAfterMutation("User unbanned successfully.", () => undefined);
+        await handleRefreshAfterMutation("Đã mở khóa nhân sự.", () => undefined);
         return;
       }
 
       await banMutation.mutateAsync(user.userId);
-      await handleRefreshAfterMutation("User banned successfully.", () => undefined);
+      await handleRefreshAfterMutation("Đã khóa nhân sự.", () => undefined);
     } catch (error) {
       handleApiError(error);
     }
@@ -294,20 +299,20 @@ export const ManagerUsersPage = () => {
   const statusFilterLabel = getStatusFilterLabel(status);
   const queryErrorMessage = usersQuery.isError ? getErrorMessage(usersQuery.error) : "";
   const branchesErrorMessage = branchesQuery.isError ? getErrorMessage(branchesQuery.error) : "";
-  const managerHasNoBranch = queryErrorMessage === "Manager has no branch";
+  const managerHasNoBranch = queryErrorMessage === "Tài khoản quản lý chưa được gán chi nhánh.";
   const roleFilterOptions = [
-    { label: "All roles", value: "" },
+    { label: "Tất cả vai trò", value: "" },
     ...ROLE_OPTIONS.map((option) => ({ label: getRoleFilterLabel(option), value: option })),
   ];
   const branchFilterOptions = [
-    { label: "All branches", value: "" },
+    { label: "Tất cả chi nhánh", value: "" },
     ...branches.map((branch) => ({ label: branch.name, value: branch.branchId })),
   ];
 
   if (!isAuthInitialized) {
     return (
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Loading...</div>
+        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Đang tải...</div>
       </main>
     );
   }
@@ -319,57 +324,57 @@ export const ManagerUsersPage = () => {
   if (!currentUser) {
     return (
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Loading...</div>
+        <div className="bg-card rounded-xl border p-6 text-sm shadow-sm">Đang tải...</div>
       </main>
     );
   }
 
   return (
     <PortalShell
-      title="Staff Management"
-      description="Manage and monitor your branch employees and kitchen staff."
-      portalLabel="Branch Portal"
-      portalName="Branch Manager Console"
+      title="Quản lý nhân sự"
+      description="Quản lý và theo dõi nhân viên phục vụ, thu ngân và nhân viên bếp."
+      portalLabel="Khu vực chi nhánh"
+      portalName="Khu vực quản lý chi nhánh"
       navItems={[
         {
-          label: "Staff Management",
+          label: "Quản lý nhân sự",
           href: PATH.manager.users,
           icon: <Users className="size-4" />,
           active: true,
         },
-        { label: "Orders", href: PATH.manager.orders, icon: <ReceiptText className="size-4" /> },
-        { label: "Inventory", href: PATH.manager.inventory, icon: <Soup className="size-4" /> },
-        { label: "Settings", href: PATH.manager.settings, icon: <Settings className="size-4" /> },
+        { label: "Đơn hàng", href: PATH.manager.orders, icon: <ReceiptText className="size-4" /> },
+        { label: "Kho hàng", href: PATH.manager.inventory, icon: <Soup className="size-4" /> },
+        { label: "Cài đặt", href: PATH.manager.settings, icon: <Settings className="size-4" /> },
       ]}
-      topbarTitle="Branch Manager Console"
+      topbarTitle="Khu vực quản lý chi nhánh"
       currentUser={currentUser}
       headerAction={
         <Button className="h-12 px-8" onClick={openCreateDialog} disabled={branchesQuery.isError}>
           <UserPlus className="size-4" />
-          Create User
+          Tạo nhân sự
         </Button>
       }
       stats={
         <>
           <PortalStatCard
-            label="Total Staff"
+            label="Tổng nhân sự"
             value={String(totalUsers)}
-            helper="Users returned from backend"
+            helper="Số nhân sự từ hệ thống"
           />
           <PortalStatCard
-            label="Kitchen Crew"
+            label="Nhân viên bếp"
             value={String(kitchenCrewCount)}
-            helper="Kitchen accounts in current scope"
+            helper="Tài khoản bếp trong phạm vi hiện tại"
           />
           <PortalStatCard
-            label="Active Today"
+            label="Đang hoạt động"
             value={String(activeTodayCount)}
-            helper="Active and not banned accounts"
+            helper="Tài khoản hoạt động và không bị khóa"
           />
           <PortalStatCard
-            label="Banned"
+            label="Đã khóa"
             value={String(bannedCount)}
-            helper="Accounts currently restricted"
+            helper="Tài khoản đang bị hạn chế"
           />
         </>
       }
@@ -407,7 +412,7 @@ export const ManagerUsersPage = () => {
 
       {branchesQuery.isError && (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
-          Failed to load managed branches. {branchesErrorMessage}
+          Không thể tải chi nhánh được quản lý. {branchesErrorMessage}
         </div>
       )}
 

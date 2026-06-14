@@ -28,36 +28,56 @@ export const ManagerOrdersIndexPage = () => {
 
   return (
     <PortalShell
-      title="Orders & Invoices"
-      description="Choose a branch to review its order and invoice history."
-      portalLabel="Branch Portal"
-      portalName="Branch Manager Console"
+      title="Đơn hàng và hóa đơn"
+      description="Chọn chi nhánh để xem lịch sử đơn hàng và hóa đơn."
+      portalLabel="Khu vực chi nhánh"
+      portalName="Khu vực quản lý chi nhánh"
       navItems={getManageMenuNavItems("manager", "orders")}
-      topbarTitle={currentUser?.fullName ?? "Branch Manager Console"}
+      topbarTitle={currentUser?.fullName ?? "Khu vực quản lý chi nhánh"}
       currentUser={currentUser}
       stats={
         <>
-          <PortalStatCard label="Assigned branches" value={String(branches.length)} helper="Linked to your account" />
-          <PortalStatCard label="Active branches" value={String(activeBranches)} helper="Available for operations" />
-          <PortalStatCard label="Order view" value="By branch" helper="Filters open in each branch invoice page" />
-          <PortalStatCard label="Access" value="Manager" helper="Limited to your branch scope" />
+          <PortalStatCard
+            label="Chi nhánh được phân công"
+            value={String(branches.length)}
+            helper="Được liên kết với tài khoản"
+          />
+          <PortalStatCard
+            label="Chi nhánh đang hoạt động"
+            value={String(activeBranches)}
+            helper="Sẵn sàng vận hành"
+          />
+          <PortalStatCard
+            label="Tra cứu đơn hàng"
+            value="Theo chi nhánh"
+            helper="Bộ lọc nằm trong trang hóa đơn của từng chi nhánh"
+          />
+          <PortalStatCard
+            label="Phạm vi truy cập"
+            value="Quản lý"
+            helper="Giới hạn trong chi nhánh được phân công"
+          />
         </>
       }
     >
       {branchesQuery.isLoading || branchesQuery.isFetching ? (
         <div className="bg-card border-border/60 flex items-center gap-3 rounded-xl border p-6 shadow-sm">
           <Spinner className="text-primary size-5" />
-          <span className="text-sm font-medium">Loading assigned branches...</span>
+          <span className="text-sm font-medium">Đang tải chi nhánh được phân công...</span>
         </div>
       ) : null}
 
       {branchesQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6">
-          <h2 className="text-lg font-semibold">Unable to load branches</h2>
-          <p className="mt-2 text-sm">Please refresh and try again.</p>
-          <Button className="mt-5" onClick={() => branchesQuery.refetch()} disabled={branchesQuery.isRefetching}>
+          <h2 className="text-lg font-semibold">Không thể tải danh sách chi nhánh</h2>
+          <p className="mt-2 text-sm">Vui lòng tải lại và thử lại.</p>
+          <Button
+            className="mt-5"
+            onClick={() => branchesQuery.refetch()}
+            disabled={branchesQuery.isRefetching}
+          >
             <RefreshCw className="size-4" />
-            Retry
+            Thử lại
           </Button>
         </div>
       ) : null}
@@ -65,9 +85,9 @@ export const ManagerOrdersIndexPage = () => {
       {!branchesQuery.isLoading && !branchesQuery.isError && branches.length === 0 ? (
         <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
           <FileText className="text-muted-foreground mx-auto size-10" />
-          <h2 className="mt-3 text-xl font-bold">No branch available</h2>
+          <h2 className="mt-3 text-xl font-bold">Chưa có chi nhánh</h2>
           <p className="text-muted-foreground mt-2 text-sm">
-            Your manager account is not linked to a branch yet.
+            Tài khoản quản lý chưa được gán chi nhánh.
           </p>
         </div>
       ) : null}
@@ -85,13 +105,13 @@ export const ManagerOrdersIndexPage = () => {
                 </div>
                 <h2 className="mt-5 line-clamp-2 text-xl font-bold">{branch.name}</h2>
                 <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
-                  {branch.address || "No address provided"}
+                  {branch.address || "Chưa có địa chỉ"}
                 </p>
               </div>
 
               <Button asChild className="mt-6 w-full">
                 <Link href={PATH.manager.branchOrders(branch.branchId)}>
-                  View orders
+                  Xem đơn hàng
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>

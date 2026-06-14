@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Control, FieldErrors, UseFormRegister, UseFormSetValue} from "react-hook-form";
+import type { Control, FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -62,20 +62,23 @@ export const OwnerUserFormDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="2xl">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Create user" : "Update user"}</DialogTitle>
+          <DialogTitle>{mode === "create" ? "Tạo nhân sự" : "Cập nhật nhân sự"}</DialogTitle>
           <DialogDescription>
-            Owners can manage branch managers, staff, kitchen, and cashier users inside their restaurant.
+            Chủ nhà hàng có thể quản lý quản lý chi nhánh, nhân viên phục vụ, nhân viên bếp và thu
+            ngân trong nhà hàng.
           </DialogDescription>
         </DialogHeader>
 
         <FieldGroup className="gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="fullName" required>Full name</FieldLabel>
+              <FieldLabel htmlFor="fullName" required>
+                Họ và tên
+              </FieldLabel>
               <FieldContent>
                 <Input
                   id="fullName"
-                  placeholder="Enter full name"
+                  placeholder="Nhập họ và tên"
                   aria-invalid={!!errors.fullName}
                   {...register("fullName")}
                 />
@@ -84,11 +87,13 @@ export const OwnerUserFormDialog = ({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="username" required>Username</FieldLabel>
+              <FieldLabel htmlFor="username" required>
+                Tên đăng nhập
+              </FieldLabel>
               <FieldContent>
                 <Input
                   id="username"
-                  placeholder="Enter username"
+                  placeholder="Nhập tên đăng nhập"
                   aria-invalid={!!errors.username}
                   {...register("username")}
                 />
@@ -97,7 +102,9 @@ export const OwnerUserFormDialog = ({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="email" required>Email</FieldLabel>
+              <FieldLabel htmlFor="email" required>
+                Email
+              </FieldLabel>
               <FieldContent>
                 <Input
                   id="email"
@@ -111,11 +118,11 @@ export const OwnerUserFormDialog = ({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="phoneNumber">Phone number</FieldLabel>
+              <FieldLabel htmlFor="phoneNumber">Số điện thoại</FieldLabel>
               <FieldContent>
                 <Input
                   id="phoneNumber"
-                  placeholder="Optional phone number"
+                  placeholder="Số điện thoại (không bắt buộc)"
                   aria-invalid={!!errors.phoneNumber}
                   {...register("phoneNumber")}
                 />
@@ -125,12 +132,14 @@ export const OwnerUserFormDialog = ({
 
             {mode === "create" && (
               <Field>
-                <FieldLabel htmlFor="password" required>Password</FieldLabel>
+                <FieldLabel htmlFor="password" required>
+                  Mật khẩu
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Nhập mật khẩu"
                     aria-invalid={!!errors.password}
                     {...register("password")}
                   />
@@ -140,16 +149,26 @@ export const OwnerUserFormDialog = ({
             )}
 
             <Field>
-              <FieldLabel htmlFor="role" required>Role</FieldLabel>
+              <FieldLabel htmlFor="role" required>
+                Vai trò
+              </FieldLabel>
               <FieldContent>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button id="role" variant="outline" className="w-full justify-between" aria-invalid={!!errors.role}>
+                    <Button
+                      id="role"
+                      variant="outline"
+                      className="w-full justify-between"
+                      aria-invalid={!!errors.role}
+                    >
                       {getRoleLabel(role)}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
-                    <DropdownMenuRadioGroup value={role} onValueChange={(nextRole) => setValue("role", nextRole as ManagedUserRole)}>
+                    <DropdownMenuRadioGroup
+                      value={role}
+                      onValueChange={(nextRole) => setValue("role", nextRole as ManagedUserRole)}
+                    >
                       {ROLE_OPTIONS.map((r) => (
                         <DropdownMenuRadioItem key={r} value={r}>
                           {getRoleLabel(r)}
@@ -164,7 +183,7 @@ export const OwnerUserFormDialog = ({
           </div>
 
           <Field>
-            <FieldLabel required>Branch assignment</FieldLabel>
+            <FieldLabel required>Phân công chi nhánh</FieldLabel>
             <FieldContent>
               <div className="border-border/70 grid gap-3 rounded-2xl border p-4 md:grid-cols-2">
                 {branches.map((branch) => {
@@ -178,12 +197,16 @@ export const OwnerUserFormDialog = ({
                           variant="outline"
                           className={cn(
                             "h-auto justify-start rounded-2xl px-3 py-3 text-left",
-                            checked ? "border-primary-container bg-primary-container/5" : "border-border/70 hover:bg-muted/50"
+                            checked
+                              ? "border-primary-container bg-primary-container/5"
+                              : "border-border/70 hover:bg-muted/50"
                           )}
                         >
                           <div>
                             <p className="font-medium">{branch.name}</p>
-                            <p className="text-muted-foreground text-xs">{branch.address || branch.email || branch.slug}</p>
+                            <p className="text-muted-foreground text-xs">
+                              {branch.address || branch.email || branch.slug}
+                            </p>
                           </div>
                         </Button>
                       </DropdownMenuTrigger>
@@ -200,7 +223,7 @@ export const OwnerUserFormDialog = ({
                             setValue("branchIds", nextBranchIds, { shouldValidate: true });
                           }}
                         >
-                          Assign {branch.name}
+                          Phân công {branch.name}
                         </DropdownMenuCheckboxItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -214,10 +237,10 @@ export const OwnerUserFormDialog = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit} disabled={submitting}>
-            {mode === "create" ? "Create user" : "Save changes"}
+            {mode === "create" ? "Tạo nhân sự" : "Lưu thay đổi"}
           </Button>
         </DialogFooter>
       </DialogContent>

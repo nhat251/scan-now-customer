@@ -1,4 +1,4 @@
-import type { FieldErrors,UseFormRegister } from "react-hook-form";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -12,7 +12,12 @@ type OwnerRestaurantFormProps = {
   onSubmit: () => void;
 };
 
-export const OwnerRestaurantForm = ({ register, errors, submitting, onSubmit }: OwnerRestaurantFormProps) => {
+export const OwnerRestaurantForm = ({
+  register,
+  errors,
+  submitting,
+  onSubmit,
+}: OwnerRestaurantFormProps) => {
   return (
     <section className="border-border/60 bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-6">
@@ -25,7 +30,9 @@ export const OwnerRestaurantForm = ({ register, errors, submitting, onSubmit }: 
       <FieldGroup className="gap-5">
         <div className="grid gap-4 md:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="restaurant-name" required>Tên nhà hàng</FieldLabel>
+            <FieldLabel htmlFor="restaurant-name" required>
+              Tên nhà hàng
+            </FieldLabel>
             <FieldContent>
               <Input
                 id="restaurant-name"
@@ -38,7 +45,9 @@ export const OwnerRestaurantForm = ({ register, errors, submitting, onSubmit }: 
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="restaurant-slug" required>Slug</FieldLabel>
+            <FieldLabel htmlFor="restaurant-slug" required>
+              Đường dẫn định danh
+            </FieldLabel>
             <FieldContent>
               <Input
                 id="restaurant-slug"
@@ -52,7 +61,7 @@ export const OwnerRestaurantForm = ({ register, errors, submitting, onSubmit }: 
         </div>
 
         <Field>
-          <FieldLabel htmlFor="restaurant-logo-url">URL logo</FieldLabel>
+          <FieldLabel htmlFor="restaurant-logo-url">URL biểu trưng</FieldLabel>
           <FieldContent>
             <Input
               id="restaurant-logo-url"

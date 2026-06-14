@@ -37,13 +37,13 @@ import {
 } from "./helpers";
 
 const CATEGORY_SORT_OPTIONS = [
-  { label: "Display order", sortBy: "displayOrder", sortDirection: "asc" },
-  { label: "Display order desc", sortBy: "displayOrder", sortDirection: "desc" },
-  { label: "Name A-Z", sortBy: "name", sortDirection: "asc" },
-  { label: "Name Z-A", sortBy: "name", sortDirection: "desc" },
-  { label: "Newest first", sortBy: "createdAt", sortDirection: "desc" },
-  { label: "Oldest first", sortBy: "createdAt", sortDirection: "asc" },
-  { label: "Recently updated", sortBy: "updatedAt", sortDirection: "desc" },
+  { label: "Thứ tự hiển thị", sortBy: "displayOrder", sortDirection: "asc" },
+  { label: "Thứ tự hiển thị giảm dần", sortBy: "displayOrder", sortDirection: "desc" },
+  { label: "Tên A-Z", sortBy: "name", sortDirection: "asc" },
+  { label: "Tên Z-A", sortBy: "name", sortDirection: "desc" },
+  { label: "Mới nhất", sortBy: "createdAt", sortDirection: "desc" },
+  { label: "Cũ nhất", sortBy: "createdAt", sortDirection: "asc" },
+  { label: "Mới cập nhật", sortBy: "updatedAt", sortDirection: "desc" },
 ] as const;
 
 type CategoryListPageProps = {
@@ -120,8 +120,8 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
 
   return (
     <PortalShell
-      title="Categories"
-      description="Create, update, activate, deactivate, and reorder categories for this branch."
+      title="Danh mục"
+      description="Tạo, cập nhật, bật, tắt và sắp xếp danh mục của chi nhánh."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal, "categories", branchId)}
@@ -130,15 +130,31 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
       headerAction={
         <Button onClick={() => router.push(getCategoryCreatePath(portal, branchId))}>
           <Plus className="size-4" />
-          Create Category
+          Tạo danh mục
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Total" value={String(totalItems)} helper="Categories returned from backend" />
-          <PortalStatCard label="Active" value={String(activeCount)} helper="Active categories on this page" />
-          <PortalStatCard label="Branch" value="Scoped" helper="Backend validates branch ownership" />
-          <PortalStatCard label="Ordering" value="Enabled" helper="Use arrows to reorder current page" />
+          <PortalStatCard
+            label="Tổng cộng"
+            value={String(totalItems)}
+            helper="Số danh mục từ hệ thống"
+          />
+          <PortalStatCard
+            label="Đang hoạt động"
+            value={String(activeCount)}
+            helper="Danh mục đang hoạt động trên trang"
+          />
+          <PortalStatCard
+            label="Chi nhánh"
+            value="Theo phạm vi"
+            helper="Hệ thống kiểm tra quyền sở hữu chi nhánh"
+          />
+          <PortalStatCard
+            label="Sắp xếp"
+            value="Đã bật"
+            helper="Dùng nút mũi tên để sắp xếp trang hiện tại"
+          />
         </>
       }
     >
@@ -146,26 +162,25 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
         <div className="grid gap-3 lg:grid-cols-[1fr_220px_240px]">
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input
-              {...register("search")}
-              placeholder="Search categories"
-              className="h-11 pl-10"
-            />
+            <Input {...register("search")} placeholder="Tìm danh mục" className="h-11 pl-10" />
           </label>
           <select
             {...register("status")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
-            <option value="all">All statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
           </select>
           <select
             {...register("sortValue")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
             {CATEGORY_SORT_OPTIONS.map((option) => (
-              <option key={`${option.sortBy}:${option.sortDirection}`} value={`${option.sortBy}:${option.sortDirection}`}>
+              <option
+                key={`${option.sortBy}:${option.sortDirection}`}
+                value={`${option.sortBy}:${option.sortDirection}`}
+              >
                 {option.label}
               </option>
             ))}
@@ -176,11 +191,15 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
       {categoriesQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(categoriesQuery.error)
-            ? "You do not have permission to access this branch"
-            : getManageApiErrorMessage(categoriesQuery.error, "Unable to load categories.")}
-          <Button className="mt-4" onClick={() => categoriesQuery.refetch()} disabled={categoriesQuery.isRefetching}>
+            ? "Bạn không có quyền truy cập chi nhánh này"
+            : getManageApiErrorMessage(categoriesQuery.error, "Không thể tải danh sách danh mục.")}
+          <Button
+            className="mt-4"
+            onClick={() => categoriesQuery.refetch()}
+            disabled={categoriesQuery.isRefetching}
+          >
             <RefreshCw className="size-4" />
-            Retry
+            Thử lại
           </Button>
         </div>
       ) : null}
@@ -190,24 +209,32 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
           <table className="divide-border/60 min-w-[1120px] divide-y text-left">
             <thead className="bg-muted/60">
               <tr>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Image</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Category Name</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Description</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Display Order</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Status</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Created At</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Updated At</th>
-                <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">Actions</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Hình ảnh</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Tên danh mục</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Mô tả</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">
+                  Thứ tự hiển thị
+                </th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Trạng thái</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Ngày tạo</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Ngày cập nhật</th>
+                <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody className="divide-border/40 divide-y">
               {categoriesQuery.isLoading ? (
                 <tr>
-                  <td colSpan={8} className="text-muted-foreground px-6 py-10 text-center text-sm">Loading categories...</td>
+                  <td colSpan={8} className="text-muted-foreground px-6 py-10 text-center text-sm">
+                    Đang tải danh mục...
+                  </td>
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-muted-foreground px-6 py-10 text-center text-sm">No categories found.</td>
+                  <td colSpan={8} className="text-muted-foreground px-6 py-10 text-center text-sm">
+                    Không tìm thấy danh mục.
+                  </td>
                 </tr>
               ) : (
                 categories.map((category, index) => (
@@ -232,27 +259,62 @@ export const CategoryListPage = ({ branchId, portal }: CategoryListPageProps) =>
                     </td>
                     <td className="px-6 py-4 text-sm">{category.displayOrder}</td>
                     <td className="px-6 py-4">
-                      <Tag tagString={getStatusLabel(category.isActive)} variant={category.isActive ? "success" : "warning"} />
+                      <Tag
+                        tagString={getStatusLabel(category.isActive)}
+                        variant={category.isActive ? "success" : "warning"}
+                      />
                     </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">{formatDateTime(category.createdAt)}</td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">{formatDateTime(category.updatedAt)}</td>
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                      {formatDateTime(category.createdAt)}
+                    </td>
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                      {formatDateTime(category.updatedAt)}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
-                        <Button size="icon-sm" variant="outline" disabled={index === 0} onClick={() => reorder(category.categoryId, "up")}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          disabled={index === 0}
+                          onClick={() => reorder(category.categoryId, "up")}
+                        >
                           <ArrowUp className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant="outline" disabled={index === categories.length - 1} onClick={() => reorder(category.categoryId, "down")}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          disabled={index === categories.length - 1}
+                          onClick={() => reorder(category.categoryId, "down")}
+                        >
                           <ArrowDown className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant="outline" onClick={() => router.push(getCategoryDetailPath(portal, branchId, category.categoryId))}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          onClick={() =>
+                            router.push(
+                              getCategoryDetailPath(portal, branchId, category.categoryId)
+                            )
+                          }
+                        >
                           <Edit className="size-4" />
                         </Button>
                         <Button
                           size="icon-sm"
                           variant={category.isActive ? "destructive" : "success"}
-                          onClick={() => activeMutation.mutateAsync({ branchId, categoryId: category.categoryId, isActive: !category.isActive })}
+                          onClick={() =>
+                            activeMutation.mutateAsync({
+                              branchId,
+                              categoryId: category.categoryId,
+                              isActive: !category.isActive,
+                            })
+                          }
                         >
-                          {category.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+                          {category.isActive ? (
+                            <PowerOff className="size-4" />
+                          ) : (
+                            <Power className="size-4" />
+                          )}
                         </Button>
                       </div>
                     </td>

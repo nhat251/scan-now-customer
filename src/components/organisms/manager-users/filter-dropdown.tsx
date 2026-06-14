@@ -33,13 +33,20 @@ export const FilterDropdown = <TValue extends string>({
       <FieldContent>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button id={id} variant="outline" className="bg-muted/50 h-12 w-full justify-between rounded-lg px-3 font-normal">
+            <Button
+              id={id}
+              variant="outline"
+              className="bg-muted/50 h-12 w-full justify-between rounded-lg px-3 font-normal"
+            >
               <span className="truncate">{displayValue}</span>
               <ChevronDown className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
-            <DropdownMenuRadioGroup value={value} onValueChange={(nextValue) => onValueChange(nextValue as TValue)}>
+            <DropdownMenuRadioGroup
+              value={value}
+              onValueChange={(nextValue) => onValueChange(nextValue as TValue)}
+            >
               {options.map((option) => (
                 <DropdownMenuRadioItem key={option.value} value={option.value}>
                   {option.label}

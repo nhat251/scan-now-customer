@@ -17,7 +17,13 @@ import type {
   UpdateOrderItemsStatusRequest,
 } from "@/types/order";
 
-export const placePublicOrder = async ({ sessionCode, request }: { sessionCode: string; request: PlaceOrderRequest }) => {
+export const placePublicOrder = async ({
+  sessionCode,
+  request,
+}: {
+  sessionCode: string;
+  request: PlaceOrderRequest;
+}) => {
   const response = await axiosBasic.post<ApiResponse<CustomerOrderResponse>>(
     `/api/public/sessions/${sessionCode}/orders`,
     request
@@ -62,18 +68,30 @@ export const cancelPublicPayment = async (sessionCode: string) => {
 };
 
 export const getPendingWaiterOrders = async (branchId: string) => {
-  return await axiosBasic.get<ApiResponse<PendingOrderResponse[]>>("/api/waiter/orders/pending-confirmation", {
-    params: { branchId },
-  });
+  return await axiosBasic.get<ApiResponse<PendingOrderResponse[]>>(
+    "/api/waiter/orders/pending-confirmation",
+    {
+      params: { branchId },
+    }
+  );
 };
 
 export const getPendingKitchenOrders = async (branchId: string) => {
-  return await axiosBasic.get<ApiResponse<PendingOrderResponse[]>>("/api/kitchen/orders/pending-confirmation", {
-    params: { branchId },
-  });
+  return await axiosBasic.get<ApiResponse<PendingOrderResponse[]>>(
+    "/api/kitchen/orders/pending-confirmation",
+    {
+      params: { branchId },
+    }
+  );
 };
 
-export const confirmWaiterOrder = async ({ branchId, orderId }: { branchId: string; orderId: string }) => {
+export const confirmWaiterOrder = async ({
+  branchId,
+  orderId,
+}: {
+  branchId: string;
+  orderId: string;
+}) => {
   const response = await axiosBasic.post<ApiResponse<ConfirmOrderResponse>>(
     `/api/waiter/orders/${orderId}/confirm`,
     undefined,
@@ -83,7 +101,13 @@ export const confirmWaiterOrder = async ({ branchId, orderId }: { branchId: stri
   return response.data;
 };
 
-export const confirmKitchenOrder = async ({ branchId, orderId }: { branchId: string; orderId: string }) => {
+export const confirmKitchenOrder = async ({
+  branchId,
+  orderId,
+}: {
+  branchId: string;
+  orderId: string;
+}) => {
   const response = await axiosBasic.post<ApiResponse<ConfirmOrderResponse>>(
     `/api/kitchen/orders/${orderId}/confirm`,
     undefined,
@@ -110,9 +134,12 @@ export const confirmKitchenItems = async ({
 };
 
 export const getReadyToServeItems = async (branchId: string) => {
-  return await axiosBasic.get<ApiResponse<ReadyToServeTableGroup[]>>("/api/waiter/items/ready-to-serve", {
-    params: { branchId },
-  });
+  return await axiosBasic.get<ApiResponse<ReadyToServeTableGroup[]>>(
+    "/api/waiter/items/ready-to-serve",
+    {
+      params: { branchId },
+    }
+  );
 };
 
 export const markWaiterItemsServed = async ({

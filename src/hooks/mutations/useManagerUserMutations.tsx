@@ -12,8 +12,13 @@ type UpdateManagerUserParams = {
   data: UpdateManagerUserRequest;
 };
 
-export async function createManagerUser(req: CreateManagerUserRequest): Promise<ManagerScopedUserResponse> {
-  const response = await axiosBasic.post<ApiResponse<ManagerScopedUserResponse>>("/api/manager/users", req);
+export async function createManagerUser(
+  req: CreateManagerUserRequest
+): Promise<ManagerScopedUserResponse> {
+  const response = await axiosBasic.post<ApiResponse<ManagerScopedUserResponse>>(
+    "/api/manager/users",
+    req
+  );
   return response.data.result;
 }
 
@@ -21,7 +26,10 @@ export async function updateManagerUser({
   id,
   data,
 }: UpdateManagerUserParams): Promise<ManagerScopedUserResponse> {
-  const response = await axiosBasic.put<ApiResponse<ManagerScopedUserResponse>>(`/api/manager/users/${id}`, data);
+  const response = await axiosBasic.put<ApiResponse<ManagerScopedUserResponse>>(
+    `/api/manager/users/${id}`,
+    data
+  );
   return response.data.result;
 }
 

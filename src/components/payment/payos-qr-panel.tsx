@@ -24,7 +24,11 @@ export const getQrImageSrc = (qrCode?: string | null, fallbackUrl?: string | nul
     return null;
   }
 
-  if (value.startsWith("data:image/") || value.startsWith("http://") || value.startsWith("https://")) {
+  if (
+    value.startsWith("data:image/") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://")
+  ) {
     return value;
   }
 
@@ -68,50 +72,54 @@ export const PayOsQrPanel = ({
       </div>
       {qrImageSrc ? (
         <div className="mt-4 flex justify-center">
-          <img src={qrImageSrc} alt="PayOS payment QR" className="size-64 rounded-xl bg-white p-3 shadow-sm" />
+          <img
+            src={qrImageSrc}
+            alt="Mã QR thanh toán PayOS"
+            className="size-64 rounded-xl bg-white p-3 shadow-sm"
+          />
         </div>
       ) : (
-        <p className="mt-4 text-sm text-gray-500">QR is not available for this payment link.</p>
+        <p className="mt-4 text-sm text-gray-500">Liên kết thanh toán này chưa có mã QR.</p>
       )}
       <dl className="mt-4 space-y-2 text-sm">
         {amount ? (
           <div className="flex justify-between gap-3">
-            <dt className="text-gray-500">Amount</dt>
+            <dt className="text-gray-500">Số tiền</dt>
             <dd className="font-bold">{formatCurrency(amount)}</dd>
           </div>
         ) : null}
         {description ? (
           <div className="flex justify-between gap-3">
-            <dt className="text-gray-500">Description</dt>
+            <dt className="text-gray-500">Mô tả</dt>
             <dd className="font-bold">{description}</dd>
           </div>
         ) : null}
         {accountName ? (
           <div className="flex justify-between gap-3">
-            <dt className="text-gray-500">Account</dt>
+            <dt className="text-gray-500">Chủ tài khoản</dt>
             <dd className="text-right font-bold">{accountName}</dd>
           </div>
         ) : null}
         {accountNumber ? (
           <div className="flex justify-between gap-3">
-            <dt className="text-gray-500">Account number</dt>
+            <dt className="text-gray-500">Số tài khoản</dt>
             <dd className="font-bold">{accountNumber}</dd>
           </div>
         ) : null}
         {bin ? (
           <div className="flex justify-between gap-3">
-            <dt className="text-gray-500">Bank BIN</dt>
+            <dt className="text-gray-500">Mã BIN ngân hàng</dt>
             <dd className="font-bold">{bin}</dd>
           </div>
         ) : null}
       </dl>
       <p className="mt-4 text-xs font-semibold text-gray-500">
-        QR expires in <span className="text-warning-foreground font-black">{countdown}</span>.
+        Mã QR hết hạn sau <span className="text-warning-foreground font-black">{countdown}</span>.
       </p>
       {isChecking ? (
         <p className="mt-3 flex items-center gap-2 text-sm text-gray-500">
           <Loader2 className="size-4 animate-spin" />
-          Checking payment...
+          Đang kiểm tra thanh toán...
         </p>
       ) : null}
       {onCancel ? (
@@ -121,7 +129,7 @@ export const PayOsQrPanel = ({
           disabled={cancelDisabled}
           className="text-destructive border-destructive/30 mt-4 w-full rounded-xl border bg-white px-4 py-2 text-sm font-bold disabled:opacity-50"
         >
-          Cancel QR payment
+          Hủy thanh toán QR
         </button>
       ) : null}
     </div>

@@ -74,11 +74,14 @@ export const useUserStore = create<UserStore>((set) => ({
   },
 }));
 
-export const login = (payload: { user: AuthUser | null; accessToken: string }) => useUserStore.getState().login(payload);
+export const login = (payload: { user: AuthUser | null; accessToken: string }) =>
+  useUserStore.getState().login(payload);
 export const logout = () => useUserStore.getState().logout();
-export const setAuthInitialized = (isAuthInitialized: boolean) => useUserStore.getState().setAuthInitialized(isAuthInitialized);
+export const setAuthInitialized = (isAuthInitialized: boolean) =>
+  useUserStore.getState().setAuthInitialized(isAuthInitialized);
 export const setUser = (user: AuthUser | null) => useUserStore.getState().setUser(user);
-export const setAccessToken = (accessToken: string) => useUserStore.getState().setAccessToken(accessToken);
+export const setAccessToken = (accessToken: string) =>
+  useUserStore.getState().setAccessToken(accessToken);
 export const hydrateUserSession = () => useUserStore.getState().hydrateFromStorage();
 export const getUser = () => useUserStore.getState().user;
 export const getIsLogin = () => useUserStore.getState().isLogin;

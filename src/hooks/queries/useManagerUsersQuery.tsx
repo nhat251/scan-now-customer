@@ -2,12 +2,19 @@ import { QUERY_KEY } from "@/constants/queryKeys";
 import useQuery from "@/hooks/useQuery";
 import { axiosBasic } from "@/services/axiosBasic";
 import type { ApiResponse, PagedResult } from "@/types/commons";
-import type { BranchResponse, ManagerScopedUserResponse, UserListQuery } from "@/types/user-management";
+import type {
+  BranchResponse,
+  ManagerScopedUserResponse,
+  UserListQuery,
+} from "@/types/user-management";
 
 const getManagerUsers = async (query: UserListQuery) => {
-  return await axiosBasic.get<ApiResponse<PagedResult<ManagerScopedUserResponse>>>("/api/manager/users", {
-    params: query,
-  });
+  return await axiosBasic.get<ApiResponse<PagedResult<ManagerScopedUserResponse>>>(
+    "/api/manager/users",
+    {
+      params: query,
+    }
+  );
 };
 
 const getMyBranches = async () => {

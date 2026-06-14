@@ -24,7 +24,10 @@ export const ProtectedRoute = ({
   const user = useUserStore((state) => state.user);
   const isLogin = useUserStore((state) => state.isLogin);
   const isAuthInitialized = useUserStore((state) => state.isAuthInitialized);
-  const normalizedRoles = useMemo(() => allowedRoles?.map((role) => role.toUpperCase()), [allowedRoles]);
+  const normalizedRoles = useMemo(
+    () => allowedRoles?.map((role) => role.toUpperCase()),
+    [allowedRoles]
+  );
 
   useEffect(() => {
     if (!isAuthInitialized) {

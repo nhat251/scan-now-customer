@@ -1,6 +1,5 @@
-import defaultAxios from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useQuery from "@/hooks/useQuery";
 import { axiosBasic } from "@/services/axiosBasic";
 import { showNotify } from "@/stores/global";
@@ -8,21 +7,19 @@ import type { ApiResponse, PagedResult } from "@/types/api";
 import type { OwnerScopedUserResponse, UserListQuery } from "@/types/user-management";
 
 const getOwnerUsers = async (query: UserListQuery) => {
-  return await axiosBasic.get<ApiResponse<PagedResult<OwnerScopedUserResponse>>>("/api/owner/users", {
-    params: query,
-  });
-};
-
-const getOwnerUsersErrorMessage = (error: unknown) => {
-  if (defaultAxios.isAxiosError(error)) {
-    return error.response?.data?.message ?? "Unable to load owner users.";
-  }
-
-  return "Unable to load owner users.";
+  return await axiosBasic.get<ApiResponse<PagedResult<OwnerScopedUserResponse>>>(
+    "/api/owner/users",
+    {
+      params: query,
+    }
+  );
 };
 
 export const useOwnerUsersQuery = (query: UserListQuery) => {
-  return useQuery<ApiResponse<PagedResult<OwnerScopedUserResponse>>, PagedResult<OwnerScopedUserResponse>>({
+  return useQuery<
+    ApiResponse<PagedResult<OwnerScopedUserResponse>>,
+    PagedResult<OwnerScopedUserResponse>
+  >({
     queryKey: [
       QUERY_KEY.OWNER_USERS,
       String(query.pageNumber),
@@ -38,7 +35,10 @@ export const useOwnerUsersQuery = (query: UserListQuery) => {
     queryFn: () => getOwnerUsers(query),
     select: (res) => res.data.result,
     onError: (error) => {
-      showNotify({ type: "error", message: getOwnerUsersErrorMessage(error) });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tải danh sách nhân sự."),
+      });
     },
   });
 };

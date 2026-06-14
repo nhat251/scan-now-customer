@@ -10,7 +10,12 @@ type Props = {
 const PublicSessionMenuItemRoute = async ({ params }: Props) => {
   const { sessionCode, menuItemId } = await params;
 
-  return <SessionMenuItemPage sessionCode={decodeURIComponent(sessionCode)} menuItemId={decodeURIComponent(menuItemId)} />;
+  return (
+    <SessionMenuItemPage
+      sessionCode={decodeURIComponent(sessionCode)}
+      menuItemId={decodeURIComponent(menuItemId)}
+    />
+  );
 };
 
 export default PublicSessionMenuItemRoute;

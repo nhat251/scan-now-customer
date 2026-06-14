@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, BellRing, Check, ChefHat, Clock3, RefreshCw, Soup } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  BellRing,
+  Check,
+  ChefHat,
+  Clock3,
+  RefreshCw,
+  Soup,
+} from "lucide-react";
 
 import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -14,7 +23,10 @@ import {
   useMarkKitchenItemsReadyMutation,
 } from "@/hooks/mutations/useOrderMutations";
 import { useMyBranchDetailQuery } from "@/hooks/queries/useMeQueries";
-import { useGroupedKitchenItemsQuery, usePendingKitchenOrdersQuery } from "@/hooks/queries/useOrderQueries";
+import {
+  useGroupedKitchenItemsQuery,
+  usePendingKitchenOrdersQuery,
+} from "@/hooks/queries/useOrderQueries";
 import { useBranchOrderUpdates } from "@/hooks/useBranchOrderUpdates";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
@@ -54,7 +66,8 @@ const getPendingMinutes = (createdAt: string) => {
 const playPendingOrderBell = () => {
   const AudioContextClass =
     window.AudioContext ??
-    (window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    (window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
 
   if (!AudioContextClass) {
     return;
@@ -117,12 +130,17 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
     () =>
       pendingOrders.flatMap((order) =>
         order.items
-          .filter((item) => Date.now() - new Date(item.createdAt).getTime() >= PENDING_ALERT_AFTER_MS)
+          .filter(
+            (item) => Date.now() - new Date(item.createdAt).getTime() >= PENDING_ALERT_AFTER_MS
+          )
           .map((item) => ({ order, item, pendingMinutes: getPendingMinutes(item.createdAt) }))
       ),
     [pendingOrders]
   );
-  const visibleItemIds = useMemo(() => groups.flatMap((group) => group.items.map((item) => item.orderItemId)), [groups]);
+  const visibleItemIds = useMemo(
+    () => groups.flatMap((group) => group.items.map((item) => item.orderItemId)),
+    [groups]
+  );
   const selectedConfirmedIds = useMemo(
     () =>
       groups
@@ -132,7 +150,9 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
     [groups, selectedIds]
   );
   const totalPortions = groups.reduce((total, group) => total + group.totalQuantity, 0);
-  const highPriorityCount = groups.filter((group) => group.suggestedPriorityLevel === "High").length;
+  const highPriorityCount = groups.filter(
+    (group) => group.suggestedPriorityLevel === "High"
+  ).length;
   const pendingPortions = pendingOrders.reduce(
     (total, order) => total + order.items.reduce((itemTotal, item) => itemTotal + item.quantity, 0),
     0
@@ -160,20 +180,24 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
       playPendingOrderBell();
       showNotify({
         type: "warning",
-        message: `Table ${order.tableNumber ?? "unassigned"} has ${item.menuItemName} waiting ${pendingMinutes} minutes for confirmation.`,
+        message: `Bàn ${order.tableNumber ?? "chưa gán"} có món ${item.menuItemName} đang chờ xác nhận ${pendingMinutes} phút.`,
       });
     }
   }, [overduePendingItems]);
 
   const toggleItem = (orderItemId: string) => {
     setSelectedIds((current) =>
-      current.includes(orderItemId) ? current.filter((id) => id !== orderItemId) : [...current, orderItemId]
+      current.includes(orderItemId)
+        ? current.filter((id) => id !== orderItemId)
+        : [...current, orderItemId]
     );
   };
 
   const togglePendingItem = (orderItemId: string) => {
     setSelectedPendingIds((current) =>
-      current.includes(orderItemId) ? current.filter((id) => id !== orderItemId) : [...current, orderItemId]
+      current.includes(orderItemId)
+        ? current.filter((id) => id !== orderItemId)
+        : [...current, orderItemId]
     );
   };
 
@@ -225,17 +249,15 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
   };
 
   const isMutating =
-    confirmOrderMutation.isPending ||
-    confirmItemsMutation.isPending ||
-    markReadyMutation.isPending;
+    confirmOrderMutation.isPending || confirmItemsMutation.isPending || markReadyMutation.isPending;
   const queryError = branchQuery.error ?? pendingQuery.error ?? kitchenQuery.error;
 
   return (
     <PortalShell
-      title="Kitchen Queue"
-      description="Prepare backend-grouped dishes by priority. Notes create separate groups to protect preparation requirements."
-      portalLabel="Branch Workspace"
-      portalName="My Branch Portal"
+      title="Hàng chờ của bếp"
+      description="Chuẩn bị các nhóm món theo mức ưu tiên. Món có ghi chú riêng được tách nhóm để bảo đảm yêu cầu chế biến."
+      portalLabel="Khu vực chi nhánh"
+      portalName="Cổng chi nhánh của tôi"
       branchId={branchId}
       navItems={getMyPortalNavItems({
         active: "kitchen",
@@ -245,14 +267,14 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
         canSeeOrders,
         canSeeKitchen,
       })}
-      topbarTitle={branchQuery.data?.name ?? currentUser?.fullName ?? "Kitchen Queue"}
+      topbarTitle={branchQuery.data?.name ?? currentUser?.fullName ?? "Hàng chờ của bếp"}
       currentUser={currentUser}
       headerAction={
         <div className="flex flex-wrap gap-3">
           <Button asChild variant="outline">
             <Link href={PATH.me.branchDetail(branchId)}>
               <ArrowLeft className="size-4" />
-              Branch Detail
+              Chi tiết chi nhánh
             </Link>
           </Button>
           <Button
@@ -263,32 +285,54 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
             }}
             disabled={pendingQuery.isFetching || kitchenQuery.isFetching}
           >
-            <RefreshCw className={cn("size-4", (pendingQuery.isFetching || kitchenQuery.isFetching) && "animate-spin")} />
-            Refresh
+            <RefreshCw
+              className={cn(
+                "size-4",
+                (pendingQuery.isFetching || kitchenQuery.isFetching) && "animate-spin"
+              )}
+            />
+            Tải lại
           </Button>
         </div>
       }
       stats={
         <>
-          <PortalStatCard label="Pending Orders" value={String(pendingOrders.length)} helper={`${pendingPortions} dishes need confirmation`} />
-          <PortalStatCard label="Kitchen Groups" value={String(groups.length)} helper={`${totalPortions} confirmed portions`} />
-          <PortalStatCard label="High Priority" value={String(highPriorityCount)} helper="Urgent groups first" />
-          <PortalStatCard label="Selected Items" value={String(selectedIds.length)} helper="Individual order items" />
+          <PortalStatCard
+            label="Đơn chờ xác nhận"
+            value={String(pendingOrders.length)}
+            helper={`${pendingPortions} món cần xác nhận`}
+          />
+          <PortalStatCard
+            label="Nhóm món của bếp"
+            value={String(groups.length)}
+            helper={`${totalPortions} phần món đã xác nhận`}
+          />
+          <PortalStatCard
+            label="Ưu tiên cao"
+            value={String(highPriorityCount)}
+            helper="Nhóm khẩn cấp được xếp trước"
+          />
+          <PortalStatCard
+            label="Món đã chọn"
+            value={String(selectedIds.length)}
+            helper="Từng món trong đơn"
+          />
         </>
       }
     >
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Pending Confirmation</h2>
+            <h2 className="text-2xl font-bold">Chờ xác nhận</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              New orders and added dishes go straight to kitchen. Confirm a whole order or only selected dishes.
+              Đơn mới và món gọi thêm được gửi thẳng đến bếp. Có thể xác nhận toàn bộ đơn hoặc từng
+              món đã chọn.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={playPendingOrderBell}>
               <BellRing className="size-4" />
-              Test Bell
+              Thử chuông
             </Button>
             <Button
               variant="warning"
@@ -296,7 +340,7 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
               onClick={() => void confirmPendingItems(selectedPendingIds)}
             >
               <Check className="size-4" />
-              Confirm Selected ({selectedPendingIds.length})
+              Xác nhận món đã chọn ({selectedPendingIds.length})
             </Button>
           </div>
         </div>
@@ -305,9 +349,9 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
           <div className="border-warning/60 bg-warning/20 text-warning-foreground flex items-start gap-3 rounded-xl border p-4">
             <AlertTriangle className="mt-0.5 size-5 shrink-0" />
             <div className="text-sm">
-              <p className="font-bold">{overduePendingItems.length} dish(es) have waited over 10 minutes.</p>
+              <p className="font-bold">{overduePendingItems.length} món đã chờ quá 10 phút.</p>
               <p className="mt-1">
-                The bell repeats every 5 minutes while those dishes remain unconfirmed.
+                Chuông sẽ lặp lại mỗi 5 phút khi các món đó chưa được xác nhận.
               </p>
             </div>
           </div>
@@ -316,16 +360,23 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
         {!pendingQuery.isLoading && pendingOrders.length === 0 ? (
           <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
             <ChefHat className="text-muted-foreground mx-auto size-10" />
-            <h2 className="mt-3 text-xl font-bold">No orders waiting for confirmation</h2>
-            <p className="text-muted-foreground mt-2 text-sm">New customer dishes will appear here first.</p>
+            <h2 className="mt-3 text-xl font-bold">Không có đơn chờ xác nhận</h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Món mới của khách sẽ xuất hiện tại đây trước.
+            </p>
           </div>
         ) : null}
 
         <section className="grid gap-4 xl:grid-cols-2">
           {pendingOrders.map((order) => {
             const orderItemIds = order.items.map((item) => item.orderItemId);
-            const allOrderItemsSelected = orderItemIds.every((id) => selectedPendingIds.includes(id));
-            const longestWaitMinutes = Math.max(...order.items.map((item) => getPendingMinutes(item.createdAt)), 0);
+            const allOrderItemsSelected = orderItemIds.every((id) =>
+              selectedPendingIds.includes(id)
+            );
+            const longestWaitMinutes = Math.max(
+              ...order.items.map((item) => getPendingMinutes(item.createdAt)),
+              0
+            );
             const isOverdue = longestWaitMinutes >= 10;
 
             return (
@@ -339,21 +390,23 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
-                      {order.tableNumber ?? "Unassigned table"}
+                      {order.tableNumber ?? "Chưa gán bàn"}
                     </p>
                     <h3 className="mt-1 text-lg font-bold">{order.orderNumber}</h3>
-                    <p className="text-muted-foreground mt-1 text-xs">Longest wait {longestWaitMinutes}m</p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Chờ lâu nhất {longestWaitMinutes}m
+                    </p>
                   </div>
                   {isOverdue ? (
                     <span className="bg-warning text-warning-foreground rounded-full px-3 py-1 text-xs font-bold">
-                      Alert
+                      Cảnh báo
                     </span>
                   ) : null}
                 </div>
 
                 {order.customerNote ? (
                   <p className="bg-warning/40 text-warning-foreground mt-4 rounded-lg px-3 py-2 text-sm">
-                    Order note: {order.customerNote}
+                    Ghi chú đơn: {order.customerNote}
                   </p>
                 ) : null}
 
@@ -364,7 +417,7 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                     onChange={() => togglePendingOrder(order)}
                     className="border-border text-primary focus:ring-primary size-4 rounded"
                   />
-                  Select all pending dishes in this order
+                  Chọn tất cả món đang chờ trong đơn này
                 </label>
 
                 <div className="mt-4 space-y-3">
@@ -372,7 +425,10 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                     const pendingMinutes = getPendingMinutes(item.createdAt);
 
                     return (
-                      <label key={item.orderItemId} className="border-border/60 flex cursor-pointer items-start gap-3 rounded-lg border p-3">
+                      <label
+                        key={item.orderItemId}
+                        className="border-border/60 flex cursor-pointer items-start gap-3 rounded-lg border p-3"
+                      >
                         <input
                           type="checkbox"
                           checked={selectedPendingIds.includes(item.orderItemId)}
@@ -383,9 +439,20 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                           <span className="block font-semibold">
                             {item.menuItemName} x{item.quantity}
                           </span>
-                          {item.note ? <span className="text-primary mt-1 block text-xs font-semibold">Note: {item.note}</span> : null}
-                          <span className={cn("mt-1 block text-xs", pendingMinutes >= 10 ? "text-warning-foreground font-bold" : "text-muted-foreground")}>
-                            Waiting {pendingMinutes}m
+                          {item.note ? (
+                            <span className="text-primary mt-1 block text-xs font-semibold">
+                              Ghi chú: {item.note}
+                            </span>
+                          ) : null}
+                          <span
+                            className={cn(
+                              "mt-1 block text-xs",
+                              pendingMinutes >= 10
+                                ? "text-warning-foreground font-bold"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            Đang chờ {pendingMinutes}m
                           </span>
                         </span>
                       </label>
@@ -401,15 +468,21 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                     onClick={() => void confirmOrder(order)}
                   >
                     <Check className="size-4" />
-                    Confirm Order
+                    Xác nhận đơn
                   </Button>
                   <Button
                     variant="outline"
                     className="flex-1"
-                    disabled={!orderItemIds.some((id) => selectedPendingIds.includes(id)) || isMutating}
-                    onClick={() => void confirmPendingItems(orderItemIds.filter((id) => selectedPendingIds.includes(id)))}
+                    disabled={
+                      !orderItemIds.some((id) => selectedPendingIds.includes(id)) || isMutating
+                    }
+                    onClick={() =>
+                      void confirmPendingItems(
+                        orderItemIds.filter((id) => selectedPendingIds.includes(id))
+                      )
+                    }
                   >
-                    Confirm Checked
+                    Xác nhận món đã chọn
                   </Button>
                 </div>
               </article>
@@ -428,7 +501,7 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                 variant={filter === option ? "default" : "outline"}
                 onClick={() => setFilter(option)}
               >
-                {option === "all" ? "All Active" : option}
+                {option === "all" ? "Tất cả món đang xử lý" : option}
               </Button>
             ))}
           </div>
@@ -439,7 +512,7 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
               onClick={() => void markReady(selectedConfirmedIds)}
             >
               <Soup className="size-4" />
-              Mark Ready ({selectedConfirmedIds.length})
+              Đánh dấu sẵn sàng ({selectedConfirmedIds.length})
             </Button>
           </div>
         </div>
@@ -448,29 +521,34 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
       {kitchenQuery.isLoading || pendingQuery.isLoading || branchQuery.isLoading ? (
         <div className="bg-card border-border/60 flex items-center gap-3 rounded-xl border p-6 shadow-sm">
           <Spinner className="text-primary size-5" />
-          <span className="text-sm font-medium">Loading kitchen groups...</span>
+          <span className="text-sm font-medium">Đang tải nhóm món của bếp...</span>
         </div>
       ) : null}
 
       {queryError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6">
-          <h2 className="text-lg font-semibold">Unable to load kitchen queue</h2>
-          <p className="mt-2 text-sm">{getApiErrorMessage(queryError, "Please retry this kitchen queue.")}</p>
+          <h2 className="text-lg font-semibold">Không thể tải hàng chờ của bếp</h2>
+          <p className="mt-2 text-sm">
+            {getApiErrorMessage(queryError, "Vui lòng thử tải lại hàng chờ của bếp.")}
+          </p>
         </div>
       ) : null}
 
       {!kitchenQuery.isLoading && !kitchenQuery.isError && groups.length === 0 ? (
         <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
           <ChefHat className="text-muted-foreground mx-auto size-10" />
-          <h2 className="mt-3 text-xl font-bold">No dishes in this queue</h2>
-          <p className="text-muted-foreground mt-2 text-sm">Confirmed dishes appear here after kitchen approval.</p>
+          <h2 className="mt-3 text-xl font-bold">Không có món trong hàng chờ này</h2>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Món đã xác nhận sẽ xuất hiện tại đây.
+          </p>
         </div>
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-2">
         {groups.map((group) => {
           const groupIds = group.items.map((item) => item.orderItemId);
-          const allSelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.includes(id));
+          const allSelected =
+            groupIds.length > 0 && groupIds.every((id) => selectedIds.includes(id));
 
           return (
             <article
@@ -480,15 +558,22 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={cn("rounded-full px-3 py-1 text-xs font-bold", PRIORITY_TONE[group.suggestedPriorityLevel])}>
+                    <span
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-bold",
+                        PRIORITY_TONE[group.suggestedPriorityLevel]
+                      )}
+                    >
                       {group.suggestedPriorityLevel}
                     </span>
                     <span className="bg-surface-container text-muted-foreground rounded-full px-3 py-1 text-xs font-semibold">
-                      Confirmed / In Progress
+                      Đã xác nhận / Đang chế biến
                     </span>
                   </div>
                   <h2 className="mt-3 text-xl font-bold">{group.menuItemName}</h2>
-                  {group.note ? <p className="text-primary mt-1 text-sm font-semibold">Note: {group.note}</p> : null}
+                  {group.note ? (
+                    <p className="text-primary mt-1 text-sm font-semibold">Ghi chú: {group.note}</p>
+                  ) : null}
                 </div>
                 <p className="text-primary shrink-0 text-2xl font-black">x{group.totalQuantity}</p>
               </div>
@@ -496,10 +581,10 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
               <div className="text-muted-foreground mt-4 grid gap-2 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-3">
                 <p className="flex items-center gap-2">
                   <Clock3 className="size-4" />
-                  Wait {Math.round(group.waitingMinutes)}m
+                  Thời gian chờ {Math.round(group.waitingMinutes)}m
                 </p>
-                <p>Prep ~{group.averageCookingMinutes}m</p>
-                <p>Score {Math.round(group.priorityScore)}</p>
+                <p>Chuẩn bị khoảng{group.averageCookingMinutes}m</p>
+                <p>Điểm ưu tiên {Math.round(group.priorityScore)}</p>
               </div>
 
               <label className="text-muted-foreground mt-4 flex cursor-pointer items-center gap-2 text-sm font-semibold">
@@ -509,12 +594,15 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                   onChange={() => toggleGroup(group)}
                   className="border-border text-primary focus:ring-primary size-4 rounded"
                 />
-                Select entire group
+                Chọn toàn bộ nhóm
               </label>
 
               <div className="mt-4 space-y-3">
                 {group.items.map((item) => (
-                  <label key={item.orderItemId} className="border-border/60 flex cursor-pointer items-start gap-3 rounded-lg border p-3">
+                  <label
+                    key={item.orderItemId}
+                    className="border-border/60 flex cursor-pointer items-start gap-3 rounded-lg border p-3"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(item.orderItemId)}
@@ -523,10 +611,10 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                     />
                     <span className="min-w-0 flex-1 text-sm">
                       <span className="block font-semibold">
-                        {item.tableName ?? "No table"} / {item.orderCode} - x{item.quantity}
+                        {item.tableName ?? "Không có bàn"} / {item.orderCode} - x{item.quantity}
                       </span>
                       <span className="text-muted-foreground mt-1 block text-xs">
-                        Confirmed {formatDateTime(item.confirmedAt)}
+                        Đã xác nhận {formatDateTime(item.confirmedAt)}
                       </span>
                     </span>
                   </label>
@@ -541,7 +629,7 @@ export const MyBranchKitchenPage = ({ branchId }: Props) => {
                   disabled={isMutating}
                 >
                   <Soup className="size-4" />
-                  Mark Entire Group Ready
+                  Đánh dấu cả nhóm đã sẵn sàng
                 </Button>
               </div>
             </article>

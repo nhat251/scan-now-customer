@@ -29,9 +29,9 @@ export type AlertModalProps = {
   showClose?: boolean;
 };
 
-const NEGATIVE_BUTTON_LABEL_DEFAULT = "Cancel";
+const NEGATIVE_BUTTON_LABEL_DEFAULT = "Hủy";
 const POSITIVE_BUTTON_LABEL_DEFAULT = "OK";
-const TITLE_DEFAULT = "Heads Up";
+const TITLE_DEFAULT = "Lưu ý";
 
 export const AlertModal = ({
   open,

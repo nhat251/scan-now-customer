@@ -18,10 +18,17 @@ import { OwnerBranchForm } from "@/components/owner/branches/owner-branch-form";
 import { getOwnerPortalNavItems } from "@/components/owner/users/owner-portal-nav";
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
-import { useCreateOwnerBranchMutation, useUpdateOwnerBranchMutation } from "@/hooks/mutations/useOwnerBranchMutations";
+import {
+  useCreateOwnerBranchMutation,
+  useUpdateOwnerBranchMutation,
+} from "@/hooks/mutations/useOwnerBranchMutations";
 import { useOwnerBranchDetailQuery } from "@/hooks/queries/useOwnerBranchDetailQuery";
 import { useUserStore } from "@/stores/user";
-import type { CreateBranchRequest, OwnerBranchFormValues, UpdateBranchRequest } from "@/types/user-management";
+import type {
+  CreateBranchRequest,
+  OwnerBranchFormValues,
+  UpdateBranchRequest,
+} from "@/types/user-management";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type OwnerBranchDetailPageProps = {
@@ -29,7 +36,9 @@ type OwnerBranchDetailPageProps = {
   mode: "create" | "edit";
 };
 
-const toBranchPayload = (value: OwnerBranchFormValues): CreateBranchRequest | UpdateBranchRequest => ({
+const toBranchPayload = (
+  value: OwnerBranchFormValues
+): CreateBranchRequest | UpdateBranchRequest => ({
   name: value.name.trim(),
   slug: value.slug.trim(),
   address: value.address.trim() || null,
@@ -44,11 +53,8 @@ const toBranchPayload = (value: OwnerBranchFormValues): CreateBranchRequest | Up
 
 const ownerBranchSchema = z.object({
   name: z.string().trim().min(1, "Tên chi nhánh là bắt buộc."),
-  slug: z.string().trim().min(1, "Slug là bắt buộc."),
-  email: z.string().refine(
-    (val) => !val || val.includes("@"),
-    { message: "Email không hợp lệ." }
-  ),
+  slug: z.string().trim().min(1, "Đường dẫn định danh là bắt buộc."),
+  email: z.string().refine((val) => !val || val.includes("@"), { message: "Email không hợp lệ." }),
   phone: z.string(),
   address: z.string(),
   openTime: z.string(),
@@ -65,7 +71,12 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
   const createMutation = useCreateOwnerBranchMutation();
   const updateMutation = useUpdateOwnerBranchMutation();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<OwnerBranchFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<OwnerBranchFormValues>({
     resolver: zodResolver(ownerBranchSchema),
     defaultValues: getDefaultOwnerBranchFormValues(),
   });
@@ -106,9 +117,13 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">
+            Cổng chủ quán
+          </p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">{errorState.heading}</h2>
-          <p className="text-muted-foreground mt-3 text-sm md:text-base">{errorState.description}</p>
+          <p className="text-muted-foreground mt-3 text-sm md:text-base">
+            {errorState.description}
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button onClick={() => detailQuery.refetch()} disabled={detailQuery.isRefetching}>
               {errorState.retryLabel}
@@ -129,11 +144,19 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
 
   return (
     <PortalShell
-      title={mode === "create" ? "Tạo chi nhánh" : branch?.name ?? "Chi tiết chi nhánh"}
-      description={mode === "create" ? "Tạo chi nhánh mới cho nhà hàng." : "Xem và cập nhật thông tin, liên hệ, giờ mở cửa và phí của chi nhánh."}
+      title={mode === "create" ? "Tạo chi nhánh" : (branch?.name ?? "Chi tiết chi nhánh")}
+      description={
+        mode === "create"
+          ? "Tạo chi nhánh mới cho nhà hàng."
+          : "Xem và cập nhật thông tin, liên hệ, giờ mở cửa và phí của chi nhánh."
+      }
       portalLabel="Bộ quản lý"
       portalName="Cổng chủ quán"
-      navItems={branchId ? getManageMenuNavItems("owner", "branches", branchId) : getOwnerPortalNavItems("branches")}
+      navItems={
+        branchId
+          ? getManageMenuNavItems("owner", "branches", branchId)
+          : getOwnerPortalNavItems("branches")
+      }
       topbarTitle={branch?.name ?? currentUser?.fullName ?? "Cổng chủ quán"}
       currentUser={currentUser}
       branchName={branch?.name}
@@ -145,7 +168,10 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
           </Button>
           {branchId ? (
             <>
-              <Button variant="outline" onClick={() => router.push(PATH.owner.branchCategories(branchId))}>
+              <Button
+                variant="outline"
+                onClick={() => router.push(PATH.owner.branchCategories(branchId))}
+              >
                 <Tags className="size-4" />
                 Danh mục
               </Button>
@@ -153,7 +179,10 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
                 <Soup className="size-4" />
                 Món ăn
               </Button>
-              <Button variant="outline" onClick={() => router.push(PATH.owner.branchTables(branchId))}>
+              <Button
+                variant="outline"
+                onClick={() => router.push(PATH.owner.branchTables(branchId))}
+              >
                 <Table2 className="size-4" />
                 Sơ đồ bàn & QR
               </Button>
@@ -164,20 +193,38 @@ export const OwnerBranchDetailPage = ({ branchId, mode }: OwnerBranchDetailPageP
       stats={
         mode === "edit" ? (
           <>
-            <PortalStatCard label="Chi nhánh" value={branch?.name ?? "-"} helper={branch?.slug ? `/${branch.slug}` : "Chưa có slug"} />
-            <PortalStatCard label="Trạng thái" value={branch ? getBranchStatusLabel(branch) : "-"} helper={branch?.managerName ?? "Chưa gán quản lý"} />
+            <PortalStatCard
+              label="Chi nhánh"
+              value={branch?.name ?? "-"}
+              helper={branch?.slug ? `/${branch.slug}` : "Chưa có slug"}
+            />
+            <PortalStatCard
+              label="Trạng thái"
+              value={branch ? getBranchStatusLabel(branch) : "-"}
+              helper={branch?.managerName ?? "Chưa gán quản lý"}
+            />
             <PortalStatCard
               label="Liên hệ"
               value={branch?.email ?? "-"}
               helper={branch?.phone ?? "Chưa có số điện thoại"}
               valueClassName="break-all text-2xl xl:text-3xl"
             />
-            <PortalStatCard label="Giờ mở cửa" value={branch?.openTime ?? "-"} helper={branch?.closeTime ?? "Chưa có giờ đóng cửa"} />
+            <PortalStatCard
+              label="Giờ mở cửa"
+              value={branch?.openTime ?? "-"}
+              helper={branch?.closeTime ?? "Chưa có giờ đóng cửa"}
+            />
           </>
         ) : undefined
       }
     >
-      <OwnerBranchForm mode={mode} register={register} errors={errors} submitting={isSubmitting} onSubmit={handleSubmit(submitForm)} />
+      <OwnerBranchForm
+        mode={mode}
+        register={register}
+        errors={errors}
+        submitting={isSubmitting}
+        onSubmit={handleSubmit(submitForm)}
+      />
     </PortalShell>
   );
 };

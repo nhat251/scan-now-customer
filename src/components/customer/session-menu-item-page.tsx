@@ -3,7 +3,17 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertCircle, ChevronLeft, Clock, Loader2, Minus, Plus, ShoppingBag, StickyNote, Utensils } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronLeft,
+  Clock,
+  Loader2,
+  Minus,
+  Plus,
+  ShoppingBag,
+  StickyNote,
+  Utensils,
+} from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +25,11 @@ import { showNotify } from "@/stores/global";
 import type { CartItemDto } from "@/types/cart";
 import type { PersistedCustomerSession } from "@/types/customer-session";
 
-import { formatCurrency, getCustomerApiErrorMessage, readPersistedCustomerSession } from "./customer-session-utils";
+import {
+  formatCurrency,
+  getCustomerApiErrorMessage,
+  readPersistedCustomerSession,
+} from "./customer-session-utils";
 
 type Props = {
   sessionCode: string;
@@ -85,10 +99,11 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
     }
 
     await updateCart(recalculateCart({ items: nextItems, totalAmount: 0 }));
-    
+
     showNotify({
       type: "success",
-      message: currentQuantity > 0 ? "Đã cập nhật món trong giỏ hàng." : "Đã thêm món vào giỏ hàng.",
+      message:
+        currentQuantity > 0 ? "Đã cập nhật món trong giỏ hàng." : "Đã thêm món vào giỏ hàng.",
     });
   };
 
@@ -97,7 +112,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
       {/* 1. Sticky Header */}
       <header className="bg-surface/95 sticky top-0 z-50 flex h-16 w-full items-center justify-between px-4 shadow-sm backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <Link 
+          <Link
             href={PATH.customer.sessionMenu(normalizedSessionCode)}
             className="hover:bg-surface-container-high flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-150 active:scale-95"
           >
@@ -107,7 +122,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
         </div>
         <div className="bg-primary-container/10 border-primary-container/20 flex items-center gap-1.5 rounded-full border px-3 py-1.5">
           <Utensils className="text-primary size-[18px]" />
-          <span className="font-label-md text-label-md text-on-primary-container">{session ? `Bàn ${session.tableNumber}` : "Bàn"}</span>
+          <span className="font-label-md text-label-md text-on-primary-container">
+            {session ? `Bàn ${session.tableNumber}` : "Bàn"}
+          </span>
         </div>
       </header>
 
@@ -123,7 +140,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
         <section className="border-outline-variant/30 bg-surface-container-lowest mx-4 mt-4 rounded-2xl border p-8 text-center shadow-sm">
           <AlertCircle className="text-error mx-auto size-10" />
           <h1 className="mt-3 text-xl font-bold">Phiên đặt món không còn khả dụng</h1>
-          <p className="text-on-surface-variant mt-2 text-sm">Vui lòng quay lại menu từ mã QR của bàn.</p>
+          <p className="text-on-surface-variant mt-2 text-sm">
+            Vui lòng quay lại menu từ mã QR của bàn.
+          </p>
         </section>
       ) : null}
 
@@ -133,9 +152,16 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
           <AlertCircle className="text-error mx-auto size-10" />
           <h1 className="mt-3 text-xl font-bold">Không thể tải món ăn</h1>
           <p className="text-on-surface-variant mt-2 text-sm">
-            {getCustomerApiErrorMessage(itemQuery.error, "Món ăn không tồn tại hoặc không còn phục vụ.")}
+            {getCustomerApiErrorMessage(
+              itemQuery.error,
+              "Món ăn không tồn tại hoặc không còn phục vụ."
+            )}
           </p>
-          <Button className="bg-primary mt-5 text-white" onClick={() => itemQuery.refetch()} disabled={itemQuery.isRefetching}>
+          <Button
+            className="bg-primary mt-5 text-white"
+            onClick={() => itemQuery.refetch()}
+            disabled={itemQuery.isRefetching}
+          >
             Thử lại
           </Button>
         </section>
@@ -152,7 +178,10 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
               fill
               unoptimized
               sizes="480px"
-              className={cn("object-cover transition-transform duration-300", !item.isAvailable && "opacity-60 grayscale")}
+              className={cn(
+                "object-cover transition-transform duration-300",
+                !item.isAvailable && "opacity-60 grayscale"
+              )}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
             {/* Badge */}
@@ -172,10 +201,16 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
           <section className="relative -mt-6 px-4">
             <div className="bg-surface-container-lowest border-outline-variant/10 rounded-3xl border p-6 shadow-lg">
               <div className="flex flex-col gap-2">
-                <span className="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">{item.categoryName ?? "Món ăn"}</span>
+                <span className="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">
+                  {item.categoryName ?? "Món ăn"}
+                </span>
                 <div className="flex items-start justify-between gap-4">
-                  <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface leading-tight">{item.name}</h1>
-                  <span className="font-headline-md text-headline-md text-primary-container whitespace-nowrap">{formatCurrency(item.price)}</span>
+                  <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface leading-tight">
+                    {item.name}
+                  </h1>
+                  <span className="font-headline-md text-headline-md text-primary-container whitespace-nowrap">
+                    {formatCurrency(item.price)}
+                  </span>
                 </div>
                 <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 leading-relaxed">
                   {item.description || "Món được chuẩn bị tươi mới tại nhà hàng."}
@@ -185,7 +220,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
               {/* 4. Prep Time Row */}
               <div className="bg-primary-container/5 border-primary-container/10 mt-6 flex w-fit items-center gap-2 rounded-full border px-4 py-2">
                 <Clock className="text-primary size-[18px]" />
-                <span className="font-label-sm text-label-sm text-on-primary-fixed-variant">Thời gian chuẩn bị: {item.preparationTime} phút</span>
+                <span className="font-label-sm text-label-sm text-on-primary-fixed-variant">
+                  Thời gian chuẩn bị: {item.preparationTime} phút
+                </span>
               </div>
             </div>
           </section>
@@ -195,7 +232,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
             <div className="bg-surface-container-lowest border-outline-variant/30 rounded-2xl border p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <StickyNote className="text-primary size-5" />
-                <h2 className="font-headline-sm text-headline-sm text-on-surface">Ghi chú cho món</h2>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">
+                  Ghi chú cho món
+                </h2>
               </div>
               <textarea
                 className="bg-surface-container-low font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-primary-container/30 min-h-[100px] w-full resize-none rounded-xl border-none p-4 transition-all outline-none focus:ring-2"
@@ -224,7 +263,9 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
               >
                 <Minus className="size-5" strokeWidth={2.5} />
               </button>
-              <span className="font-headline-sm text-headline-sm text-on-primary-container w-10 text-center">{localQuantity}</span>
+              <span className="font-headline-sm text-headline-sm text-on-primary-container w-10 text-center">
+                {localQuantity}
+              </span>
               <button
                 type="button"
                 onClick={() => setValue("localQuantity", localQuantity + 1)}
@@ -234,7 +275,7 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
                 <Plus className="size-5" strokeWidth={2.5} />
               </button>
             </div>
-            
+
             {/* Primary Action */}
             <button
               onClick={handleSaveToCart}

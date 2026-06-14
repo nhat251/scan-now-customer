@@ -1,5 +1,15 @@
 import dayjs from "dayjs";
-import { ArrowDownAZ, ArrowUpAZ, ChevronsUpDown, Eye, MoreHorizontal, Power, PowerOff, Soup, Tags } from "lucide-react";
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  ChevronsUpDown,
+  Eye,
+  MoreHorizontal,
+  Power,
+  PowerOff,
+  Soup,
+  Tags,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +71,7 @@ export const OwnerBranchesTable = ({
         <div>
           <h2 className="text-lg font-semibold">Danh sách chi nhánh</h2>
           <p className="text-muted-foreground text-sm">
-            Đang hiển thị {visibleRangeStart}-{visibleRangeEnd} trong {totalItems} chi nhánh
+            Đang hiển thị {visibleRangeStart}-{visibleRangeEnd} trên tổng số {totalItems} chi nhánh
           </p>
         </div>
 
@@ -97,7 +107,9 @@ export const OwnerBranchesTable = ({
               <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Phí</th>
               <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Trạng thái</th>
               <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Ngày tạo</th>
-              <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">Thao tác</th>
+              <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">
+                Thao tác
+              </th>
             </tr>
           </thead>
           <tbody className="divide-border/40 divide-y">
@@ -132,7 +144,11 @@ export const OwnerBranchesTable = ({
                     <div>
                       <p className="text-foreground font-bold">{branch.name}</p>
                       <p className="text-muted-foreground text-xs font-medium">/{branch.slug}</p>
-                      {branch.managerName ? <p className="text-muted-foreground mt-1 text-xs">Quản lý: {branch.managerName}</p> : null}
+                      {branch.managerName ? (
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          Quản lý: {branch.managerName}
+                        </p>
+                      ) : null}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">
@@ -153,9 +169,14 @@ export const OwnerBranchesTable = ({
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <Tag tagString={getBranchStatusLabel(branch)} variant={branch.isActive ? "success" : "warning"} />
+                    <Tag
+                      tagString={getBranchStatusLabel(branch)}
+                      variant={branch.isActive ? "success" : "warning"}
+                    />
                   </td>
-                  <td className="text-muted-foreground px-6 py-4 text-sm">{dayjs(branch.createdAt).format("DD/MM/YYYY")}</td>
+                  <td className="text-muted-foreground px-6 py-4 text-sm">
+                    {dayjs(branch.createdAt).format("DD/MM/YYYY")}
+                  </td>
                   <td className="px-6 py-4 text-right" onClick={(event) => event.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -164,15 +185,21 @@ export const OwnerBranchesTable = ({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchDetail(branch.branchId))}>
+                        <DropdownMenuItem
+                          onClick={() => onOpenBranch(PATH.owner.branchDetail(branch.branchId))}
+                        >
                           <Eye />
                           Xem chi nhánh
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchCategories(branch.branchId))}>
+                        <DropdownMenuItem
+                          onClick={() => onOpenBranch(PATH.owner.branchCategories(branch.branchId))}
+                        >
                           <Tags />
                           Danh mục
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onOpenBranch(PATH.owner.branchMenuItems(branch.branchId))}>
+                        <DropdownMenuItem
+                          onClick={() => onOpenBranch(PATH.owner.branchMenuItems(branch.branchId))}
+                        >
                           <Soup />
                           Món ăn
                         </DropdownMenuItem>
