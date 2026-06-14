@@ -88,6 +88,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
     cart,
     isUpdating: isCartUpdating,
     updateCart,
+    updateCartQuiet,
     clearCart,
   } = useSharedCart(normalizedSessionCode);
 
@@ -189,7 +190,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
   };
 
   const updateCartNote = async (menuItemId: string, specialRequest: string) => {
-    await updateCart(
+    await updateCartQuiet(
       recalculateCart({
         ...cart,
         items: cart.items.map((item) =>

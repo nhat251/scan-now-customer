@@ -31,7 +31,7 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
     cart,
     status: cartStatus,
     isUpdating,
-    updateCart,
+    updateCartQuiet,
     clearCart,
   } = useSharedCart(normalizedSessionCode);
   const placeOrderMutation = usePlacePublicOrderMutation();
@@ -57,7 +57,7 @@ export const SessionCheckoutPage = ({ sessionCode }: Props) => {
     cartStatus === "reconnecting";
 
   const updateSpecialRequest = async (menuItemId: string, specialRequest: string) => {
-    await updateCart(
+    await updateCartQuiet(
       recalculateCart({
         ...cart,
         items: cart.items.map((item) =>

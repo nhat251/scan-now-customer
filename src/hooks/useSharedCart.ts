@@ -163,6 +163,33 @@ export const useSharedCart = (sessionCode: string) => {
     [normalizedSessionCode]
   );
 
+  // Silent variant: updates cart without setting isUpdating.
+  // Use for per-keystroke note changes so the textarea never becomes disabled mid-type.
+  const updateCartQuiet = useCallback(
+    async (nextCart: CartDto) => {
+      const normalizedCart = recalculateCart(nextCart);
+
+      setCart(normalizedCart);
+
+      const connection = connectionRef.current;
+
+      if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+        showNotify({
+          type: "warning",
+          message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại.",
+        });
+        return;
+      }
+
+      try {
+        await connection.invoke("UpdateCart", normalizedSessionCode, normalizedCart);
+      } catch {
+        showNotify({ type: "error", message: "Không thể cập nhật giỏ dùng chung." });
+      }
+    },
+    [normalizedSessionCode]
+  );
+
   const clearCart = useCallback(async () => {
     setCart(EMPTY_CART);
 
@@ -191,6 +218,7 @@ export const useSharedCart = (sessionCode: string) => {
     status,
     isUpdating,
     updateCart,
+    updateCartQuiet,
     clearCart,
   };
 };
