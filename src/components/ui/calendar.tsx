@@ -1,4 +1,5 @@
 import * as React from "react";
+import { vi } from "date-fns/locale";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { type DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
 
@@ -22,6 +23,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={vi}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -30,7 +32,7 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) => date.toLocaleString("vi-VN", { month: "short" }),
         ...formatters,
       }}
       classNames={{

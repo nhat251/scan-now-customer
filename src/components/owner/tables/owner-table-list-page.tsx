@@ -2,12 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Download, Edit, Eye, Plus, Power, PowerOff, QrCode, RefreshCw, Search } from "lucide-react";
+import {
+  Download,
+  Edit,
+  Eye,
+  Plus,
+  Power,
+  PowerOff,
+  QrCode,
+  RefreshCw,
+  Search,
+} from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FooterPagination } from "@/components/ui/footer-pagination";
 import { Input } from "@/components/ui/input";
 import { Tag } from "@/components/ui/tag";
@@ -51,11 +68,11 @@ type OwnerTableListPageProps = {
 };
 
 const SORT_OPTIONS = [
-  { label: "Table number", value: "tableNumber:asc" },
-  { label: "Capacity low to high", value: "capacity:asc" },
-  { label: "Capacity high to low", value: "capacity:desc" },
-  { label: "Newest first", value: "createdAt:desc" },
-  { label: "Recently updated", value: "updatedAt:desc" },
+  { label: "Số bàn", value: "tableNumber:asc" },
+  { label: "Sức chứa tăng dần", value: "capacity:asc" },
+  { label: "Sức chứa giảm dần", value: "capacity:desc" },
+  { label: "Mới nhất", value: "createdAt:desc" },
+  { label: "Mới cập nhật", value: "updatedAt:desc" },
 ] as const;
 
 export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableListPageProps) => {
@@ -108,11 +125,14 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
   const downloadMutation = useDownloadOwnerTableQrMutation();
 
   const tables = tablesQuery.data?.items ?? [];
-  const branchName = branchDetailQuery.data?.name ?? (tables.length > 0 ? tables[0].branchName : undefined);
+  const branchName =
+    branchDetailQuery.data?.name ?? (tables.length > 0 ? tables[0].branchName : undefined);
   const totalItems = tablesQuery.data?.totalItems ?? 0;
   const totalPages = Math.max(tablesQuery.data?.totalPages ?? 1, 1);
   const activeCount = tables.filter((table) => table.isActive).length;
-  const occupiedCount = tables.filter((table) => normalizeOwnerTableStatus(table.status) === "OCCUPIED").length;
+  const occupiedCount = tables.filter(
+    (table) => normalizeOwnerTableStatus(table.status) === "OCCUPIED"
+  ).length;
 
   const downloadQr = async (tableId: string) => {
     const table = tables.find((item) => item.tableId === tableId);
@@ -129,14 +149,14 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
     const response = await regenerateMutation.mutateAsync(regenerateTableId);
     setRegenerateTableId(null);
     await navigator.clipboard.writeText(response.result.qrCodeUrl).catch(() => undefined);
-    showNotify({ type: "success", message: "New QR URL is ready." });
+    showNotify({ type: "success", message: "URL mã QR mới đã sẵn sàng." });
     await tablesQuery.refetch();
   };
 
   return (
     <PortalShell
-      title="Tables & QR"
-      description="Configure branch tables, activation state, table status, and QR codes."
+      title="Bàn và mã QR"
+      description="Quản lý bàn, trạng thái hoạt động, trạng thái sử dụng và mã QR của chi nhánh."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getTablePortalNavItems(portal, branchId)}
@@ -148,16 +168,32 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
         <Button asChild>
           <Link href={getOwnerTableCreatePath(branchId, portal)}>
             <Plus className="size-4" />
-            Create Table
+            Tạo bàn
           </Link>
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Total" value={String(totalItems)} helper="Tables returned from backend" />
-          <PortalStatCard label="Visible" value={String(tables.length)} helper="Tables on current page" />
-          <PortalStatCard label="Active" value={String(activeCount)} helper="Operational tables on this page" />
-          <PortalStatCard label="Occupied" value={String(occupiedCount)} helper="Session display only" />
+          <PortalStatCard
+            label="Tổng cộng"
+            value={String(totalItems)}
+            helper="Số bàn từ hệ thống"
+          />
+          <PortalStatCard
+            label="Đang hiển thị"
+            value={String(tables.length)}
+            helper="Số bàn trên trang hiện tại"
+          />
+          <PortalStatCard
+            label="Đang hoạt động"
+            value={String(activeCount)}
+            helper="Bàn đang hoạt động trên trang"
+          />
+          <PortalStatCard
+            label="Đang có khách"
+            value={String(occupiedCount)}
+            helper="Phiên chỉ để hiển thị"
+          />
         </>
       }
     >
@@ -165,11 +201,7 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
         <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_180px_160px_160px_220px]">
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input
-              {...register("search")}
-              placeholder="Search table"
-              className="h-11 pl-10"
-            />
+            <Input {...register("search")} placeholder="Tìm bàn" className="h-11 pl-10" />
           </label>
           <select
             {...register("status")}
@@ -185,16 +217,16 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
             type="number"
             min={1}
             {...register("capacity")}
-            placeholder="Capacity"
+            placeholder="Sức chứa"
             className="h-11"
           />
           <select
             {...register("activeFilter")}
             className="border-input bg-card focus:border-ring focus:ring-ring/50 h-11 rounded-md border px-3 text-sm font-semibold outline-none focus:ring-3"
           >
-            <option value="all">All active</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">Tất cả trạng thái hoạt động</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
           </select>
           <select
             {...register("sortValue")}
@@ -212,11 +244,15 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
       {tablesQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(tablesQuery.error)
-            ? "You do not have permission to access this branch/table"
-            : getOwnerTableErrorMessage(tablesQuery.error, "Unable to load tables.")}
-          <Button className="mt-4" onClick={() => tablesQuery.refetch()} disabled={tablesQuery.isRefetching}>
+            ? "Bạn không có quyền truy cập chi nhánh hoặc bàn này"
+            : getOwnerTableErrorMessage(tablesQuery.error, "Không thể tải danh sách bàn.")}
+          <Button
+            className="mt-4"
+            onClick={() => tablesQuery.refetch()}
+            disabled={tablesQuery.isRefetching}
+          >
             <RefreshCw className="size-4" />
-            Retry
+            Thử lại
           </Button>
         </div>
       ) : null}
@@ -226,44 +262,62 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
           <table className="divide-border/60 min-w-[1180px] divide-y text-left">
             <thead className="bg-muted/60">
               <tr>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Table Number</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Capacity</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Status</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Active</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Current Session</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Created At</th>
-                <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">Actions</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Số bàn</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Sức chứa</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Trạng thái</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">
+                  Đang hoạt động
+                </th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">
+                  Phiên hiện tại
+                </th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Ngày tạo</th>
+                <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody className="divide-border/40 divide-y">
               {tablesQuery.isLoading ? (
                 <tr>
                   <td colSpan={7} className="text-muted-foreground px-6 py-10 text-center text-sm">
-                    Loading tables...
+                    Đang tải bàn...
                   </td>
                 </tr>
               ) : tables.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-muted-foreground px-6 py-10 text-center text-sm">
-                    No tables found.
+                    Không tìm thấy bàn.
                   </td>
                 </tr>
               ) : (
                 tables.map((table) => (
                   <tr key={table.tableId} className="hover:bg-muted/30">
                     <td className="px-6 py-4">
-                      <p className="font-bold">Table {table.tableNumber}</p>
-                      <p className="text-muted-foreground max-w-48 truncate text-xs">{table.branchName}</p>
+                      <p className="font-bold">Bàn {table.tableNumber}</p>
+                      <p className="text-muted-foreground max-w-48 truncate text-xs">
+                        {table.branchName}
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-sm">{table.capacity}</td>
                     <td className="px-6 py-4">
-                      <Tag tagString={getOwnerTableStatusLabel(table.status)} variant={getOwnerTableStatusTone(table.status)} />
+                      <Tag
+                        tagString={getOwnerTableStatusLabel(table.status)}
+                        variant={getOwnerTableStatusTone(table.status)}
+                      />
                     </td>
                     <td className="px-6 py-4">
-                      <Tag tagString={getActiveLabel(table.isActive)} variant={table.isActive ? "success" : "warning"} />
+                      <Tag
+                        tagString={getActiveLabel(table.isActive)}
+                        variant={table.isActive ? "success" : "warning"}
+                      />
                     </td>
-                    <td className="px-6 py-4 text-sm">{table.currentSession?.sessionCode ?? "-"}</td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">{formatDateTime(table.createdAt)}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {table.currentSession?.sessionCode ?? "-"}
+                    </td>
+                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                      {formatDateTime(table.createdAt)}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
                         <Button asChild size="icon-sm" variant="outline">
@@ -276,18 +330,35 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
                             <Edit className="size-4" />
                           </Link>
                         </Button>
-                        <Button size="icon-sm" variant="outline" onClick={() => downloadQr(table.tableId)}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          onClick={() => downloadQr(table.tableId)}
+                        >
                           <Download className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant="outline" onClick={() => setRegenerateTableId(table.tableId)}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          onClick={() => setRegenerateTableId(table.tableId)}
+                        >
                           <QrCode className="size-4" />
                         </Button>
                         <Button
                           size="icon-sm"
                           variant={table.isActive ? "destructive" : "success"}
-                          onClick={() => activeMutation.mutateAsync({ tableId: table.tableId, isActive: !table.isActive })}
+                          onClick={() =>
+                            activeMutation.mutateAsync({
+                              tableId: table.tableId,
+                              isActive: !table.isActive,
+                            })
+                          }
                         >
-                          {table.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+                          {table.isActive ? (
+                            <PowerOff className="size-4" />
+                          ) : (
+                            <Power className="size-4" />
+                          )}
                         </Button>
                       </div>
                     </td>
@@ -303,7 +374,7 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
           pageSize={pageSize}
           pageSizeOptions={OWNER_TABLE_PAGE_SIZE_OPTIONS}
           totalItems={totalItems}
-          itemLabel="tables"
+          itemLabel="bàn"
           disabled={tablesQuery.isFetching}
           onPageChange={setPageNumber}
           onPageSizeChange={(nextPageSize) => {
@@ -313,21 +384,28 @@ export const OwnerTableListPage = ({ branchId, portal = "owner" }: OwnerTableLis
         />
       </section>
 
-      <Dialog open={Boolean(regenerateTableId)} onOpenChange={(open) => !open && setRegenerateTableId(null)}>
+      <Dialog
+        open={Boolean(regenerateTableId)}
+        onOpenChange={(open) => !open && setRegenerateTableId(null)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Regenerate QR?</DialogTitle>
+            <DialogTitle>Tạo lại mã QR?</DialogTitle>
             <DialogDescription>
-              Regenerating QR will make the old QR invalid. Download and share the new QR afterward.
+              Mã QR cũ sẽ mất hiệu lực. Hãy tải và chia sẻ mã QR mới.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRegenerateTableId(null)}>
-              Cancel
+              Hủy
             </Button>
-            <Button variant="warning" onClick={regenerateQr} disabled={regenerateMutation.isPending}>
+            <Button
+              variant="warning"
+              onClick={regenerateQr}
+              disabled={regenerateMutation.isPending}
+            >
               <QrCode className="size-4" />
-              {regenerateMutation.isPending ? "Regenerating..." : "Regenerate QR"}
+              {regenerateMutation.isPending ? "Đang tạo lại..." : "Tạo lại mã QR"}
             </Button>
           </DialogFooter>
         </DialogContent>

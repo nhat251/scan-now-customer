@@ -3,10 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { showNotify } from "@/stores/global";
-import { type CartDto,EMPTY_CART } from "@/types/cart";
+import { type CartDto, EMPTY_CART } from "@/types/cart";
 import * as signalR from "@microsoft/signalr";
 
-type CartConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "disconnected" | "error";
+type CartConnectionStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "disconnected"
+  | "error";
 
 const getCartHubUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
@@ -16,7 +22,8 @@ const getCartHubUrl = () => {
 
 const normalizeCart = (cart?: Partial<CartDto> | null): CartDto => {
   const items = cart?.items ?? [];
-  const totalAmount = cart?.totalAmount ?? items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const totalAmount =
+    cart?.totalAmount ?? items.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return { items, totalAmount };
 };
@@ -115,7 +122,10 @@ export const useSharedCart = (sessionCode: string) => {
       const activeConnection = connectionRef.current;
       connectionRef.current = null;
 
-      if (activeConnection?.state === signalR.HubConnectionState.Connected && joinedSessionRef.current) {
+      if (
+        activeConnection?.state === signalR.HubConnectionState.Connected &&
+        joinedSessionRef.current
+      ) {
         void activeConnection
           .invoke("LeaveSession", joinedSessionRef.current)
           .finally(() => activeConnection.stop());
@@ -134,7 +144,10 @@ export const useSharedCart = (sessionCode: string) => {
       const connection = connectionRef.current;
 
       if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-        showNotify({ type: "warning", message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại." });
+        showNotify({
+          type: "warning",
+          message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại.",
+        });
         return;
       }
 
@@ -156,7 +169,10 @@ export const useSharedCart = (sessionCode: string) => {
     const connection = connectionRef.current;
 
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-      showNotify({ type: "warning", message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại." });
+      showNotify({
+        type: "warning",
+        message: "Giỏ dùng chung đang kết nối lại. Vui lòng thử lại.",
+      });
       return;
     }
 

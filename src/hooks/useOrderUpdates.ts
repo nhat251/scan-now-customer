@@ -9,7 +9,13 @@ import type { CustomerOrderResponse } from "@/types/order";
 import * as signalR from "@microsoft/signalr";
 import { useQueryClient } from "@tanstack/react-query";
 
-type OrderConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "disconnected" | "error";
+type OrderConnectionStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "disconnected"
+  | "error";
 
 const getOrderHubUrl = () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
@@ -108,7 +114,11 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
     const start = async () => {
       try {
         await connection.start();
-        const order = await connection.invoke<CustomerOrderResponse>("JoinOrder", normalizedSessionCode, orderId);
+        const order = await connection.invoke<CustomerOrderResponse>(
+          "JoinOrder",
+          normalizedSessionCode,
+          orderId
+        );
 
         if (!mounted) {
           return;
@@ -120,7 +130,10 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
       } catch {
         if (mounted) {
           setStatus("error");
-          showNotify({ type: "warning", message: "Không thể kết nối cập nhật trực tiếp của đơn hàng." });
+          showNotify({
+            type: "warning",
+            message: "Không thể kết nối cập nhật trực tiếp của đơn hàng.",
+          });
         }
       }
     };
@@ -132,8 +145,13 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
       const activeConnection = connectionRef.current;
       connectionRef.current = null;
 
-      if (activeConnection?.state === signalR.HubConnectionState.Connected && joinedOrderRef.current) {
-        void activeConnection.invoke("LeaveOrder", joinedOrderRef.current).finally(() => activeConnection.stop());
+      if (
+        activeConnection?.state === signalR.HubConnectionState.Connected &&
+        joinedOrderRef.current
+      ) {
+        void activeConnection
+          .invoke("LeaveOrder", joinedOrderRef.current)
+          .finally(() => activeConnection.stop());
       } else {
         void activeConnection?.stop();
       }

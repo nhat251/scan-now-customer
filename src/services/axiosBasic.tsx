@@ -25,18 +25,14 @@ const clearAuthState = () => {
 const refreshAccessToken = () => {
   if (!refreshPromise) {
     refreshPromise = defaultAxios
-      .post<ApiResponse<AuthPayload>>(
-        "/api/auth/refresh-token",
-        undefined,
-        {
-          baseURL: process.env.NEXT_PUBLIC_API_URL,
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "*/*",
-          },
-        }
-      )
+      .post<ApiResponse<AuthPayload>>("/api/auth/refresh-token", undefined, {
+        baseURL: process.env.NEXT_PUBLIC_API_URL,
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+      })
       .then((response) => {
         const payload = response.data.result;
 
@@ -136,12 +132,16 @@ axiosBasic.interceptors.response.use(
   }
 );
 
-export const withAuthRequestConfig = (config: ExtendedAxiosRequestConfig = {}): ExtendedAxiosRequestConfig => ({
+export const withAuthRequestConfig = (
+  config: ExtendedAxiosRequestConfig = {}
+): ExtendedAxiosRequestConfig => ({
   withCredentials: true,
   ...config,
 });
 
-export const withAuthRefreshSkipped = (config: ExtendedAxiosRequestConfig = {}): ExtendedAxiosRequestConfig => ({
+export const withAuthRefreshSkipped = (
+  config: ExtendedAxiosRequestConfig = {}
+): ExtendedAxiosRequestConfig => ({
   ...withAuthRequestConfig(config),
   skipAuthRefresh: true,
 });

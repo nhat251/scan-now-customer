@@ -1,5 +1,6 @@
 import { AxiosError } from "axios";
 
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import type { BranchResponse, OwnerBranchFormValues } from "@/types/user-management";
 
 export type BranchStatusFilter = "all" | "active" | "inactive";
@@ -20,13 +21,17 @@ export const BRANCH_SORT_OPTIONS = [
 ];
 
 export const getBranchStatusFilterLabel = (status: BranchStatusFilter) => {
-  return BRANCH_STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "Tất cả trạng thái";
+  return (
+    BRANCH_STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ??
+    "Tất cả trạng thái"
+  );
 };
 
 export const getBranchSortOptionLabel = (sortBy: string, sortDirection: "asc" | "desc") => {
   return (
-    BRANCH_SORT_OPTIONS.find((option) => option.sortBy === sortBy && option.sortDirection === sortDirection)?.label ??
-    "Sắp xếp"
+    BRANCH_SORT_OPTIONS.find(
+      (option) => option.sortBy === sortBy && option.sortDirection === sortDirection
+    )?.label ?? "Sắp xếp"
   );
 };
 
@@ -47,7 +52,8 @@ export const branchStatusFilterToQuery = (status: BranchStatusFilter) => {
 };
 
 export const getOwnerBranchErrorState = (error: unknown) => {
-  const hasAccessFailure = error instanceof AxiosError && [401, 403].includes(error.response?.status ?? 0);
+  const hasAccessFailure =
+    error instanceof AxiosError && [401, 403].includes(error.response?.status ?? 0);
 
   if (hasAccessFailure) {
     return {
@@ -60,7 +66,7 @@ export const getOwnerBranchErrorState = (error: unknown) => {
 
   return {
     heading: "Không tải được dữ liệu chi nhánh",
-    description: error instanceof AxiosError ? error.response?.data?.message ?? error.message : "Vui lòng thử lại.",
+    description: getVietnameseApiErrorMessage(error, "Vui lòng thử lại."),
     shouldRouteToLogin: false,
     retryLabel: "Thử lại",
   };
@@ -88,6 +94,8 @@ export const toOwnerBranchFormValues = (branch?: BranchResponse | null): OwnerBr
   openTime: branch?.openTime ?? "",
   closeTime: branch?.closeTime ?? "",
   vatPercent: branch?.vatPercent === undefined ? "" : String(branch.vatPercent),
-  serviceChargePercent: branch?.serviceChargePercent === undefined ? "" : String(branch.serviceChargePercent),
-  serviceChargeFixed: branch?.serviceChargeFixed === undefined ? "" : String(branch.serviceChargeFixed),
+  serviceChargePercent:
+    branch?.serviceChargePercent === undefined ? "" : String(branch.serviceChargePercent),
+  serviceChargeFixed:
+    branch?.serviceChargeFixed === undefined ? "" : String(branch.serviceChargeFixed),
 });

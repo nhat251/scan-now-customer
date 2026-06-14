@@ -21,7 +21,9 @@ import type {
 } from "@/types/me";
 import type { UseQueryResult } from "@tanstack/react-query";
 
-export const useMyBranchesListQuery = (enabled = true): UseQueryResult<MyBranchResponse[], Error> => {
+export const useMyBranchesListQuery = (
+  enabled = true
+): UseQueryResult<MyBranchResponse[], Error> => {
   return useQuery<ApiResponse<MyBranchResponse[]>, MyBranchResponse[]>({
     queryKey: [QUERY_KEY.MY_BRANCHES],
     queryFn: getMyBranches,
@@ -47,7 +49,10 @@ export const useMyBranchMenuQuery = (
   query: MyMenuQuery,
   enabled = true
 ): UseQueryResult<PagedResult<MyMenuCategoryResponse>, Error> => {
-  return useQuery<ApiResponse<PagedResult<MyMenuCategoryResponse>>, PagedResult<MyMenuCategoryResponse>>({
+  return useQuery<
+    ApiResponse<PagedResult<MyMenuCategoryResponse>>,
+    PagedResult<MyMenuCategoryResponse>
+  >({
     queryKey: [
       QUERY_KEY.MY_BRANCH_MENU,
       branchId ?? "",

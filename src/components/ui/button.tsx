@@ -22,8 +22,10 @@ const buttonVariants = cva(
         ghost: "bg-transparent text-on-surface shadow-none hover:bg-surface-container-low",
         soft: "bg-surface-container-low text-on-surface shadow-none hover:bg-surface-container",
         link: "text-primary underline-offset-4 shadow-none hover:underline",
-        success: "border border-success/60 bg-success text-success-foreground shadow-sm hover:bg-success/85",
-        warning: "border border-warning/70 bg-warning text-warning-foreground shadow-sm hover:bg-warning/80",
+        success:
+          "border border-success/60 bg-success text-success-foreground shadow-sm hover:bg-success/85",
+        warning:
+          "border border-warning/70 bg-warning text-warning-foreground shadow-sm hover:bg-warning/80",
         destructive:
           "bg-destructive text-destructive-foreground shadow-md hover:bg-destructive/90 hover:shadow-lg",
       },
@@ -48,7 +50,13 @@ type Props = React.ComponentProps<"button"> &
     asChild?: boolean;
   };
 
-function Button({ className, variant = "default", size = "default", asChild = false, ...props }: Props) {
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: Props) {
   const Comp = asChild ? Slot : "button";
 
   return (

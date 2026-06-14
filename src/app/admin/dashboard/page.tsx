@@ -4,10 +4,12 @@ const AdminDashboardPage = () => {
   return (
     <DashboardShell
       allowedRole="ADMIN"
-      description="This placeholder confirms that admin-only protected routing and logout are wired end-to-end."
-      title="Admin dashboard"
+      description="Trang này xác nhận luồng bảo vệ dành riêng cho quản trị viên và chức năng đăng xuất đã hoạt động."
+      title="Bảng điều khiển quản trị"
     >
-      <p className="text-muted-foreground text-sm">Admin users are redirected here after login and kept here after session bootstrap.</p>
+      <p className="text-muted-foreground text-sm">
+        Quản trị viên được chuyển đến đây sau khi đăng nhập và khôi phục phiên.
+      </p>
     </DashboardShell>
   );
 };

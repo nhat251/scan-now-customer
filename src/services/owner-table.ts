@@ -58,7 +58,10 @@ export const updateOwnerTable = async ({
   tableId: string;
   data: UpdateOwnerTableRequest;
 }) => {
-  return await axiosBasic.put<ApiResponse<OwnerTableResponse>>(`/api/owner/tables/${tableId}`, data);
+  return await axiosBasic.put<ApiResponse<OwnerTableResponse>>(
+    `/api/owner/tables/${tableId}`,
+    data
+  );
 };
 
 export const updateOwnerTableStatus = async ({
@@ -74,7 +77,13 @@ export const updateOwnerTableStatus = async ({
   );
 };
 
-export const setOwnerTableActive = async ({ tableId, isActive }: { tableId: string; isActive: boolean }) => {
+export const setOwnerTableActive = async ({
+  tableId,
+  isActive,
+}: {
+  tableId: string;
+  isActive: boolean;
+}) => {
   return await axiosBasic.patch<ApiResponse<OwnerTableResponse>>(
     `/api/owner/tables/${tableId}/${isActive ? "activate" : "deactivate"}`
   );

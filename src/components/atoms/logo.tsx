@@ -30,7 +30,7 @@ export const Logo = ({ size = 40, textSize = "text-xl", fill = false }: Props) =
         />
       </div>
       <span className={`text-primary-container font-black tracking-tighter uppercase ${textSize}`}>
-        Scan Now
+        ScanNow
       </span>
     </Link>
   );

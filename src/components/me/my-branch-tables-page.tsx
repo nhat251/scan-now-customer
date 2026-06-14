@@ -21,13 +21,21 @@ import { FooterPagination } from "@/components/ui/footer-pagination";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
-import { useCloseMyTableSessionMutation, useOpenMyTableSessionMutation } from "@/hooks/mutations/useMyTableMutations";
+import {
+  useCloseMyTableSessionMutation,
+  useOpenMyTableSessionMutation,
+} from "@/hooks/mutations/useMyTableMutations";
 import { useMyBranchDetailQuery, useMyBranchTablesQuery } from "@/hooks/queries/useMeQueries";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
-import type { MyTableResponse, MyTablesQuery, MyTableStatus, OpenTableSessionResponse } from "@/types/me";
+import type {
+  MyTableResponse,
+  MyTablesQuery,
+  MyTableStatus,
+  OpenTableSessionResponse,
+} from "@/types/me";
 
 import {
   canHandleKitchenOrders,
@@ -130,10 +138,15 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
 
   const tables = useMemo(() => tablesQuery.data?.items ?? [], [tablesQuery.data?.items]);
   const totalPages = Math.max(tablesQuery.data?.totalPages ?? 1, 1);
-  const availableCount = tables.filter((table) => normalizeTableStatus(table.status) === "AVAILABLE").length;
-  const occupiedCount = tables.filter((table) => normalizeTableStatus(table.status) === "OCCUPIED").length;
+  const availableCount = tables.filter(
+    (table) => normalizeTableStatus(table.status) === "AVAILABLE"
+  ).length;
+  const occupiedCount = tables.filter(
+    (table) => normalizeTableStatus(table.status) === "OCCUPIED"
+  ).length;
   const activeCount = tables.filter((table) => table.isActive).length;
-  const hasForbiddenError = isForbiddenError(tablesQuery.error) || isForbiddenError(branchQuery.error);
+  const hasForbiddenError =
+    isForbiddenError(tablesQuery.error) || isForbiddenError(branchQuery.error);
 
   useEffect(() => {
     setPageNumber(1);
@@ -196,9 +209,21 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
       }
       stats={
         <>
-          <PortalStatCard label="Đang hiển thị" value={String(tables.length)} helper="Bàn trong kết quả hiện tại" />
-          <PortalStatCard label="Bàn trống" value={String(availableCount)} helper="Sẵn sàng mở bàn" />
-          <PortalStatCard label="Có khách" value={String(occupiedCount)} helper="Đang có phiên phục vụ" />
+          <PortalStatCard
+            label="Đang hiển thị"
+            value={String(tables.length)}
+            helper="Bàn trong kết quả hiện tại"
+          />
+          <PortalStatCard
+            label="Bàn trống"
+            value={String(availableCount)}
+            helper="Sẵn sàng mở bàn"
+          />
+          <PortalStatCard
+            label="Có khách"
+            value={String(occupiedCount)}
+            helper="Đang có phiên phục vụ"
+          />
           <PortalStatCard label="Hoạt động" value={String(activeCount)} helper="Bàn đang dùng" />
         </>
       }
@@ -209,7 +234,8 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
             <div>
               <h2 className="text-lg font-bold">Mở bàn thành công</h2>
               <p className="mt-1 text-sm">
-                Mã phiên: <span className="font-black tracking-[0.2em]">{openedSession.sessionCode}</span>
+                Mã phiên:{" "}
+                <span className="font-black tracking-[0.2em]">{openedSession.sessionCode}</span>
               </p>
               <p className="mt-1 text-sm">Đưa mã này cho khách để gọi món.</p>
             </div>
@@ -227,7 +253,9 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
 
       {hasForbiddenError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6">
-          <h2 className="text-lg font-semibold">Bạn không có quyền truy cập chi nhánh hoặc bàn này</h2>
+          <h2 className="text-lg font-semibold">
+            Bạn không có quyền truy cập chi nhánh hoặc bàn này
+          </h2>
           <p className="mt-2 text-sm">Vui lòng chọn chi nhánh được gán cho tài khoản nhân viên.</p>
         </div>
       ) : null}
@@ -236,11 +264,7 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
         <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_220px_180px_220px]">
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input
-              {...register("search")}
-              placeholder="Tìm số bàn"
-              className="h-11 pl-10"
-            />
+            <Input {...register("search")} placeholder="Tìm số bàn" className="h-11 pl-10" />
           </label>
 
           <label className="relative">
@@ -293,7 +317,11 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
           <p className="mt-2 text-sm">
             {getApiErrorMessage(tablesQuery.error, "Vui lòng thử tải lại danh sách bàn.")}
           </p>
-          <Button className="mt-5" onClick={() => tablesQuery.refetch()} disabled={tablesQuery.isRefetching}>
+          <Button
+            className="mt-5"
+            onClick={() => tablesQuery.refetch()}
+            disabled={tablesQuery.isRefetching}
+          >
             Thử lại
           </Button>
         </div>
@@ -303,18 +331,28 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
         <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
           <Table2 className="text-muted-foreground mx-auto size-10" />
           <h2 className="mt-3 text-xl font-bold">Không tìm thấy bàn</h2>
-          <p className="text-muted-foreground mt-2 text-sm">Thử đổi từ khóa, trạng thái hoặc bộ lọc hoạt động.</p>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Thử đổi từ khóa, trạng thái hoặc bộ lọc hoạt động.
+          </p>
         </div>
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {tables.map((table) => (
-          <article key={table.tableId} className="bg-card border-border/60 rounded-xl border p-5 shadow-sm">
+          <article
+            key={table.tableId}
+            className="bg-card border-border/60 rounded-xl border p-5 shadow-sm"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
                 <Table2 className="size-5" />
               </div>
-              <span className={cn("rounded-full px-3 py-1 text-xs font-semibold", getTableStatusTone(table.status))}>
+              <span
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold",
+                  getTableStatusTone(table.status)
+                )}
+              >
                 {getTableStatusLabel(table.status)}
               </span>
             </div>
@@ -338,7 +376,9 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
                 <dd className="mt-1 font-medium">
                   {table.currentSession ? (
                     <div className="space-y-1">
-                      <p className="text-primary font-black tracking-[0.18em]">{table.currentSession.sessionCode}</p>
+                      <p className="text-primary font-black tracking-[0.18em]">
+                        {table.currentSession.sessionCode}
+                      </p>
                       <p className="text-muted-foreground flex gap-2 text-xs">
                         <Clock className="size-3.5" />
                         Hết hạn {formatDateTime(table.currentSession.expiresAt)}
@@ -365,7 +405,11 @@ export const MyBranchTablesPage = ({ branchId }: MyBranchTablesPageProps) => {
                 </Button>
               ) : null}
               {canCloseTableSession(table) ? (
-                <Button variant="destructive" disabled={isMutating} onClick={() => handleCloseSession(table)}>
+                <Button
+                  variant="destructive"
+                  disabled={isMutating}
+                  onClick={() => handleCloseSession(table)}
+                >
                   <XCircle className="size-4" />
                   {closeMutation.isPending ? "Đang đóng..." : "Đóng phiên"}
                 </Button>

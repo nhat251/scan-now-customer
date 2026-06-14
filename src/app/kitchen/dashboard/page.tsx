@@ -4,10 +4,12 @@ const KitchenDashboardPage = () => {
   return (
     <DashboardShell
       allowedRole="KITCHEN"
-      description="This placeholder confirms that kitchen-only protected routing and logout are wired end-to-end."
-      title="Kitchen dashboard"
+      description="Trang này xác nhận luồng bảo vệ dành riêng cho nhân viên bếp và chức năng đăng xuất đã hoạt động."
+      title="Bảng điều khiển bếp"
     >
-      <p className="text-muted-foreground text-sm">Kitchen users are redirected here after login and kept here after session bootstrap.</p>
+      <p className="text-muted-foreground text-sm">
+        Nhân viên bếp được chuyển đến đây sau khi đăng nhập và khôi phục phiên.
+      </p>
     </DashboardShell>
   );
 };

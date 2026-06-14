@@ -101,7 +101,13 @@ export const clearStoredAuthSession = () => {
   clearStoredAuthUser();
 };
 
-export const setStoredAuthSession = ({ accessToken, user }: { accessToken: string; user: AuthUser | null }) => {
+export const setStoredAuthSession = ({
+  accessToken,
+  user,
+}: {
+  accessToken: string;
+  user: AuthUser | null;
+}) => {
   setStoredAccessToken(accessToken);
   setStoredAuthUser(user);
 };

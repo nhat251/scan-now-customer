@@ -66,10 +66,18 @@ export const getMyTable = async (tableId: string) => {
 };
 
 export const getMyTableActiveOrders = async (tableId: string) => {
-  return await axiosBasic.get<ApiResponse<MyActiveTableOrderResponse[]>>(`/api/me/tables/${tableId}/orders`);
+  return await axiosBasic.get<ApiResponse<MyActiveTableOrderResponse[]>>(
+    `/api/me/tables/${tableId}/orders`
+  );
 };
 
-export const openMyTableSession = async ({ branchId, tableId }: { branchId: string; tableId: string }) => {
+export const openMyTableSession = async ({
+  branchId,
+  tableId,
+}: {
+  branchId: string;
+  tableId: string;
+}) => {
   return await axiosBasic.post<ApiResponse<OpenTableSessionResponse>>(
     `/api/me/branches/${branchId}/tables/${tableId}/open`
   );

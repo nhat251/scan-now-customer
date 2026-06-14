@@ -6,7 +6,13 @@ import { showNotify } from "@/stores/global";
 import type { CustomerOrderResponse } from "@/types/order";
 import * as signalR from "@microsoft/signalr";
 
-type BranchOrderConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "disconnected" | "error";
+type BranchOrderConnectionStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "disconnected"
+  | "error";
 
 type UseBranchOrderUpdatesOptions = {
   enabled?: boolean;
@@ -93,7 +99,11 @@ export const useBranchOrderUpdates = (
       } catch {
         if (mounted) {
           setStatus("error");
-          showNotify({ type: "warning", message: "Unable to connect real-time branch order updates. Using refresh fallback." });
+          showNotify({
+            type: "warning",
+            message:
+              "Không thể kết nối cập nhật đơn hàng theo thời gian thực. Hệ thống sẽ dùng chế độ tải lại.",
+          });
         }
       }
     };
@@ -105,7 +115,10 @@ export const useBranchOrderUpdates = (
       const activeConnection = connectionRef.current;
       connectionRef.current = null;
 
-      if (activeConnection?.state === signalR.HubConnectionState.Connected && joinedBranchRef.current) {
+      if (
+        activeConnection?.state === signalR.HubConnectionState.Connected &&
+        joinedBranchRef.current
+      ) {
         void activeConnection
           .invoke("LeaveBranch", joinedBranchRef.current)
           .finally(() => activeConnection.stop());

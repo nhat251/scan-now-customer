@@ -20,7 +20,10 @@ const TAG_VARIANT_CLASSNAME: Record<NonNullable<TagProps["variant"]>, string> = 
 export function Tag({ tagString, variant = "default" }: TagProps) {
   return (
     <span
-      className={cn("inline-flex rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap", TAG_VARIANT_CLASSNAME[variant])}
+      className={cn(
+        "inline-flex rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap",
+        TAG_VARIANT_CLASSNAME[variant]
+      )}
     >
       {tagString}
     </span>

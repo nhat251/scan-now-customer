@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -24,7 +23,10 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
-import { useBulkMyMenuAvailabilityMutation, useToggleMyMenuItemAvailabilityMutation } from "@/hooks/mutations/useMeMenuMutations";
+import {
+  useBulkMyMenuAvailabilityMutation,
+  useToggleMyMenuItemAvailabilityMutation,
+} from "@/hooks/mutations/useMeMenuMutations";
 import { useMyBranchDetailQuery, useMyBranchMenuQuery } from "@/hooks/queries/useMeQueries";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
@@ -36,13 +38,13 @@ import {
   canHandleWaiterOrders,
   canManageMenuAvailability,
   canManageTableSessions,
-  FALLBACK_MENU_IMAGE,
   formatCurrency,
   getApiErrorMessage,
   getMyPortalNavItems,
   isForbiddenError,
 } from "./helpers";
 import { MeRoleShell as PortalShell } from "./me-role-shell";
+import { MenuItemImage } from "./menu-item-image";
 
 type MyBranchMenuPageProps = {
   branchId: string;
@@ -73,34 +75,6 @@ const getAvailabilityQueryValue = (filter: AvailabilityFilter) => {
   }
 
   return undefined;
-};
-
-const MenuItemImage = ({
-  src,
-  alt,
-  isAvailable,
-}: {
-  src?: string | null;
-  alt: string;
-  isAvailable: boolean;
-}) => {
-  const [imageSrc, setImageSrc] = useState(src || FALLBACK_MENU_IMAGE);
-
-  useEffect(() => {
-    setImageSrc(src || FALLBACK_MENU_IMAGE);
-  }, [src]);
-
-  return (
-    <Image
-      src={imageSrc}
-      alt={alt}
-      fill
-      unoptimized
-      sizes="96px"
-      className={cn("object-cover", !isAvailable && "opacity-60 grayscale")}
-      onError={() => setImageSrc(FALLBACK_MENU_IMAGE)}
-    />
-  );
 };
 
 export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
@@ -225,7 +199,8 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
   };
 
   const isMutating = toggleMutation.isPending || bulkMutation.isPending;
-  const hasForbiddenError = isForbiddenError(menuQuery.error) || isForbiddenError(branchQuery.error);
+  const hasForbiddenError =
+    isForbiddenError(menuQuery.error) || isForbiddenError(branchQuery.error);
 
   return (
     <PortalShell
@@ -254,10 +229,22 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
       }
       stats={
         <>
-          <PortalStatCard label="Đang hiển thị" value={String(allVisibleItems.length)} helper="Món trong kết quả hiện tại" />
+          <PortalStatCard
+            label="Đang hiển thị"
+            value={String(allVisibleItems.length)}
+            helper="Món trong kết quả hiện tại"
+          />
           <PortalStatCard label="Còn hàng" value={String(availableCount)} helper="Sẵn sàng bán" />
-          <PortalStatCard label="Hết hàng" value={String(outOfStockCount)} helper="Tạm thời ngưng bán" />
-          <PortalStatCard label="Đã chọn" value={String(selectedCount)} helper="Món chọn để cập nhật" />
+          <PortalStatCard
+            label="Hết hàng"
+            value={String(outOfStockCount)}
+            helper="Tạm thời ngưng bán"
+          />
+          <PortalStatCard
+            label="Đã chọn"
+            value={String(selectedCount)}
+            helper="Món chọn để cập nhật"
+          />
         </>
       }
     >
@@ -271,7 +258,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
       <section className="rounded-[24px] border border-[#e8e4dc] bg-white p-3 shadow-sm lg:p-4">
         <div className="flex items-center justify-between gap-3 lg:hidden">
           <div>
-            <p className="text-[12px] font-black tracking-[0.16em] text-stone-400 uppercase">Menu</p>
+            <p className="text-[12px] font-black tracking-[0.16em] text-stone-400 uppercase">
+              Thực đơn
+            </p>
             <h2 className="text-lg font-black tracking-tight text-stone-950">Tình trạng món</h2>
           </div>
           <span className="rounded-full bg-[#f1efe9] px-3 py-1.5 text-xs font-bold text-stone-600">
@@ -312,7 +301,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               >
                 <Store className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <span className="flex-1 truncate text-left">
-                  {categoryIdVal === "all" ? "Tất cả danh mục" : (categories.find((c) => c.id === categoryIdVal)?.name ?? "Danh mục")}
+                  {categoryIdVal === "all"
+                    ? "Tất cả danh mục"
+                    : (categories.find((c) => c.id === categoryIdVal)?.name ?? "Danh mục")}
                 </span>
                 <ChevronDown className="text-muted-foreground size-4 shrink-0" />
               </button>
@@ -326,7 +317,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                 onClick={() => setValue("categoryId", "all")}
                 className={cn(
                   "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
-                  categoryIdVal === "all" ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
+                  categoryIdVal === "all"
+                    ? "bg-primary-container/10 text-primary-container"
+                    : "text-muted-foreground hover:bg-muted"
                 )}
               >
                 Tất cả danh mục
@@ -338,7 +331,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                   onClick={() => setValue("categoryId", category.id)}
                   className={cn(
                     "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
-                    categoryIdVal === category.id ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
+                    categoryIdVal === category.id
+                      ? "bg-primary-container/10 text-primary-container"
+                      : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {category.name}
@@ -372,7 +367,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                   onClick={() => setValue("sortValue", option.value)}
                   className={cn(
                     "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-semibold transition",
-                    sortValueVal === option.value ? "bg-primary-container/10 text-primary-container" : "text-muted-foreground hover:bg-muted"
+                    sortValueVal === option.value
+                      ? "bg-primary-container/10 text-primary-container"
+                      : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {option.label}
@@ -411,7 +408,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               onChange={toggleAllVisible}
               className="border-border text-primary focus:ring-primary size-4 rounded"
             />
-            <span className="truncate">{selectedCount > 0 ? `${selectedCount} đã chọn` : "Chọn trang này"}</span>
+            <span className="truncate">
+              {selectedCount > 0 ? `${selectedCount} đã chọn` : "Chọn trang này"}
+            </span>
           </label>
 
           <div className="flex gap-2">
@@ -485,7 +484,11 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
           <p className="mt-2 text-sm">
             {getApiErrorMessage(menuQuery.error, "Vui lòng thử tải lại menu.")}
           </p>
-          <Button className="mt-5" onClick={() => menuQuery.refetch()} disabled={menuQuery.isRefetching}>
+          <Button
+            className="mt-5"
+            onClick={() => menuQuery.refetch()}
+            disabled={menuQuery.isRefetching}
+          >
             Thử lại
           </Button>
         </div>
@@ -495,7 +498,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
         <div className="bg-card border-border/60 rounded-xl border p-8 text-center shadow-sm">
           <PackageX className="text-muted-foreground mx-auto size-10" />
           <h2 className="mt-3 text-xl font-bold">Không tìm thấy món</h2>
-          <p className="text-muted-foreground mt-2 text-sm">Thử đổi từ khóa, danh mục hoặc trạng thái món.</p>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Thử đổi từ khóa, danh mục hoặc trạng thái món.
+          </p>
         </div>
       ) : null}
 
@@ -506,7 +511,9 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
               <h2 className="text-sm font-black tracking-[0.16em] text-stone-500 uppercase lg:text-2xl lg:tracking-tight lg:text-stone-950 lg:normal-case">
                 {group.categoryName}
               </h2>
-              <span className="text-xs font-bold text-stone-400 lg:text-sm">{group.items.length} món</span>
+              <span className="text-xs font-bold text-stone-400 lg:text-sm">
+                {group.items.length} món
+              </span>
             </div>
 
             <div className="grid gap-3">
@@ -527,12 +534,16 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                         checked={selected}
                         onChange={() => toggleSelected(item.menuItemId)}
                         className="border-border text-primary focus:ring-primary size-4 rounded bg-white/95 shadow-sm lg:shadow-none"
-                        aria-label={`Select ${item.name}`}
+                        aria-label={`Chọn ${item.name}`}
                       />
                     </div>
 
                     <div className="relative size-[82px] overflow-hidden rounded-2xl bg-[#f1efe9] lg:size-24">
-                      <MenuItemImage src={item.imageUrl} alt={item.name} isAvailable={item.isAvailable} />
+                      <MenuItemImage
+                        src={item.imageUrl}
+                        alt={item.name}
+                        isAvailable={item.isAvailable}
+                      />
                     </div>
 
                     <div className="min-w-0 py-0.5 lg:py-0">
@@ -580,7 +591,7 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                               checked={item.isAvailable}
                               disabled={isMutating}
                               onChange={() => handleToggleItem(item)}
-                              aria-label={`Toggle availability for ${item.name}`}
+                              aria-label={`Đổi tình trạng phục vụ của ${item.name}`}
                             />
                             <span
                               className={cn(
@@ -621,7 +632,11 @@ export const MyBranchMenuPage = ({ branchId }: MyBranchMenuPageProps) => {
                         disabled={isMutating}
                         onClick={() => handleToggleItem(item)}
                       >
-                        {item.isAvailable ? <PackageX className="size-4" /> : <Check className="size-4" />}
+                        {item.isAvailable ? (
+                          <PackageX className="size-4" />
+                        ) : (
+                          <Check className="size-4" />
+                        )}
                         {item.isAvailable ? "Hết hàng" : "Còn hàng"}
                       </Button>
                       <Button asChild variant="outline" size="sm" className="min-w-[132px]">

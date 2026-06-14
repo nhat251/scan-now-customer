@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
-import type { FieldErrors} from "react-hook-form";
-import {useForm } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { PortalShell } from "@/components/auth/portal-shell";
@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateManageCategoryMutation, useUpdateManageCategoryMutation } from "@/hooks/mutations/useManageMenuMutations";
+import {
+  useCreateManageCategoryMutation,
+  useUpdateManageCategoryMutation,
+} from "@/hooks/mutations/useManageMenuMutations";
 import { useManageCategoryQuery } from "@/hooks/queries/useManageMenuQueries";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
@@ -46,18 +49,17 @@ const toPayload = (value: ManageCategoryFormValues) => ({
 });
 
 const categorySchema = z.object({
-  name: z.string().trim().min(1, "Category name is required."),
+  name: z.string().trim().min(1, "Tên danh mục là bắt buộc."),
   displayOrder: z.string().refine(
     (val) => {
       const num = Number(val);
       return !isNaN(num) && num >= 0;
     },
-    { message: "Display order must be greater than or equal to 0." }
+    { message: "Thứ tự hiển thị phải lớn hơn hoặc bằng 0." }
   ),
-  imageUrl: z.string().refine(
-    (val) => !val || isValidOptionalUrl(val),
-    { message: "Image URL must be a valid URL." }
-  ),
+  imageUrl: z
+    .string()
+    .refine((val) => !val || isValidOptionalUrl(val), { message: "URL hình ảnh không hợp lệ." }),
   description: z.string(),
 });
 
@@ -100,29 +102,33 @@ export const CategoryFormPage = ({ branchId, categoryId, mode, portal }: Categor
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
-  const title = mode === "create" ? "Create Category" : categoryQuery.data?.name ?? "Category Detail";
+  const title =
+    mode === "create" ? "Tạo danh mục" : (categoryQuery.data?.name ?? "Chi tiết danh mục");
 
   return (
     <PortalShell
       title={title}
-      description="Manage category identity, ordering, and display image."
+      description="Quản lý thông tin, thứ tự và hình ảnh của danh mục."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal, "categories", branchId)}
       topbarTitle={currentUser?.fullName ?? copy.topbar}
       currentUser={currentUser}
       headerAction={
-        <Button variant="outline" onClick={() => router.push(getCategoryListPath(portal, branchId))}>
+        <Button
+          variant="outline"
+          onClick={() => router.push(getCategoryListPath(portal, branchId))}
+        >
           <ArrowLeft className="size-4" />
-          Categories
+          Danh mục
         </Button>
       }
     >
       {categoryQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(categoryQuery.error)
-            ? "You do not have permission to access this branch"
-            : getManageApiErrorMessage(categoryQuery.error, "Unable to load category.")}
+            ? "Bạn không có quyền truy cập chi nhánh này"
+            : getManageApiErrorMessage(categoryQuery.error, "Không thể tải danh mục.")}
         </div>
       ) : null}
 
@@ -130,24 +136,20 @@ export const CategoryFormPage = ({ branchId, categoryId, mode, portal }: Categor
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="category-name" required>
-              Category name
+              Tên danh mục
             </Label>
             <Input id="category-name" {...register("name")} />
           </div>
           <label className="space-y-2">
-            <span className="text-sm font-semibold">Display order</span>
-            <Input
-              type="number"
-              min={0}
-              {...register("displayOrder")}
-            />
+            <span className="text-sm font-semibold">Thứ tự hiển thị</span>
+            <Input type="number" min={0} {...register("displayOrder")} />
           </label>
           <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold">Image URL</span>
+            <span className="text-sm font-semibold">URL hình ảnh</span>
             <Input {...register("imageUrl")} />
           </label>
           <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold">Description</span>
+            <span className="text-sm font-semibold">Mô tả</span>
             <Textarea {...register("description")} />
           </label>
         </div>
@@ -155,7 +157,7 @@ export const CategoryFormPage = ({ branchId, categoryId, mode, portal }: Categor
         <div className="mt-6 flex justify-end">
           <Button onClick={handleSubmit(submit, onValidationError)} disabled={isSubmitting}>
             <Save className="size-4" />
-            {isSubmitting ? "Saving..." : "Save Category"}
+            {isSubmitting ? "Đang lưu..." : "Lưu danh mục"}
           </Button>
         </div>
       </section>

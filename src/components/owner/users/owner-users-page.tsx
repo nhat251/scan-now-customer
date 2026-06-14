@@ -25,7 +25,12 @@ import { useOwnerUsersQuery } from "@/hooks/queries/useOwnerUsersQuery";
 import { useDebounce } from "@/hooks/useDebounce";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
-import type { OwnerScopedUserResponse, UserFormValues, UserListQuery, UserStatusFilter } from "@/types/user-management";
+import type {
+  OwnerScopedUserResponse,
+  UserFormValues,
+  UserListQuery,
+  UserStatusFilter,
+} from "@/types/user-management";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const EMPTY_FORM: UserFormValues = {
@@ -44,9 +49,7 @@ const getOwnerUserSchema = (mode: "create" | "edit") => {
     username: z.string().trim().min(1, "Tên đăng nhập là bắt buộc."),
     email: z.string().trim().min(1, "Email là bắt buộc.").email("Email không hợp lệ."),
     phoneNumber: z.string(),
-    password: mode === "create"
-      ? z.string().min(1, "Mật khẩu là bắt buộc.")
-      : z.string(),
+    password: mode === "create" ? z.string().min(1, "Mật khẩu là bắt buộc.") : z.string(),
     role: z.enum(["BRANCH_MANAGER", "STAFF", "KITCHEN", "CASHIER"]),
     branchIds: z.array(z.string()).min(1, "Chọn ít nhất một chi nhánh."),
   });
@@ -68,7 +71,14 @@ export const OwnerUsersPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<OwnerScopedUserResponse | null>(null);
 
-  const { register, control, handleSubmit, reset, setValue, formState: { errors } } = useForm<UserFormValues>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<UserFormValues>({
     resolver: (values, context, options) => {
       return zodResolver(getOwnerUserSchema(dialogMode))(values, context, options);
     },
@@ -104,7 +114,10 @@ export const OwnerUsersPage = () => {
   const totalItems = usersQuery.data?.totalItems ?? 0;
   const totalPages = usersQuery.data?.totalPages ?? 1;
   const isSubmitting =
-    createMutation.isPending || updateMutation.isPending || banMutation.isPending || unbanMutation.isPending;
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    banMutation.isPending ||
+    unbanMutation.isPending;
 
   const branchManagerCount = (users ?? []).filter((user) => user.role === "BRANCH_MANAGER").length;
   const activeUserCount = (users ?? []).filter((user) => user.isActive && !user.isBanned).length;
@@ -179,7 +192,8 @@ export const OwnerUsersPage = () => {
     if (!editingUser) {
       showNotify({
         type: "error",
-        message: "Không thể cập nhật nhân sự vì thiếu dữ liệu đã chọn. Vui lòng mở lại hộp thoại và thử lại.",
+        message:
+          "Không thể cập nhật nhân sự vì thiếu dữ liệu đã chọn. Vui lòng mở lại hộp thoại và thử lại.",
         duration: 4000,
       });
       closeDialog();
@@ -213,7 +227,9 @@ export const OwnerUsersPage = () => {
   };
 
   const hasQueryFailure = usersQuery.isError || branchesQuery.isError;
-  const errorState = hasQueryFailure ? getOwnerPortalErrorState(usersQuery.error, branchesQuery.error) : null;
+  const errorState = hasQueryFailure
+    ? getOwnerPortalErrorState(usersQuery.error, branchesQuery.error)
+    : null;
 
   if (errorState) {
     return (
@@ -222,14 +238,18 @@ export const OwnerUsersPage = () => {
         description="Quản lý quyền truy cập của nhân viên trên toàn bộ chi nhánh."
         portalLabel="Bộ quản lý"
         portalName="Cổng chủ quán"
-        navItems={getOwnerPortalNavItems("users")}
+        navItems={getOwnerPortalNavItems("nhân sự")}
         topbarTitle={restaurantName}
         currentUser={currentUser}
       >
         <div className="border-border/60 bg-card rounded-[1.5rem] border p-8 shadow-sm">
-          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">Cổng chủ quán</p>
+          <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase">
+            Cổng chủ quán
+          </p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">{errorState.heading}</h2>
-          <p className="text-muted-foreground mt-3 text-sm md:text-base">{errorState.description}</p>
+          <p className="text-muted-foreground mt-3 text-sm md:text-base">
+            {errorState.description}
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
               onClick={async () => {
@@ -256,7 +276,7 @@ export const OwnerUsersPage = () => {
       description="Quản lý quyền truy cập của nhân viên trên toàn bộ chi nhánh."
       portalLabel="Bộ quản lý"
       portalName="Cổng chủ quán"
-      navItems={getOwnerPortalNavItems("users")}
+      navItems={getOwnerPortalNavItems("nhân sự")}
       topbarTitle={restaurantName}
       currentUser={currentUser}
       headerAction={
@@ -267,10 +287,26 @@ export const OwnerUsersPage = () => {
       }
       stats={
         <>
-          <PortalStatCard label="Tổng nhân sự" value={String(totalItems)} helper="Số tài khoản trong hệ thống" />
-          <PortalStatCard label="Quản lý chi nhánh" value={String(branchManagerCount)} helper="Quản lý trong phạm vi hiện tại" />
-          <PortalStatCard label="Chi nhánh quản lý" value={String(branches.length)} helper="Chi nhánh trả về từ hệ thống" />
-          <PortalStatCard label="Đang hoạt động" value={String(activeUserCount)} helper="Tài khoản hoạt động và không bị khóa" />
+          <PortalStatCard
+            label="Tổng nhân sự"
+            value={String(totalItems)}
+            helper="Số tài khoản trong hệ thống"
+          />
+          <PortalStatCard
+            label="Quản lý chi nhánh"
+            value={String(branchManagerCount)}
+            helper="Quản lý trong phạm vi hiện tại"
+          />
+          <PortalStatCard
+            label="Chi nhánh quản lý"
+            value={String(branches.length)}
+            helper="Chi nhánh trả về từ hệ thống"
+          />
+          <PortalStatCard
+            label="Đang hoạt động"
+            value={String(activeUserCount)}
+            helper="Tài khoản hoạt động và không bị khóa"
+          />
         </>
       }
     >

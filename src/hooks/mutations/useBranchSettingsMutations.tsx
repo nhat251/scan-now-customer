@@ -1,9 +1,8 @@
-import { isAxiosError } from "axios";
-
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import { createPaperVoucher, upsertBranchPaymentConfig } from "@/services/branch-settings";
 import { showNotify } from "@/stores/global";
-import type { ApiErrorResponse, ApiResponse } from "@/types/api";
+import type { ApiResponse } from "@/types/api";
 import type {
   BranchPaymentConfigResponse,
   PaperVoucherRequest,
@@ -13,14 +12,6 @@ import type {
 
 type Portal = "owner" | "manager";
 
-const getSettingsErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError<ApiErrorResponse>(error)) {
-    return fallback;
-  }
-
-  return error.response?.data?.message ?? error.response?.data?.detail ?? error.response?.data?.title ?? fallback;
-};
-
 export const useUpsertBranchPaymentConfigMutation = () => {
   return useMutation<
     { portal: Portal; branchId: string; data: UpsertBranchPaymentConfigRequest },
@@ -29,7 +20,10 @@ export const useUpsertBranchPaymentConfigMutation = () => {
     mutationFn: upsertBranchPaymentConfig,
     hasLoading: true,
     onError: (error) =>
-      showNotify({ type: "error", message: getSettingsErrorMessage(error, "Unable to save payment config.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể lưu cấu hình thanh toán."),
+      }),
   });
 };
 
@@ -41,6 +35,9 @@ export const useCreatePaperVoucherMutation = () => {
     mutationFn: createPaperVoucher,
     hasLoading: true,
     onError: (error) =>
-      showNotify({ type: "error", message: getSettingsErrorMessage(error, "Unable to create paper voucher.") }),
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo phiếu giảm giá."),
+      }),
   });
 };

@@ -21,8 +21,10 @@ const HIDE_PUBLIC_CHROME_PREFIXES = [
 const HIDE_PUBLIC_CHROME_PATHS = [PATH.auth.login];
 
 const shouldHidePublicChrome = (pathname: string) => {
-  return HIDE_PUBLIC_CHROME_PATHS.includes(pathname as (typeof HIDE_PUBLIC_CHROME_PATHS)[number]) ||
-    HIDE_PUBLIC_CHROME_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  return (
+    HIDE_PUBLIC_CHROME_PATHS.includes(pathname as (typeof HIDE_PUBLIC_CHROME_PATHS)[number]) ||
+    HIDE_PUBLIC_CHROME_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  );
 };
 
 export const AppChrome = ({ children }: { children: React.ReactNode }) => {

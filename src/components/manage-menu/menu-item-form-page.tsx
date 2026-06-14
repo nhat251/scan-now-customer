@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, DollarSign, History, ImageIcon, Save, Upload } from "lucide-react";
-import type { FieldErrors} from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -19,7 +19,10 @@ import {
   useUpdateManageMenuItemMutation,
   useUploadManageMenuItemImagesMutation,
 } from "@/hooks/mutations/useManageMenuMutations";
-import { useManageCategoriesQuery, useManageMenuItemQuery } from "@/hooks/queries/useManageMenuQueries";
+import {
+  useManageCategoriesQuery,
+  useManageMenuItemQuery,
+} from "@/hooks/queries/useManageMenuQueries";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
 import type { ManageMenuItemFormValues } from "@/types/manage-menu";
@@ -65,24 +68,35 @@ const toUpdatePayload = (value: ManageMenuItemFormValues) => ({
 
 const getMenuItemSchema = (mode: "create" | "edit") =>
   z.object({
-    categoryId: z.string().min(1, "Category is required."),
-    name: z.string().trim().min(1, "Name is required."),
-    imageUrl: z.string().refine(
-      (val) => !val || isValidOptionalUrl(val),
-      { message: "Image URL must be a valid URL." }
-    ),
+    categoryId: z.string().min(1, "Danh mục là bắt buộc."),
+    name: z.string().trim().min(1, "Tên món là bắt buộc."),
+    imageUrl: z
+      .string()
+      .refine((val) => !val || isValidOptionalUrl(val), { message: "URL hình ảnh không hợp lệ." }),
     description: z.string(),
-    price: mode === "create"
-      ? z.string().refine((val) => Number(val) >= 0, { message: "Price must be greater than or equal to 0." })
-      : z.string(),
-    costPrice: z.string().refine((val) => Number(val) >= 0, { message: "Numeric values must be greater than or equal to 0." }),
-    preparationTime: z.string().refine((val) => Number(val) >= 0, { message: "Numeric values must be greater than or equal to 0." }),
-    displayOrder: z.string().refine((val) => Number(val) >= 0, { message: "Numeric values must be greater than or equal to 0." }),
+    price:
+      mode === "create"
+        ? z.string().refine((val) => Number(val) >= 0, { message: "Giá phải lớn hơn hoặc bằng 0." })
+        : z.string(),
+    costPrice: z
+      .string()
+      .refine((val) => Number(val) >= 0, { message: "Giá trị số phải lớn hơn hoặc bằng 0." }),
+    preparationTime: z
+      .string()
+      .refine((val) => Number(val) >= 0, { message: "Giá trị số phải lớn hơn hoặc bằng 0." }),
+    displayOrder: z
+      .string()
+      .refine((val) => Number(val) >= 0, { message: "Giá trị số phải lớn hơn hoặc bằng 0." }),
     isAvailable: z.boolean(),
     isFeatured: z.boolean(),
   });
 
-export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, portal }: MenuItemFormPageProps) => {
+export const MenuItemFormPage = ({
+  branchId: initialBranchId,
+  menuItemId,
+  mode,
+  portal,
+}: MenuItemFormPageProps) => {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.user);
   const copy = getPortalCopy(portal);
@@ -97,7 +111,10 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
   const updateMutation = useUpdateManageMenuItemMutation();
   const uploadImageMutation = useUploadManageMenuItemImagesMutation();
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
-  const categories = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data?.items]);
+  const categories = useMemo(
+    () => categoriesQuery.data?.items ?? [],
+    [categoriesQuery.data?.items]
+  );
 
   const { register, control, handleSubmit, reset, setValue } = useForm<ManageMenuItemFormValues>({
     resolver: zodResolver(getMenuItemSchema(mode)),
@@ -125,7 +142,11 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
     }
 
     if (mode === "create") {
-      await createMutation.mutateAsync({ branchId, categoryId: values.categoryId, data: toCreatePayload(values) });
+      await createMutation.mutateAsync({
+        branchId,
+        categoryId: values.categoryId,
+        data: toCreatePayload(values),
+      });
       router.push(getMenuItemListPath(portal, branchId));
       return;
     }
@@ -150,12 +171,12 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
     }
 
     if (!file.type.startsWith("image/")) {
-      showNotify({ type: "warning", message: "Please choose an image file." });
+      showNotify({ type: "warning", message: "Vui lòng chọn tệp hình ảnh." });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showNotify({ type: "warning", message: "Image must be 5MB or smaller." });
+      showNotify({ type: "warning", message: "Hình ảnh phải có dung lượng không quá 5 MB." });
       return;
     }
 
@@ -167,12 +188,13 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
     }
   };
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending || uploadImageMutation.isPending;
+  const isSubmitting =
+    createMutation.isPending || updateMutation.isPending || uploadImageMutation.isPending;
 
   return (
     <PortalShell
-      title={mode === "create" ? "Create Menu Item" : itemQuery.data?.name ?? "Menu Item Detail"}
-      description="Manage item content, category, cost, preparation time, ordering, and flags."
+      title={mode === "create" ? "Tạo món" : (itemQuery.data?.name ?? "Chi tiết món")}
+      description="Quản lý nội dung món, danh mục, chi phí, thời gian chuẩn bị, thứ tự và trạng thái."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal, "menu-items", branchId)}
@@ -181,20 +203,23 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
       headerAction={
         branchId ? (
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={() => router.push(getMenuItemListPath(portal, branchId))}>
+            <Button
+              variant="outline"
+              onClick={() => router.push(getMenuItemListPath(portal, branchId))}
+            >
               <ArrowLeft className="size-4" />
-              Menu Items
+              Món ăn
             </Button>
             {mode === "edit" && menuItemId && itemQuery.data ? (
               <>
                 <Button onClick={() => setPriceDialogOpen(true)}>
                   <DollarSign className="size-4" />
-                  Update Price
+                  Cập nhật giá
                 </Button>
                 <Button asChild variant="outline">
                   <Link href={getPriceHistoryPath(portal, menuItemId)}>
                     <History className="size-4" />
-                    Price History
+                    Lịch sử giá
                   </Link>
                 </Button>
               </>
@@ -206,8 +231,11 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
       {itemQuery.isError || categoriesQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(itemQuery.error) || isForbiddenError(categoriesQuery.error)
-            ? "You do not have permission to access this branch"
-            : getManageApiErrorMessage(itemQuery.error ?? categoriesQuery.error, "Unable to load menu item data.")}
+            ? "Bạn không có quyền truy cập chi nhánh này"
+            : getManageApiErrorMessage(
+                itemQuery.error ?? categoriesQuery.error,
+                "Không thể tải dữ liệu món."
+              )}
         </div>
       ) : null}
 
@@ -215,14 +243,14 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="item-category" required>
-              Category
+              Danh mục
             </Label>
             <select
               id="item-category"
               {...register("categoryId")}
               className="border-input bg-card focus:border-ring focus:ring-ring/50 h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-3"
             >
-              <option value="">Select category</option>
+              <option value="">Chọn danh mục</option>
               {categories.map((category) => (
                 <option key={category.categoryId} value={category.categoryId}>
                   {category.name}
@@ -232,18 +260,18 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
           </div>
           <div className="space-y-2">
             <Label htmlFor="item-name" required>
-              Name
+              Tên món
             </Label>
             <Input id="item-name" {...register("name")} />
           </div>
           <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold">Image URL</span>
+            <span className="text-sm font-semibold">URL hình ảnh</span>
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
               <Input {...register("imageUrl")} />
               <Button asChild variant="outline" className="relative overflow-hidden">
                 <span>
                   <Upload className="size-4" />
-                  {uploadImageMutation.isPending ? "Uploading..." : "Upload Image"}
+                  {uploadImageMutation.isPending ? "Đang tải lên..." : "Tải hình ảnh lên"}
                   <input
                     type="file"
                     accept="image/*"
@@ -262,7 +290,7 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
                 <div className="relative size-16 overflow-hidden rounded-lg bg-white">
                   <Image
                     src={imageUrlValue}
-                    alt="Menu item preview"
+                    alt="Xem trước hình ảnh món"
                     fill
                     unoptimized
                     sizes="64px"
@@ -270,24 +298,24 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
                   />
                 </div>
                 <div className="min-w-0 text-sm">
-                  <p className="font-semibold">Current image</p>
+                  <p className="font-semibold">Hình ảnh hiện tại</p>
                   <p className="text-muted-foreground truncate">{imageUrlValue}</p>
                 </div>
               </div>
             ) : (
               <div className="text-muted-foreground bg-surface-container-low mt-3 flex items-center gap-2 rounded-xl p-3 text-sm">
                 <ImageIcon className="size-4" />
-                No image selected.
+                Chưa chọn hình ảnh.
               </div>
             )}
           </label>
           <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold">Description</span>
+            <span className="text-sm font-semibold">Mô tả</span>
             <Textarea {...register("description")} />
           </label>
           <div className="space-y-2">
             <Label htmlFor="item-price" required={mode === "create"}>
-              Price
+              Giá bán
             </Label>
             <Input
               id="item-price"
@@ -298,31 +326,34 @@ export const MenuItemFormPage = ({ branchId: initialBranchId, menuItemId, mode, 
             />
           </div>
           <label className="space-y-2">
-            <span className="text-sm font-semibold">Cost Price</span>
+            <span className="text-sm font-semibold">Giá vốn</span>
             <Input type="number" min={0} {...register("costPrice")} />
           </label>
           <label className="space-y-2">
-            <span className="text-sm font-semibold">Preparation Time</span>
+            <span className="text-sm font-semibold">Thời gian chuẩn bị</span>
             <Input type="number" min={0} {...register("preparationTime")} />
           </label>
           <label className="space-y-2">
-            <span className="text-sm font-semibold">Display Order</span>
+            <span className="text-sm font-semibold">Thứ tự hiển thị</span>
             <Input type="number" min={0} {...register("displayOrder")} />
           </label>
           <label className="flex items-center gap-3 rounded-xl border p-4 text-sm font-semibold">
             <input type="checkbox" {...register("isAvailable")} />
-            Available
+            Đang phục vụ
           </label>
           <label className="flex items-center gap-3 rounded-xl border p-4 text-sm font-semibold">
             <input type="checkbox" {...register("isFeatured")} />
-            Featured
+            Nổi bật
           </label>
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button onClick={handleSubmit(submit, onValidationError)} disabled={isSubmitting || categories.length === 0}>
+          <Button
+            onClick={handleSubmit(submit, onValidationError)}
+            disabled={isSubmitting || categories.length === 0}
+          >
             <Save className="size-4" />
-            {isSubmitting ? "Saving..." : "Save Menu Item"}
+            {isSubmitting ? "Đang lưu..." : "Lưu món"}
           </Button>
         </div>
       </section>

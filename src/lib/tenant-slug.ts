@@ -1,4 +1,12 @@
-const RESERVED_TENANT_SUBDOMAINS = new Set(["www", "app", "api", "admin", "business", "staging", "localhost"]);
+const RESERVED_TENANT_SUBDOMAINS = new Set([
+  "www",
+  "app",
+  "api",
+  "admin",
+  "business",
+  "staging",
+  "localhost",
+]);
 
 function getSubdomainFromHostname(hostname: string): string | null {
   const cleanHostname = hostname.split(":")[0]?.toLowerCase();

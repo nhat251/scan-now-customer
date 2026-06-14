@@ -18,26 +18,26 @@ export const OwnerTableForm = ({
   register,
   errors,
   submitting = false,
-  submitLabel = "Save Table",
+  submitLabel = "Lưu bàn",
   onSubmit,
 }: OwnerTableFormProps) => {
   return (
     <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold">Table Details</h2>
-          <p className="text-muted-foreground mt-1 text-sm">Edit table number and seating capacity</p>
+          <h2 className="text-xl font-bold">Thông tin bàn</h2>
+          <p className="text-muted-foreground mt-1 text-sm">Chỉnh sửa số bàn và sức chứa</p>
         </div>
         <Button onClick={onSubmit} disabled={submitting}>
           <Save className="size-4" />
-          {submitting ? "Saving..." : submitLabel}
+          {submitting ? "Đang lưu..." : submitLabel}
         </Button>
       </div>
       <div className="mt-5 grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="table-number" required className="flex items-center gap-1.5">
             <Hash className="text-muted-foreground size-3.5" />
-            Table Number
+            Số bàn
           </Label>
           <Input
             id="table-number"
@@ -49,7 +49,7 @@ export const OwnerTableForm = ({
         <div className="space-y-2">
           <Label htmlFor="table-capacity" required className="flex items-center gap-1.5">
             <Users className="text-muted-foreground size-3.5" />
-            Capacity
+            Sức chứa
           </Label>
           <Input
             id="table-capacity"

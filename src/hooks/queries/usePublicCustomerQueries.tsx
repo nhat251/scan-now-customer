@@ -1,6 +1,11 @@
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useQuery from "@/hooks/useQuery";
-import { getPublicBranchCategories, getPublicMenuItem, getPublicSessionMenu, getPublicTable } from "@/services/public-customer";
+import {
+  getPublicBranchCategories,
+  getPublicMenuItem,
+  getPublicSessionMenu,
+  getPublicTable,
+} from "@/services/public-customer";
 import type { ApiResponse } from "@/types/api";
 import type {
   PublicCategoryResponse,
@@ -11,7 +16,9 @@ import type {
 } from "@/types/customer-session";
 import type { UseQueryResult } from "@tanstack/react-query";
 
-export const usePublicTableQuery = (qrCodeToken: string): UseQueryResult<PublicTableResponse, Error> => {
+export const usePublicTableQuery = (
+  qrCodeToken: string
+): UseQueryResult<PublicTableResponse, Error> => {
   return useQuery<ApiResponse<PublicTableResponse>, PublicTableResponse>({
     queryKey: [QUERY_KEY.PUBLIC_TABLE, qrCodeToken],
     queryFn: () => getPublicTable(qrCodeToken),
@@ -42,7 +49,9 @@ export const usePublicSessionMenuQuery = (
   });
 };
 
-export const usePublicBranchCategoriesQuery = (branchId?: string): UseQueryResult<PublicCategoryResponse[], Error> => {
+export const usePublicBranchCategoriesQuery = (
+  branchId?: string
+): UseQueryResult<PublicCategoryResponse[], Error> => {
   return useQuery<ApiResponse<PublicCategoryResponse[]>, PublicCategoryResponse[]>({
     queryKey: [QUERY_KEY.PUBLIC_BRANCH_CATEGORIES, branchId ?? ""],
     queryFn: () => getPublicBranchCategories(branchId ?? ""),

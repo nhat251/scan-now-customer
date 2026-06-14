@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const getPageSizeLabel = (pageSize: number) => {
-  return `${pageSize} / page`;
+  return `${pageSize} / trang`;
 };
 
 const getVisiblePages = (page: number, totalPages: number) => {
@@ -55,7 +55,7 @@ export const FooterPagination = ({
   pageSize,
   pageSizeOptions,
   totalItems,
-  itemLabel = "items",
+  itemLabel = "mục",
   disabled = false,
   compact = false,
   hideWhenSinglePage = false,
@@ -71,7 +71,9 @@ export const FooterPagination = ({
   const showPageSizePicker = pageSizeOptions.length > 1;
   const numberMode = mode === "numbers";
   const summary =
-    totalItems === undefined ? `Page ${safePage} of ${safeTotalPages}` : `Page ${safePage} of ${safeTotalPages} - ${totalItems} ${itemLabel}`;
+    totalItems === undefined
+      ? `Trang ${safePage}/${safeTotalPages}`
+      : `Trang ${safePage}/${safeTotalPages} - ${totalItems} ${itemLabel}`;
 
   if (hideWhenSinglePage && safeTotalPages <= 1) {
     return null;
@@ -102,13 +104,23 @@ export const FooterPagination = ({
           {showPageSizePicker ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between sm:w-36" disabled={disabled}>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between sm:w-36"
+                  disabled={disabled}
+                >
                   {getPageSizeLabel(pageSize)}
                   <ChevronsUpDown className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
-                <DropdownMenuRadioGroup value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+              <DropdownMenuContent
+                align="start"
+                className="w-(--radix-dropdown-menu-trigger-width)"
+              >
+                <DropdownMenuRadioGroup
+                  value={String(pageSize)}
+                  onValueChange={(value) => onPageSizeChange(Number(value))}
+                >
                   {pageSizeOptions.map((size) => (
                     <DropdownMenuRadioItem key={size} value={String(size)}>
                       {getPageSizeLabel(size)}
@@ -118,13 +130,22 @@ export const FooterPagination = ({
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <p className="text-muted-foreground text-sm font-semibold">{getPageSizeLabel(pageSize)}</p>
+            <p className="text-muted-foreground text-sm font-semibold">
+              {getPageSizeLabel(pageSize)}
+            </p>
           )}
         </div>
       ) : null}
 
-      <div className={numberMode ? cn("flex flex-wrap items-center justify-center", compact ? "gap-1.5" : "gap-3") : "flex flex-wrap items-center gap-2"}>
+      <div
+        className={
+          numberMode
+            ? cn("flex flex-wrap items-center justify-center", compact ? "gap-1.5" : "gap-3")
+            : "flex flex-wrap items-center gap-2"
+        }
+      >
         <Button
+          aria-label="Về trang trước"
           variant="outline"
           onClick={goToPreviousPage}
           disabled={!canGoPrevious}
@@ -138,7 +159,7 @@ export const FooterPagination = ({
           }
         >
           <ChevronLeft className="size-4" />
-          {!numberMode ? "Previous" : null}
+          {!numberMode ? "Trang trước" : null}
         </Button>
         <div className={cn("flex flex-wrap items-center", compact ? "gap-1.5" : "gap-2")}>
           {visiblePages.map((pageNumber, index) => {
@@ -147,7 +168,9 @@ export const FooterPagination = ({
 
             return (
               <span key={pageNumber} className="flex items-center gap-1">
-                {shouldShowGap ? <span className="text-muted-foreground px-1 text-sm">...</span> : null}
+                {shouldShowGap ? (
+                  <span className="text-muted-foreground px-1 text-sm">...</span>
+                ) : null}
                 <Button
                   variant={pageNumber === safePage ? "default" : "outline"}
                   size={numberMode ? undefined : "icon"}
@@ -158,13 +181,13 @@ export const FooterPagination = ({
                           compact ? "size-9 min-w-9 text-sm" : "h-12 min-w-12 text-[15px]",
                           pageNumber === safePage
                             ? "border-0 bg-[#ffb07a] text-white shadow-none hover:bg-[#ffb07a]"
-                            : "border-[#ead9cf] bg-white text-[#9d715b] hover:bg-[#fff7f1]",
+                            : "border-[#ead9cf] bg-white text-[#9d715b] hover:bg-[#fff7f1]"
                         )
                       : undefined
                   }
                   onClick={() => onPageChange(pageNumber)}
                   disabled={disabled || pageNumber === safePage}
-                  aria-label={`Go to page ${pageNumber}`}
+                  aria-label={`Đi đến trang ${pageNumber}`}
                 >
                   {pageNumber}
                 </Button>
@@ -173,6 +196,7 @@ export const FooterPagination = ({
           })}
         </div>
         <Button
+          aria-label="Sang trang tiếp theo"
           variant="outline"
           onClick={goToNextPage}
           disabled={!canGoNext}
@@ -185,7 +209,7 @@ export const FooterPagination = ({
               : undefined
           }
         >
-          {!numberMode ? "Next" : null}
+          {!numberMode ? "Tiếp theo" : null}
           <ChevronRight className="size-4" />
         </Button>
       </div>

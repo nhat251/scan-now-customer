@@ -12,19 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const placeOrderSchema = z.object({
-  customerName: z
-    .string()
-    .max(100, "Tên không được vượt quá 100 ký tự")
-    .optional(),
+  customerName: z.string().max(100, "Tên không được vượt quá 100 ký tự").optional(),
   customerPhone: z
     .string()
     .regex(/(84|0[3|5|7|8|9])+([0-9]{8})\b/g, "Số điện thoại không hợp lệ")
     .optional()
     .or(z.literal("")),
-  customerNote: z
-    .string()
-    .max(300, "Ghi chú không được dài quá 300 ký tự")
-    .optional(),
+  customerNote: z.string().max(300, "Ghi chú không được dài quá 300 ký tự").optional(),
 });
 
 type PlaceOrderFormValues = z.infer<typeof placeOrderSchema>;

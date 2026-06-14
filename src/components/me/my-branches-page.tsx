@@ -46,15 +46,23 @@ export const MyBranchesPage = () => {
       currentUser={currentUser}
       stats={
         <>
-          <PortalStatCard label="Được gán" value={String(branches.length)} helper="Chi nhánh liên kết với tài khoản" />
-          <PortalStatCard label="Hoạt động" value={String(activeBranches)} helper="Chi nhánh đang hoạt động" />
+          <PortalStatCard
+            label="Được gán"
+            value={String(branches.length)}
+            helper="Chi nhánh liên kết với tài khoản"
+          />
+          <PortalStatCard
+            label="Hoạt động"
+            value={String(activeBranches)}
+            helper="Chi nhánh đang hoạt động"
+          />
           <PortalStatCard
             label="Quyền"
             value="Chỉ xem"
             helper="Không chỉnh sửa thông tin chi nhánh tại đây"
           />
           <PortalStatCard
-            label="Menu"
+            label="Thực đơn"
             value={canSeeMenu ? "Có quyền" : "Thông tin"}
             helper={canSeeMenu ? "Có thể cập nhật trạng thái món" : "Chỉ xem thông tin chi nhánh"}
           />
@@ -74,7 +82,11 @@ export const MyBranchesPage = () => {
           <p className="mt-2 text-sm">
             {getApiErrorMessage(branchesQuery.error, "Vui lòng thử tải lại danh sách chi nhánh.")}
           </p>
-          <Button className="mt-5" onClick={() => branchesQuery.refetch()} disabled={branchesQuery.isRefetching}>
+          <Button
+            className="mt-5"
+            onClick={() => branchesQuery.refetch()}
+            disabled={branchesQuery.isRefetching}
+          >
             <RefreshCw className="size-4" />
             Thử lại
           </Button>

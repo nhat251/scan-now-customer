@@ -1,6 +1,11 @@
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useQuery from "@/hooks/useQuery";
-import { getOwnerBranchOrders, getOwnerBranchTables, getOwnerTable, getOwnerTableOrderHistory } from "@/services/owner-table";
+import {
+  getOwnerBranchOrders,
+  getOwnerBranchTables,
+  getOwnerTable,
+  getOwnerTableOrderHistory,
+} from "@/services/owner-table";
 import type { ApiResponse, PagedResult } from "@/types/api";
 import type {
   OwnerOrderInvoiceListResponse,

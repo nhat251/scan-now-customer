@@ -6,7 +6,11 @@ import { FilterDropdown } from "@/components/organisms/manager-users/filter-drop
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-import { BRANCH_STATUS_FILTER_OPTIONS, type BranchStatusFilter, getBranchStatusFilterLabel } from "./helpers";
+import {
+  BRANCH_STATUS_FILTER_OPTIONS,
+  type BranchStatusFilter,
+  getBranchStatusFilterLabel,
+} from "./helpers";
 
 type OwnerBranchesToolbarProps = {
   searchInput: string;

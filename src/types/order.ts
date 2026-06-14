@@ -9,7 +9,13 @@ export type OrderStatus =
   | "Completed"
   | "Cancelled";
 
-export type OrderItemStatus = "Pending" | "Confirmed" | "Cooking" | "Ready" | "Served" | "Cancelled";
+export type OrderItemStatus =
+  | "Pending"
+  | "Confirmed"
+  | "Cooking"
+  | "Ready"
+  | "Served"
+  | "Cancelled";
 
 export type CustomerOrderItemResponse = {
   orderItemId: string;

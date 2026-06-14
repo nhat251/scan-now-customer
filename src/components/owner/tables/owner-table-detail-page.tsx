@@ -15,13 +15,26 @@ import {
   RefreshCw,
   Save,
 } from "lucide-react";
-import { type FieldErrors,useForm } from "react-hook-form";
+import { type FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tag } from "@/components/ui/tag";
+import {
+  getOrderItemStatusLabel,
+  getOrderStatusLabel,
+  getPaymentMethodLabel,
+  getPaymentStatusLabel,
+} from "@/helpers/presentation";
 import {
   useDownloadOwnerTableQrMutation,
   useRegenerateOwnerTableQrMutation,
@@ -29,11 +42,18 @@ import {
   useUpdateOwnerTableMutation,
   useUpdateOwnerTableStatusMutation,
 } from "@/hooks/mutations/useOwnerTableMutations";
-import { useOwnerTableOrderHistoryQuery, useOwnerTableQuery } from "@/hooks/queries/useOwnerTableQueries";
+import {
+  useOwnerTableOrderHistoryQuery,
+  useOwnerTableQuery,
+} from "@/hooks/queries/useOwnerTableQueries";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
 import { useUserStore } from "@/stores/user";
-import type { OwnerTableFormValues, OwnerTableOrderHistoryResponse, OwnerTableStatus } from "@/types/owner-table";
+import type {
+  OwnerTableFormValues,
+  OwnerTableOrderHistoryResponse,
+  OwnerTableStatus,
+} from "@/types/owner-table";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -55,19 +75,13 @@ import {
   toOwnerTableFormValues,
 } from "./helpers";
 import { OwnerTableForm } from "./owner-table-form";
+import { OwnerTableInfoRow } from "./owner-table-info-row";
 
 type OwnerTableDetailPageProps = {
   branchId: string;
   tableId: string;
   portal?: TableManagementPortal;
 };
-
-const InfoRow = ({ label, value }: { label: string; value?: React.ReactNode }) => (
-  <div className="border-border/60 flex flex-col gap-1 border-b py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
-    <dt className="text-muted-foreground text-sm font-semibold">{label}</dt>
-    <dd className="text-on-surface min-w-0 text-sm font-medium break-words sm:text-right">{value || "-"}</dd>
-  </div>
-);
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -76,33 +90,12 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  PendingConfirmation: "Chờ bếp xác nhận",
-  Confirmed: "Bếp đã nhận",
-  Preparing: "Bếp đã nhận",
-  PartiallyReady: "Một số món sẵn sàng",
-  ReadyToServe: "Sẵn sàng phục vụ",
-  PartiallyServed: "Đã phục vụ một phần",
-  Served: "Đã phục vụ",
-  Completed: "Đã thanh toán",
-  Cancelled: "Đã hủy",
-};
-
-const ITEM_STATUS_LABEL: Record<string, string> = {
-  Pending: "Chờ xác nhận",
-  Confirmed: "Bếp đã nhận",
-  Cooking: "Bếp đã nhận",
-  Ready: "Sẵn sàng",
-  Served: "Đã phục vụ",
-  Cancelled: "Đã hủy",
-};
-
 const getPaymentLabel = (order: OwnerTableOrderHistoryResponse) => {
   if (order.paymentStatus) {
-    return `${order.paymentMethod ?? "Payment"} - ${order.paymentStatus}`;
+    return `${getPaymentMethodLabel(order.paymentMethod)} - ${getPaymentStatusLabel(order.paymentStatus)}`;
   }
 
-  return order.status === "Completed" ? "Completed" : "No payment";
+  return order.status === "Completed" ? "Đã hoàn thành" : "Chưa thanh toán";
 };
 
 const getVisiblePages = (page: number, totalPages: number) => {
@@ -124,20 +117,38 @@ const getVisiblePages = (page: number, totalPages: number) => {
 };
 
 const STATUS_STYLE: Record<string, { active: string; inactive: string }> = {
-  AVAILABLE: { active: "border-success/50 bg-success/25 text-success-foreground shadow-success/20", inactive: "border-border text-muted-foreground hover:border-success/50 hover:text-success-foreground" },
-  RESERVED: { active: "border-warning/50 bg-warning/25 text-warning-foreground shadow-warning/20", inactive: "border-border text-muted-foreground hover:border-warning/50 hover:text-warning-foreground" },
-  DISABLED: { active: "border-border bg-muted text-muted-foreground", inactive: "border-border text-muted-foreground" },
+  AVAILABLE: {
+    active: "border-success/50 bg-success/25 text-success-foreground shadow-success/20",
+    inactive:
+      "border-border text-muted-foreground hover:border-success/50 hover:text-success-foreground",
+  },
+  RESERVED: {
+    active: "border-warning/50 bg-warning/25 text-warning-foreground shadow-warning/20",
+    inactive:
+      "border-border text-muted-foreground hover:border-warning/50 hover:text-warning-foreground",
+  },
+  DISABLED: {
+    active: "border-border bg-muted text-muted-foreground",
+    inactive: "border-border text-muted-foreground",
+  },
 };
 
 const ownerTableSchema = z.object({
-  tableNumber: z.string().trim().min(1, "Table number is required."),
-  capacity: z.string().refine((val) => {
-    const num = Number(val);
-    return !isNaN(num) && num >= 1;
-  }, { message: "Capacity must be greater than or equal to 1." }),
+  tableNumber: z.string().trim().min(1, "Số bàn là bắt buộc."),
+  capacity: z.string().refine(
+    (val) => {
+      const num = Number(val);
+      return !isNaN(num) && num >= 1;
+    },
+    { message: "Sức chứa phải lớn hơn hoặc bằng 1." }
+  ),
 });
 
-export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: OwnerTableDetailPageProps) => {
+export const OwnerTableDetailPage = ({
+  branchId,
+  tableId,
+  portal = "owner",
+}: OwnerTableDetailPageProps) => {
   const currentUser = useUserStore((state) => state.user);
   const copy = getTablePortalCopy(portal);
   const tableQuery = useOwnerTableQuery(branchId, tableId);
@@ -152,11 +163,15 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
   const regenerateMutation = useRegenerateOwnerTableQrMutation();
   const downloadMutation = useDownloadOwnerTableQrMutation();
   const [historyPage, setHistoryPage] = useState(1);
-  const [selectedHistoryOrder, setSelectedHistoryOrder] = useState<OwnerTableOrderHistoryResponse | null>(null);
+  const [selectedHistoryOrder, setSelectedHistoryOrder] =
+    useState<OwnerTableOrderHistoryResponse | null>(null);
   const historyPageSize = 5;
   const historyTotalPages = Math.max(Math.ceil(orderHistory.length / historyPageSize), 1);
   const historyVisiblePages = getVisiblePages(historyPage, historyTotalPages);
-  const pagedOrderHistory = orderHistory.slice((historyPage - 1) * historyPageSize, historyPage * historyPageSize);
+  const pagedOrderHistory = orderHistory.slice(
+    (historyPage - 1) * historyPageSize,
+    historyPage * historyPageSize
+  );
   const historyRevenue = useMemo(() => {
     return orderHistory.reduce(
       (summary, order) => {
@@ -170,11 +185,16 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
 
         return summary;
       },
-      { total: 0, paid: 0, pending: 0 },
+      { total: 0, paid: 0, pending: 0 }
     );
   }, [orderHistory]);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<OwnerTableFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<OwnerTableFormValues>({
     resolver: zodResolver(ownerTableSchema),
     defaultValues: toOwnerTableFormValues(),
   });
@@ -226,7 +246,7 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
     }
 
     await navigator.clipboard.writeText(table.qrCodeUrl);
-    showNotify({ type: "success", message: "QR URL copied." });
+    showNotify({ type: "success", message: "Đã sao chép URL mã QR." });
   };
 
   const regenerateQr = async () => {
@@ -239,8 +259,8 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
 
   return (
     <PortalShell
-      title={table ? `Table ${table.tableNumber}` : "Table Detail"}
-      description="Configure table identity, status, active state, and QR code. Session operations are handled by Staff."
+      title={table ? `Bàn ${table.tableNumber}` : "Chi tiết bàn"}
+      description="Cấu hình thông tin, trạng thái hoạt động và mã QR của bàn. Nhân viên phục vụ quản lý phiên bàn."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getTablePortalNavItems(portal, branchId)}
@@ -252,34 +272,60 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
         <Button asChild variant="soft">
           <Link href={getOwnerTableListPath(branchId, portal)}>
             <ArrowLeft className="size-4" />
-            Tables
+            Danh sách bàn
           </Link>
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Status" value={getOwnerTableStatusLabel(table?.status)} helper="Owner cannot set Occupied" />
-          <PortalStatCard label="Capacity" value={table ? `${table.capacity} seats` : "-"} helper="Configured seats" />
-          <PortalStatCard label="Active" value={getActiveLabel(table?.isActive)} helper="Visibility in operation" />
-          <PortalStatCard label="Session" value={table?.currentSession?.sessionCode ?? "None"} helper="Display only" />
-          <PortalStatCard label="Orders" value={String(orderHistory.length)} helper="History for this table" />
+          <PortalStatCard
+            label="Trạng thái"
+            value={getOwnerTableStatusLabel(table?.status)}
+            helper="Chủ nhà hàng không thể đặt trạng thái Có khách"
+          />
+          <PortalStatCard
+            label="Sức chứa"
+            value={table ? `${table.capacity} chỗ` : "-"}
+            helper="Số chỗ đã cấu hình"
+          />
+          <PortalStatCard
+            label="Đang hoạt động"
+            value={getActiveLabel(table?.isActive)}
+            helper="Hiển thị trong vận hành"
+          />
+          <PortalStatCard
+            label="Phiên"
+            value={table?.currentSession?.sessionCode ?? "Không có"}
+            helper="Chỉ hiển thị"
+          />
+          <PortalStatCard
+            label="Đơn hàng"
+            value={String(orderHistory.length)}
+            helper="Lịch sử của bàn"
+          />
         </>
       }
     >
       {tableQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(tableQuery.error)
-            ? "You do not have permission to access this branch/table"
-            : getOwnerTableErrorMessage(tableQuery.error, "Table not found.")}
-          <Button className="mt-4" onClick={() => tableQuery.refetch()} disabled={tableQuery.isRefetching}>
+            ? "Bạn không có quyền truy cập chi nhánh hoặc bàn này"
+            : getOwnerTableErrorMessage(tableQuery.error, "Không tìm thấy bàn.")}
+          <Button
+            className="mt-4"
+            onClick={() => tableQuery.refetch()}
+            disabled={tableQuery.isRefetching}
+          >
             <RefreshCw className="size-4" />
-            Retry
+            Thử lại
           </Button>
         </div>
       ) : null}
 
       {tableQuery.isLoading ? (
-        <div className="bg-card border-border/60 rounded-xl border p-6 text-sm shadow-sm">Loading table...</div>
+        <div className="bg-card border-border/60 rounded-xl border p-6 text-sm shadow-sm">
+          Đang tải bàn...
+        </div>
       ) : null}
 
       {table ? (
@@ -289,15 +335,17 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
               register={register}
               errors={errors}
               submitting={updateMutation.isPending}
-              submitLabel="Save Table"
+              submitLabel="Lưu bàn"
               onSubmit={handleSubmit(saveInfo, onValidationError)}
             />
 
             <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-bold">Order & Invoice History</h2>
-                  <p className="text-muted-foreground mt-1 text-sm">Orders created at this table in the current branch.</p>
+                  <h2 className="text-xl font-bold">Lịch sử đơn hàng và hóa đơn</h2>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Các đơn được tạo tại bàn này trong chi nhánh hiện tại.
+                  </p>
                 </div>
                 <Button
                   variant="soft"
@@ -305,15 +353,20 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                   onClick={() => orderHistoryQuery.refetch()}
                   disabled={orderHistoryQuery.isFetching}
                 >
-                  <RefreshCw className={cn("size-4", orderHistoryQuery.isFetching && "animate-spin")} />
-                  Refresh
+                  <RefreshCw
+                    className={cn("size-4", orderHistoryQuery.isFetching && "animate-spin")}
+                  />
+                  Tải lại
                 </Button>
               </div>
 
               {orderHistoryQuery.isLoading ? (
                 <div className="mt-5 space-y-4">
                   {[1, 2].map((i) => (
-                    <div key={i} className="border-border/60 bg-muted/20 animate-pulse rounded-xl border p-4">
+                    <div
+                      key={i}
+                      className="border-border/60 bg-muted/20 animate-pulse rounded-xl border p-4"
+                    >
                       <div className="bg-muted-foreground/10 mb-3 h-4 w-32 rounded" />
                       <div className="bg-muted-foreground/10 mb-2 h-5 w-48 rounded" />
                       <div className="bg-muted-foreground/10 h-4 w-36 rounded" />
@@ -324,80 +377,122 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
 
               {orderHistoryQuery.isError ? (
                 <div className="border-destructive/40 bg-destructive/10 text-destructive mt-4 rounded-xl border p-4 text-sm">
-                  {getOwnerTableErrorMessage(orderHistoryQuery.error, "Unable to load order history.")}
+                  {getOwnerTableErrorMessage(
+                    orderHistoryQuery.error,
+                    "Không thể tải lịch sử đơn hàng."
+                  )}
                 </div>
               ) : null}
 
-              {!orderHistoryQuery.isLoading && !orderHistoryQuery.isError && orderHistory.length === 0 ? (
+              {!orderHistoryQuery.isLoading &&
+              !orderHistoryQuery.isError &&
+              orderHistory.length === 0 ? (
                 <div className="bg-surface-container-low mt-5 flex flex-col items-center rounded-xl p-8 text-center text-sm">
                   <ReceiptText className="text-muted-foreground size-10" />
-                  <h3 className="mt-3 font-bold">No orders yet</h3>
-                  <p className="text-muted-foreground mt-1 max-w-xs">Orders from customers seated at this table will appear here.</p>
+                  <h3 className="mt-3 font-bold">Chưa có đơn hàng</h3>
+                  <p className="text-muted-foreground mt-1 max-w-xs">
+                    Đơn của khách tại bàn này sẽ xuất hiện ở đây.
+                  </p>
                 </div>
               ) : null}
 
-              {!orderHistoryQuery.isLoading && !orderHistoryQuery.isError && orderHistory.length > 0 ? (
+              {!orderHistoryQuery.isLoading &&
+              !orderHistoryQuery.isError &&
+              orderHistory.length > 0 ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   <div className="bg-surface-container-low rounded-xl p-4">
-                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Total revenue</p>
-                    <p className="mt-1 text-lg font-black">{formatCurrency(historyRevenue.total)}</p>
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      Tổng doanh thu
+                    </p>
+                    <p className="mt-1 text-lg font-black">
+                      {formatCurrency(historyRevenue.total)}
+                    </p>
                   </div>
                   <div className="bg-success/15 rounded-xl p-4">
-                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Paid</p>
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      Đã thanh toán
+                    </p>
                     <p className="mt-1 text-lg font-black">{formatCurrency(historyRevenue.paid)}</p>
                   </div>
                   <div className="bg-warning/15 rounded-xl p-4">
-                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Unpaid / pending</p>
-                    <p className="mt-1 text-lg font-black">{formatCurrency(historyRevenue.pending)}</p>
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                      Chưa thanh toán / Đang chờ
+                    </p>
+                    <p className="mt-1 text-lg font-black">
+                      {formatCurrency(historyRevenue.pending)}
+                    </p>
                   </div>
                 </div>
               ) : null}
 
               <div className="mt-5 space-y-4">
                 {pagedOrderHistory.map((order) => (
-                  <article key={order.orderId} className="border-border/60 hover:border-border/80 bg-card rounded-xl border p-4 transition-colors">
+                  <article
+                    key={order.orderId}
+                    className="border-border/60 hover:border-border/80 bg-card rounded-xl border p-4 transition-colors"
+                  >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-muted-foreground text-xs font-semibold tracking-[0.16em] uppercase">
                             {formatDateTime(order.createdAt)}
                           </p>
-                          <Tag tagString={ORDER_STATUS_LABEL[order.status] ?? order.status} variant={order.status === "Cancelled" ? "destructive" : order.status === "Completed" ? "success" : "warning"} />
+                          <Tag
+                            tagString={getOrderStatusLabel(order.status)}
+                            variant={
+                              order.status === "Cancelled"
+                                ? "destructive"
+                                : order.status === "Completed"
+                                  ? "success"
+                                  : "warning"
+                            }
+                          />
                         </div>
                         <h3 className="mt-1 text-base font-bold">{order.orderNumber}</h3>
                         <p className="text-muted-foreground mt-1 text-xs">
-                          Session {order.sessionCode ?? "-"}
+                          Phiên {order.sessionCode ?? "-"}
                         </p>
                       </div>
                       <div className="shrink-0 text-left sm:text-right">
-                        <p className="text-primary text-lg font-black">{formatCurrency(order.totalAmount)}</p>
-                        <p className="text-muted-foreground mt-1 text-xs">{getPaymentLabel(order)}</p>
+                        <p className="text-primary text-lg font-black">
+                          {formatCurrency(order.totalAmount)}
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {getPaymentLabel(order)}
+                        </p>
                       </div>
                     </div>
 
                     {order.customerNote ? (
                       <p className="bg-warning/15 text-warning-foreground mt-3 rounded-lg px-3 py-2 text-sm font-medium">
-                        Note: {order.customerNote}
+                        Ghi chú: {order.customerNote}
                       </p>
                     ) : null}
 
                     <div className="border-border/60 mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-muted-foreground text-sm">
-                        {order.items.length} dishes - {formatCurrency(order.subTotal)} subtotal
+                        {order.items.length} món - {formatCurrency(order.subTotal)} tạm tính
                       </p>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedHistoryOrder(order)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedHistoryOrder(order)}
+                      >
                         <Eye className="size-4" />
-                        View order detail
+                        Xem chi tiết đơn
                       </Button>
                     </div>
                   </article>
                 ))}
               </div>
 
-              {!orderHistoryQuery.isLoading && !orderHistoryQuery.isError && orderHistory.length > historyPageSize ? (
+              {!orderHistoryQuery.isLoading &&
+              !orderHistoryQuery.isError &&
+              orderHistory.length > historyPageSize ? (
                 <div className="border-border/60 mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-muted-foreground text-sm">
-                    Page {historyPage} of {historyTotalPages} - {orderHistory.length} invoices
+                    Đang ở trang {historyPage} trên {historyTotalPages} - {orderHistory.length} hóa
+                    đơn
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -406,16 +501,19 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                       disabled={historyPage <= 1}
                       onClick={() => setHistoryPage((page) => Math.max(page - 1, 1))}
                     >
-                      Previous
+                      Trang trước
                     </Button>
                     <div className="hidden items-center gap-1 sm:flex">
                       {historyVisiblePages.map((visiblePage, index) => {
                         const previousPage = historyVisiblePages[index - 1];
-                        const shouldShowGap = previousPage !== undefined && visiblePage - previousPage > 1;
+                        const shouldShowGap =
+                          previousPage !== undefined && visiblePage - previousPage > 1;
 
                         return (
                           <span key={visiblePage} className="flex items-center gap-1">
-                            {shouldShowGap ? <span className="text-muted-foreground px-1 text-sm">...</span> : null}
+                            {shouldShowGap ? (
+                              <span className="text-muted-foreground px-1 text-sm">...</span>
+                            ) : null}
                             <Button
                               variant={visiblePage === historyPage ? "default" : "outline"}
                               size="icon-sm"
@@ -432,9 +530,11 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                       variant="outline"
                       size="sm"
                       disabled={historyPage >= historyTotalPages}
-                      onClick={() => setHistoryPage((page) => Math.min(page + 1, historyTotalPages))}
+                      onClick={() =>
+                        setHistoryPage((page) => Math.min(page + 1, historyTotalPages))
+                      }
                     >
-                      Next
+                      Tiếp theo
                     </Button>
                   </div>
                 </div>
@@ -445,43 +545,63 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
           <div className="space-y-6">
             <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Table Info</h2>
-                <Tag tagString={getOwnerTableStatusLabel(table.status)} variant={getOwnerTableStatusTone(table.status)} />
+                <h2 className="text-xl font-bold">Thông tin bàn</h2>
+                <Tag
+                  tagString={getOwnerTableStatusLabel(table.status)}
+                  variant={getOwnerTableStatusTone(table.status)}
+                />
               </div>
               <p className="text-muted-foreground mt-1 text-sm">{table.branchName}</p>
               <dl className="mt-4">
-                <InfoRow label="Table Number" value={table.tableNumber} />
-                <InfoRow label="Capacity" value={`${table.capacity} seats`} />
-                <InfoRow label="Created" value={formatDateTime(table.createdAt)} />
-                <InfoRow label="Updated" value={formatDateTime(table.updatedAt)} />
+                <OwnerTableInfoRow label="Số bàn" value={table.tableNumber} />
+                <OwnerTableInfoRow label="Sức chứa" value={`${table.capacity} chỗ`} />
+                <OwnerTableInfoRow label="Ngày tạo" value={formatDateTime(table.createdAt)} />
+                <OwnerTableInfoRow label="Ngày cập nhật" value={formatDateTime(table.updatedAt)} />
               </dl>
 
               <div className="border-border/60 mt-4 border-t pt-4">
-                <h3 className="mb-3 text-sm font-semibold">Current Session</h3>
+                <h3 className="mb-3 text-sm font-semibold">Phiên hiện tại</h3>
                 {table.currentSession ? (
                   <dl>
-                    <InfoRow label="Session Code" value={table.currentSession.sessionCode} />
-                    <InfoRow label="Opened At" value={formatDateTime(table.currentSession.openedAt ?? table.currentSession.createdAt)} />
-                    <InfoRow label="Expires At" value={formatDateTime(table.currentSession.expiresAt)} />
+                    <OwnerTableInfoRow label="Mã phiên" value={table.currentSession.sessionCode} />
+                    <OwnerTableInfoRow
+                      label="Thời gian mở"
+                      value={formatDateTime(
+                        table.currentSession.openedAt ?? table.currentSession.createdAt
+                      )}
+                    />
+                    <OwnerTableInfoRow
+                      label="Thời gian hết hạn"
+                      value={formatDateTime(table.currentSession.expiresAt)}
+                    />
                   </dl>
                 ) : (
-                  <p className="text-muted-foreground text-sm">No current session.</p>
+                  <p className="text-muted-foreground text-sm">Chưa có phiên hiện tại.</p>
                 )}
               </div>
             </section>
 
             <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Status</h2>
+                <h2 className="text-xl font-bold">Trạng thái</h2>
                 <div className="flex items-center gap-2">
-                  <span className={cn("relative inline-flex size-2.5 rounded-full", table?.isActive ? "bg-success" : "bg-muted-foreground")} />
-                  <span className="text-xs font-semibold tracking-wider uppercase">{table?.isActive ? "Active" : "Inactive"}</span>
+                  <span
+                    className={cn(
+                      "relative inline-flex size-2.5 rounded-full",
+                      table?.isActive ? "bg-success" : "bg-muted-foreground"
+                    )}
+                  />
+                  <span className="text-xs font-semibold tracking-wider uppercase">
+                    {table?.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
+                  </span>
                 </div>
               </div>
-              <p className="text-muted-foreground mt-1 text-sm">Set table availability status</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Thiết lập trạng thái sử dụng của bàn
+              </p>
 
               <div className="mt-5">
-                <label className="mb-2 block text-sm font-semibold">Status</label>
+                <label className="mb-2 block text-sm font-semibold">Trạng thái</label>
                 <div className="flex gap-2">
                   {OWNER_TABLE_STATUS_UPDATE_OPTIONS.map((option) => {
                     const isCurrent = tableStatus === option.value;
@@ -494,9 +614,7 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                         onClick={() => updateStatus(option.value)}
                         className={cn(
                           "flex-1 rounded-lg border px-3 py-2.5 text-center text-sm font-bold transition-all",
-                          isCurrent
-                            ? `${style?.active} shadow-sm`
-                            : `${style?.inactive}`,
+                          isCurrent ? `${style?.active} shadow-sm` : `${style?.inactive}`,
                           statusMutation.isPending && "cursor-not-allowed opacity-50"
                         )}
                       >
@@ -507,7 +625,7 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                 </div>
                 {tableStatus === "OCCUPIED" ? (
                   <p className="text-muted-foreground mt-3 text-xs">
-                    Occupied is controlled by Staff opening a session.
+                    Trạng thái Có khách được tự động đặt khi nhân viên mở phiên bàn.
                   </p>
                 ) : null}
               </div>
@@ -515,8 +633,10 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
               <div className="border-border/60 mt-5 border-t pt-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-semibold">Activation</label>
-                    <p className="text-muted-foreground mt-0.5 text-xs">Toggle table visibility in operation</p>
+                    <label className="text-sm font-semibold">Trạng thái hoạt động</label>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      Bật hoặc tắt bàn trong vận hành
+                    </p>
                   </div>
                   <Button
                     variant={table.isActive ? "destructive" : "success"}
@@ -525,9 +645,13 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                     disabled={activeMutation.isPending}
                   >
                     {table.isActive ? (
-                      <><PowerOff className="size-3.5" /> Deactivate</>
+                      <>
+                        <PowerOff className="size-3.5" /> Ngừng hoạt động
+                      </>
                     ) : (
-                      <><Power className="size-3.5" /> Activate</>
+                      <>
+                        <Power className="size-3.5" /> Kích hoạt
+                      </>
                     )}
                   </Button>
                 </div>
@@ -537,33 +661,40 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
             <section className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold">QR Management</h2>
-                  <p className="text-muted-foreground mt-1 line-clamp-1 text-sm break-all">{table.qrCodeUrl || "QR URL is pending."}</p>
+                  <h2 className="text-xl font-bold">Quản lý mã QR</h2>
+                  <p className="text-muted-foreground mt-1 line-clamp-1 text-sm break-all">
+                    {table.qrCodeUrl || "URL mã QR đang được tạo."}
+                  </p>
                 </div>
                 <div className="bg-primary/5 flex size-14 shrink-0 items-center justify-center rounded-xl">
                   <QrCode className="text-primary size-7" />
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Button variant="soft" size="sm" onClick={downloadQr} disabled={downloadMutation.isPending}>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  onClick={downloadQr}
+                  disabled={downloadMutation.isPending}
+                >
                   <Download className="size-3.5" />
-                  Download
+                  Tải xuống
                 </Button>
                 <Button variant="soft" size="sm" onClick={copyQrUrl} disabled={!table.qrCodeUrl}>
                   <Clipboard className="size-3.5" />
-                  Copy URL
+                  Sao chép URL
                 </Button>
                 {table.qrCodeUrl ? (
                   <Button asChild variant="soft" size="sm">
                     <a href={table.qrCodeUrl} target="_blank" rel="noreferrer">
                       <ExternalLink className="size-3.5" />
-                      Open
+                      Mở
                     </a>
                   </Button>
                 ) : null}
                 <Button variant="warning" size="sm" onClick={() => setRegenerateOpen(true)}>
                   <QrCode className="size-3.5" />
-                  Regenerate
+                  Tạo lại
                 </Button>
               </div>
             </section>
@@ -574,32 +705,45 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
       <Dialog open={regenerateOpen} onOpenChange={setRegenerateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Regenerate QR?</DialogTitle>
+            <DialogTitle>Tạo lại mã QR?</DialogTitle>
             <DialogDescription>
-              Regenerating QR will make the old QR invalid. Customers must scan the new QR image afterward.
+              Mã QR cũ sẽ mất hiệu lực. Khách hàng cần quét mã QR mới.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="soft" onClick={() => setRegenerateOpen(false)}>
-              Cancel
+              Hủy
             </Button>
-            <Button variant="warning" onClick={regenerateQr} disabled={regenerateMutation.isPending}>
+            <Button
+              variant="warning"
+              onClick={regenerateQr}
+              disabled={regenerateMutation.isPending}
+            >
               <Save className="size-4" />
-              {regenerateMutation.isPending ? "Regenerating..." : "Regenerate QR"}
+              {regenerateMutation.isPending ? "Đang tạo lại..." : "Tạo lại mã QR"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(selectedHistoryOrder)} onOpenChange={(open) => !open && setSelectedHistoryOrder(null)}>
+      <Dialog
+        open={Boolean(selectedHistoryOrder)}
+        onOpenChange={(open) => !open && setSelectedHistoryOrder(null)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span>{selectedHistoryOrder?.orderNumber ?? "Order detail"}</span>
+              <span>{selectedHistoryOrder?.orderNumber ?? "Chi tiết đơn hàng"}</span>
               {selectedHistoryOrder ? (
                 <Tag
-                  tagString={ORDER_STATUS_LABEL[selectedHistoryOrder.status] ?? selectedHistoryOrder.status}
-                  variant={selectedHistoryOrder.status === "Cancelled" ? "destructive" : selectedHistoryOrder.status === "Completed" ? "success" : "warning"}
+                  tagString={getOrderStatusLabel(selectedHistoryOrder.status)}
+                  variant={
+                    selectedHistoryOrder.status === "Cancelled"
+                      ? "destructive"
+                      : selectedHistoryOrder.status === "Completed"
+                        ? "success"
+                        : "warning"
+                  }
                 />
               ) : null}
             </DialogTitle>
@@ -607,18 +751,36 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
           {selectedHistoryOrder ? (
             <div className="space-y-5">
               <div className="grid gap-3 text-sm sm:grid-cols-2">
-                <p><span className="text-muted-foreground">Table:</span> <strong>{selectedHistoryOrder.tableNumber ?? table?.tableNumber ?? "-"}</strong></p>
-                <p><span className="text-muted-foreground">Session:</span> <strong>{selectedHistoryOrder.sessionCode ?? "-"}</strong></p>
-                <p><span className="text-muted-foreground">Payment:</span> <strong>{getPaymentLabel(selectedHistoryOrder)}</strong></p>
-                <p><span className="text-muted-foreground">Created:</span> <strong>{formatDateTime(selectedHistoryOrder.createdAt)}</strong></p>
+                <p>
+                  <span className="text-muted-foreground">Bàn:</span>{" "}
+                  <strong>{selectedHistoryOrder.tableNumber ?? table?.tableNumber ?? "-"}</strong>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Phiên:</span>{" "}
+                  <strong>{selectedHistoryOrder.sessionCode ?? "-"}</strong>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Thanh toán:</span>{" "}
+                  <strong>{getPaymentLabel(selectedHistoryOrder)}</strong>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Ngày tạo:</span>{" "}
+                  <strong>{formatDateTime(selectedHistoryOrder.createdAt)}</strong>
+                </p>
               </div>
               <div className="space-y-3">
                 {selectedHistoryOrder.items.map((item) => (
-                  <div key={item.orderItemId} className="border-border/60 flex justify-between gap-3 border-b pb-3 last:border-b-0">
+                  <div
+                    key={item.orderItemId}
+                    className="border-border/60 flex justify-between gap-3 border-b pb-3 last:border-b-0"
+                  >
                     <div>
-                      <p className="font-semibold">{item.menuItemName} x{item.quantity}</p>
+                      <p className="font-semibold">
+                        {item.menuItemName} x{item.quantity}
+                      </p>
                       <p className="text-muted-foreground mt-1 text-xs">
-                        {ITEM_STATUS_LABEL[item.status] ?? item.status}{item.note ? ` - ${item.note}` : ""}
+                        {getOrderItemStatusLabel(item.status)}
+                        {item.note ? ` - ${item.note}` : ""}
                       </p>
                     </div>
                     <p className="shrink-0 font-bold">{formatCurrency(item.subTotal)}</p>
@@ -626,10 +788,22 @@ export const OwnerTableDetailPage = ({ branchId, tableId, portal = "owner" }: Ow
                 ))}
               </div>
               <dl className="border-border/60 border-t pt-4 text-sm">
-                <div className="flex justify-between py-1"><dt>Subtotal</dt><dd>{formatCurrency(selectedHistoryOrder.subTotal)}</dd></div>
-                <div className="flex justify-between py-1"><dt>VAT</dt><dd>{formatCurrency(selectedHistoryOrder.vatAmount)}</dd></div>
-                <div className="flex justify-between py-1"><dt>Service charge</dt><dd>{formatCurrency(selectedHistoryOrder.serviceChargeAmount)}</dd></div>
-                <div className="flex justify-between py-2 text-base font-black"><dt>Total</dt><dd>{formatCurrency(selectedHistoryOrder.totalAmount)}</dd></div>
+                <div className="flex justify-between py-1">
+                  <dt>Tạm tính</dt>
+                  <dd>{formatCurrency(selectedHistoryOrder.subTotal)}</dd>
+                </div>
+                <div className="flex justify-between py-1">
+                  <dt>VAT</dt>
+                  <dd>{formatCurrency(selectedHistoryOrder.vatAmount)}</dd>
+                </div>
+                <div className="flex justify-between py-1">
+                  <dt>Phí phục vụ</dt>
+                  <dd>{formatCurrency(selectedHistoryOrder.serviceChargeAmount)}</dd>
+                </div>
+                <div className="flex justify-between py-2 text-base font-black">
+                  <dt>Tổng cộng</dt>
+                  <dd>{formatCurrency(selectedHistoryOrder.totalAmount)}</dd>
+                </div>
               </dl>
             </div>
           ) : null}

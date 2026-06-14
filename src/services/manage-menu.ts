@@ -91,7 +91,9 @@ export const getManageMenuItems = async (branchId: string, query: ManageMenuQuer
 };
 
 export const getManageMenuItem = async (menuItemId: string) => {
-  return await axiosBasic.get<ApiResponse<ManageMenuItemResponse>>(`/api/owner/menu-items/${menuItemId}`);
+  return await axiosBasic.get<ApiResponse<ManageMenuItemResponse>>(
+    `/api/owner/menu-items/${menuItemId}`
+  );
 };
 
 export const uploadManageMenuItemImages = async (files: File[]) => {
@@ -126,7 +128,10 @@ export const updateManageMenuItem = async ({
   menuItemId: string;
   data: UpdateMenuItemRequest;
 }) => {
-  return await axiosBasic.put<ApiResponse<ManageMenuItemResponse>>(`/api/owner/menu-items/${menuItemId}`, data);
+  return await axiosBasic.put<ApiResponse<ManageMenuItemResponse>>(
+    `/api/owner/menu-items/${menuItemId}`,
+    data
+  );
 };
 
 export const setManageMenuItemActive = async ({
@@ -141,7 +146,13 @@ export const setManageMenuItemActive = async ({
   );
 };
 
-export const reorderManageMenuItems = async ({ branchId, data }: { branchId: string; data: ReorderRequest }) => {
+export const reorderManageMenuItems = async ({
+  branchId,
+  data,
+}: {
+  branchId: string;
+  data: ReorderRequest;
+}) => {
   return await axiosBasic.patch<ApiResponse<ManageMenuItemResponse[]>>(
     `/api/owner/branches/${branchId}/menu-items/reorder`,
     data
@@ -180,7 +191,10 @@ export const updateManageMenuItemPrice = async ({
   menuItemId: string;
   data: UpdatePriceRequest;
 }) => {
-  return await axiosBasic.patch<ApiResponse<ManageMenuItemResponse>>(`/api/owner/menu-items/${menuItemId}/price`, data);
+  return await axiosBasic.patch<ApiResponse<ManageMenuItemResponse>>(
+    `/api/owner/menu-items/${menuItemId}/price`,
+    data
+  );
 };
 
 export const getManagePriceHistory = async (menuItemId: string) => {

@@ -10,7 +10,12 @@ type Props = {
 const PublicSessionOrderRoute = async ({ params }: Props) => {
   const { sessionCode, orderId } = await params;
 
-  return <SessionOrderPage sessionCode={decodeURIComponent(sessionCode)} orderId={decodeURIComponent(orderId)} />;
+  return (
+    <SessionOrderPage
+      sessionCode={decodeURIComponent(sessionCode)}
+      orderId={decodeURIComponent(orderId)}
+    />
+  );
 };
 
 export default PublicSessionOrderRoute;

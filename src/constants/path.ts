@@ -36,7 +36,8 @@ class Path {
       return (branchId: string) => `${this.branchCategories(branchId)}/create` as const;
     },
     get branchCategoryDetail() {
-      return (branchId: string, categoryId: string) => `${this.branchCategories(branchId)}/${categoryId}` as const;
+      return (branchId: string, categoryId: string) =>
+        `${this.branchCategories(branchId)}/${categoryId}` as const;
     },
     get branchMenuItems() {
       return (branchId: string) => `${this.branches}/${branchId}/menu-items` as const;
@@ -54,7 +55,8 @@ class Path {
       return (branchId: string) => `${this.branchTables(branchId)}/create` as const;
     },
     get branchTableDetail() {
-      return (branchId: string, tableId: string) => `${this.branchTables(branchId)}/${tableId}` as const;
+      return (branchId: string, tableId: string) =>
+        `${this.branchTables(branchId)}/${tableId}` as const;
     },
     menuItems: "/owner/menu-items" as const,
     get menuItemDetail() {
@@ -77,7 +79,8 @@ class Path {
       return (branchId: string) => `${this.branchCategories(branchId)}/create` as const;
     },
     get branchCategoryDetail() {
-      return (branchId: string, categoryId: string) => `${this.branchCategories(branchId)}/${categoryId}` as const;
+      return (branchId: string, categoryId: string) =>
+        `${this.branchCategories(branchId)}/${categoryId}` as const;
     },
     get branchMenuItems() {
       return (branchId: string) => `${this.branches}/${branchId}/menu-items` as const;
@@ -95,7 +98,8 @@ class Path {
       return (branchId: string) => `${this.branchTables(branchId)}/create` as const;
     },
     get branchTableDetail() {
-      return (branchId: string, tableId: string) => `${this.branchTables(branchId)}/${tableId}` as const;
+      return (branchId: string, tableId: string) =>
+        `${this.branchTables(branchId)}/${tableId}` as const;
     },
     menuItems: "/manager/menu-items" as const,
     get menuItemDetail() {
@@ -135,8 +139,8 @@ class Path {
     get checkout() {
       return (sessionCode: string, orderId?: string) =>
         orderId
-          ? `${this.sessionsRoot}/${sessionCode}/checkout?orderId=${orderId}` as const
-          : `${this.sessionsRoot}/${sessionCode}/checkout` as const;
+          ? (`${this.sessionsRoot}/${sessionCode}/checkout?orderId=${orderId}` as const)
+          : (`${this.sessionsRoot}/${sessionCode}/checkout` as const);
     },
     get sessionMenu() {
       return (sessionCode: string) => `/sessions/${sessionCode}/menu` as const;
@@ -145,10 +149,12 @@ class Path {
       return (sessionCode: string) => `/sessions/${sessionCode}/checkout` as const;
     },
     get sessionMenuItem() {
-      return (sessionCode: string, menuItemId: string) => `/sessions/${sessionCode}/menu-items/${menuItemId}` as const;
+      return (sessionCode: string, menuItemId: string) =>
+        `/sessions/${sessionCode}/menu-items/${menuItemId}` as const;
     },
     get sessionOrder() {
-      return (sessionCode: string, orderId: string) => `/sessions/${sessionCode}/orders/${orderId}` as const;
+      return (sessionCode: string, orderId: string) =>
+        `/sessions/${sessionCode}/orders/${orderId}` as const;
     },
   };
 
@@ -185,7 +191,6 @@ class Path {
       return (id: string) => `${this.menuItemDetail}/${id}` as const;
     },
   };
-
 
   blogs = {
     root: "/blogs" as const,

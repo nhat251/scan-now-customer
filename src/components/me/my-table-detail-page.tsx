@@ -18,7 +18,16 @@ import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { PATH } from "@/constants/path";
-import { useCloseMyTableSessionMutation, useOpenMyTableSessionMutation } from "@/hooks/mutations/useMyTableMutations";
+import {
+  getOrderItemStatusLabel,
+  getOrderStatusLabel,
+  getPaymentMethodLabel,
+  getPaymentStatusLabel,
+} from "@/helpers/presentation";
+import {
+  useCloseMyTableSessionMutation,
+  useOpenMyTableSessionMutation,
+} from "@/hooks/mutations/useMyTableMutations";
 import { useMyTableActiveOrdersQuery, useMyTableQuery } from "@/hooks/queries/useMeQueries";
 import { cn } from "@/lib/utils";
 import { showNotify } from "@/stores/global";
@@ -40,18 +49,12 @@ import {
   isForbiddenError,
   normalizeTableStatus,
 } from "./helpers";
+import { MeInfoRow } from "./me-info-row";
 import { MeRoleShell as PortalShell } from "./me-role-shell";
 
 type MyTableDetailPageProps = {
   tableId: string;
 };
-
-const InfoRow = ({ label, value }: { label: string; value?: React.ReactNode }) => (
-  <div className="border-border/60 flex flex-col gap-1 border-b py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
-    <dt className="text-muted-foreground text-sm font-semibold">{label}</dt>
-    <dd className="text-on-surface text-sm font-medium sm:text-right">{value || "-"}</dd>
-  </div>
-);
 
 const canOpenTable = (table: MyTableResponse) =>
   normalizeTableStatus(table.status) === "AVAILABLE" && !table.currentSession && table.isActive;
@@ -134,9 +137,21 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
       }
       stats={
         <>
-          <PortalStatCard label="Trạng thái" value={getTableStatusLabel(table?.status)} helper="Trạng thái bàn hiện tại" />
-          <PortalStatCard label="Sức chứa" value={table ? String(table.capacity) : "-"} helper="Số chỗ đã cấu hình" />
-          <PortalStatCard label="Hoạt động" value={table ? getActiveLabel(table.isActive) : "-"} helper="Cờ vận hành" />
+          <PortalStatCard
+            label="Trạng thái"
+            value={getTableStatusLabel(table?.status)}
+            helper="Trạng thái bàn hiện tại"
+          />
+          <PortalStatCard
+            label="Sức chứa"
+            value={table ? String(table.capacity) : "-"}
+            helper="Số chỗ đã cấu hình"
+          />
+          <PortalStatCard
+            label="Hoạt động"
+            value={table ? getActiveLabel(table.isActive) : "-"}
+            helper="Cờ vận hành"
+          />
           <PortalStatCard
             label="Phiên"
             value={table?.currentSession?.sessionCode ?? "Không có"}
@@ -156,7 +171,8 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                 </h2>
               </div>
               <p className="mt-2 text-sm">
-                Mã phiên: <span className="font-black tracking-[0.2em]">{openedSession.sessionCode}</span>
+                Mã phiên:{" "}
+                <span className="font-black tracking-[0.2em]">{openedSession.sessionCode}</span>
               </p>
               <p className="mt-1 text-sm">Đưa mã này cho khách để gọi món.</p>
             </div>
@@ -183,14 +199,20 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6">
           <AlertTriangle className="size-5" />
           <h2 className="mt-3 text-lg font-semibold">
-            {hasForbiddenError ? "Bạn không có quyền truy cập chi nhánh hoặc bàn này" : "Không tải được bàn"}
+            {hasForbiddenError
+              ? "Bạn không có quyền truy cập chi nhánh hoặc bàn này"
+              : "Không tải được bàn"}
           </h2>
           <p className="mt-2 text-sm">
             {hasForbiddenError
               ? "Vui lòng chọn chi nhánh được gán cho tài khoản nhân viên."
               : getApiErrorMessage(tableQuery.error, "Không tìm thấy bàn hoặc phiên.")}
           </p>
-          <Button className="mt-5" onClick={() => tableQuery.refetch()} disabled={tableQuery.isRefetching}>
+          <Button
+            className="mt-5"
+            onClick={() => tableQuery.refetch()}
+            disabled={tableQuery.isRefetching}
+          >
             Thử lại
           </Button>
         </div>
@@ -207,19 +229,24 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                 <h2 className="mt-5 text-2xl font-bold">Bàn {table.tableNumber}</h2>
                 <p className="text-muted-foreground mt-1 text-sm">{table.branchName}</p>
               </div>
-              <span className={cn("w-fit rounded-full px-3 py-1 text-xs font-semibold", getTableStatusTone(table.status))}>
+              <span
+                className={cn(
+                  "w-fit rounded-full px-3 py-1 text-xs font-semibold",
+                  getTableStatusTone(table.status)
+                )}
+              >
                 {getTableStatusLabel(table.status)}
               </span>
             </div>
 
             <dl className="mt-6">
-              <InfoRow label="Số bàn" value={table.tableNumber} />
-              <InfoRow label="Sức chứa" value={`${table.capacity} chỗ`} />
-              <InfoRow label="Trạng thái" value={getTableStatusLabel(table.status)} />
-              <InfoRow label="Hoạt động" value={getActiveLabel(table.isActive)} />
-              <InfoRow label="Chi nhánh" value={table.branchName} />
-              <InfoRow label="Ngày tạo" value={formatDateTime(table.createdAt)} />
-              <InfoRow label="Cập nhật lúc" value={formatDateTime(table.updatedAt)} />
+              <MeInfoRow label="Số bàn" value={table.tableNumber} />
+              <MeInfoRow label="Sức chứa" value={`${table.capacity} chỗ`} />
+              <MeInfoRow label="Trạng thái" value={getTableStatusLabel(table.status)} />
+              <MeInfoRow label="Hoạt động" value={getActiveLabel(table.isActive)} />
+              <MeInfoRow label="Chi nhánh" value={table.branchName} />
+              <MeInfoRow label="Ngày tạo" value={formatDateTime(table.createdAt)} />
+              <MeInfoRow label="Cập nhật lúc" value={formatDateTime(table.updatedAt)} />
             </dl>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -230,7 +257,11 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                 </Button>
               ) : null}
               {canCloseTableSession(table) ? (
-                <Button variant="destructive" disabled={closeMutation.isPending} onClick={handleCloseSession}>
+                <Button
+                  variant="destructive"
+                  disabled={closeMutation.isPending}
+                  onClick={handleCloseSession}
+                >
                   <XCircle className="size-4" />
                   {closeMutation.isPending ? "Đang đóng phiên..." : "Đóng phiên thủ công"}
                 </Button>
@@ -242,8 +273,8 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
             <h2 className="text-xl font-bold">Phiên hiện tại</h2>
             {table.currentSession ? (
               <dl className="mt-4">
-                <InfoRow label="Mã phiên hệ thống" value={table.currentSession.sessionId} />
-                <InfoRow
+                <MeInfoRow label="Mã phiên hệ thống" value={table.currentSession.sessionId} />
+                <MeInfoRow
                   label="Mã phiên"
                   value={
                     <span className="text-primary inline-flex items-center gap-2 font-black tracking-[0.18em]">
@@ -252,9 +283,20 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                     </span>
                   }
                 />
-                <InfoRow label="Mở lúc" value={formatDateTime(table.currentSession.openedAt ?? table.currentSession.createdAt)} />
-                <InfoRow label="Hết hạn lúc" value={formatDateTime(table.currentSession.expiresAt)} />
-                <InfoRow label="Hoạt động" value={getActiveLabel(table.currentSession.isActive)} />
+                <MeInfoRow
+                  label="Mở lúc"
+                  value={formatDateTime(
+                    table.currentSession.openedAt ?? table.currentSession.createdAt
+                  )}
+                />
+                <MeInfoRow
+                  label="Hết hạn lúc"
+                  value={formatDateTime(table.currentSession.expiresAt)}
+                />
+                <MeInfoRow
+                  label="Hoạt động"
+                  value={getActiveLabel(table.currentSession.isActive)}
+                />
               </dl>
             ) : (
               <div className="bg-surface-container-low mt-5 rounded-xl p-5">
@@ -281,7 +323,11 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                 Nhân viên chỉ xem các đơn thuộc phiên đang hoạt động của bàn.
               </p>
             </div>
-            <Button variant="outline" onClick={() => activeOrdersQuery.refetch()} disabled={activeOrdersQuery.isFetching}>
+            <Button
+              variant="outline"
+              onClick={() => activeOrdersQuery.refetch()}
+              disabled={activeOrdersQuery.isFetching}
+            >
               Tải lại
             </Button>
           </div>
@@ -299,10 +345,14 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
             </div>
           ) : null}
 
-          {!activeOrdersQuery.isLoading && !activeOrdersQuery.isError && (activeOrdersQuery.data?.length ?? 0) === 0 ? (
+          {!activeOrdersQuery.isLoading &&
+          !activeOrdersQuery.isError &&
+          (activeOrdersQuery.data?.length ?? 0) === 0 ? (
             <div className="bg-surface-container-low mt-5 rounded-xl p-5 text-sm">
               <h3 className="font-bold">Bàn này chưa có đơn đang hoạt động</h3>
-              <p className="text-muted-foreground mt-1">Đơn sẽ xuất hiện ở đây khi phiên bàn còn mở.</p>
+              <p className="text-muted-foreground mt-1">
+                Đơn sẽ xuất hiện ở đây khi phiên bàn còn mở.
+              </p>
             </div>
           ) : null}
 
@@ -316,24 +366,37 @@ export const MyTableDetailPage = ({ tableId }: MyTableDetailPageProps) => {
                     </p>
                     <h3 className="mt-1 text-base font-bold">{order.orderNumber}</h3>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      Phiên {order.sessionCode ?? "-"} - {order.status}
+                      Phiên {order.sessionCode ?? "-"} - {getOrderStatusLabel(order.status)}
                     </p>
                   </div>
                   <div className="text-left sm:text-right">
-                    <p className="text-primary text-lg font-black">{formatCurrency(order.totalAmount)}</p>
+                    <p className="text-primary text-lg font-black">
+                      {formatCurrency(order.totalAmount)}
+                    </p>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {order.paymentStatus ? `${order.paymentMethod ?? "Thanh toán"} - ${order.paymentStatus}` : "Chưa thanh toán"}
+                      {order.paymentStatus
+                        ? `${getPaymentMethodLabel(order.paymentMethod)} - ${getPaymentStatusLabel(order.paymentStatus)}`
+                        : "Chưa thanh toán"}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-4 space-y-3">
                   {order.items.map((item) => (
-                    <div key={item.orderItemId} className="flex justify-between gap-3 border-b pb-3 last:border-b-0 last:pb-0">
+                    <div
+                      key={item.orderItemId}
+                      className="flex justify-between gap-3 border-b pb-3 last:border-b-0 last:pb-0"
+                    >
                       <div>
-                        <p className="text-sm font-semibold">{item.menuItemName} x{item.quantity}</p>
-                        {item.note ? <p className="text-muted-foreground mt-1 text-xs">Ghi chú: {item.note}</p> : null}
-                        <p className="text-muted-foreground mt-1 text-xs">{item.status}</p>
+                        <p className="text-sm font-semibold">
+                          {item.menuItemName} x{item.quantity}
+                        </p>
+                        {item.note ? (
+                          <p className="text-muted-foreground mt-1 text-xs">Ghi chú: {item.note}</p>
+                        ) : null}
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {getOrderItemStatusLabel(item.status)}
+                        </p>
                       </div>
                       <p className="shrink-0 text-sm font-bold">{formatCurrency(item.subTotal)}</p>
                     </div>

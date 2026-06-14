@@ -1,19 +1,11 @@
-import { isAxiosError } from "axios";
-
-import type { ApiProblemDetails, JoinSessionResponse, PersistedCustomerSession } from "@/types/customer-session";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
+import type { JoinSessionResponse, PersistedCustomerSession } from "@/types/customer-session";
 
 const CUSTOMER_SESSION_KEY = "scan-now.customer-session";
 const CUSTOMER_ORDER_KEY_PREFIX = "scan-now.customer-order";
 
 export const getCustomerApiErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError<ApiProblemDetails>(error)) {
-    return fallback;
-  }
-
-  const data = error.response?.data;
-  const firstValidationError = data?.errors ? Object.values(data.errors).flat()[0] : undefined;
-
-  return firstValidationError ?? data?.detail ?? data?.message ?? data?.title ?? fallback;
+  return getVietnameseApiErrorMessage(error, fallback);
 };
 
 export const persistCustomerSession = (sessionCode: string, session: JoinSessionResponse) => {

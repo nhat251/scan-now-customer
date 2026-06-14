@@ -6,7 +6,10 @@ import { ArrowLeft, DollarSign } from "lucide-react";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
-import { useManageMenuItemQuery, useManagePriceHistoryQuery } from "@/hooks/queries/useManageMenuQueries";
+import {
+  useManageMenuItemQuery,
+  useManagePriceHistoryQuery,
+} from "@/hooks/queries/useManageMenuQueries";
 import { useUserStore } from "@/stores/user";
 
 import {
@@ -37,8 +40,8 @@ export const PriceHistoryPage = ({ menuItemId, portal }: PriceHistoryPageProps) 
 
   return (
     <PortalShell
-      title="Price History"
-      description="Review audit history and update menu item pricing."
+      title="Lịch sử giá"
+      description="Xem lịch sử thay đổi và cập nhật giá món."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal, "menu-items", item?.branchId)}
@@ -49,31 +52,50 @@ export const PriceHistoryPage = ({ menuItemId, portal }: PriceHistoryPageProps) 
           <Button asChild variant="outline">
             <Link href={getMenuItemDetailPath(portal, menuItemId)}>
               <ArrowLeft className="size-4" />
-              Overview
+              Tổng quan
             </Link>
           </Button>
           {item ? (
             <Button onClick={() => setPriceDialogOpen(true)}>
               <DollarSign className="size-4" />
-              Update Price
+              Cập nhật giá
             </Button>
           ) : null}
         </div>
       }
       stats={
         <>
-          <PortalStatCard label="Current Price" value={item ? formatCurrency(item.price) : "-"} helper={item?.name ?? "Loading item"} />
-          <PortalStatCard label="History Rows" value={String(history.length)} helper="Price changes returned" />
-          <PortalStatCard label="Branch" value={item?.branchName ?? "-"} helper="Backend validates scope" />
-          <PortalStatCard label="Category" value={item?.categoryName ?? "-"} helper="Item category" />
+          <PortalStatCard
+            label="Giá hiện tại"
+            value={item ? formatCurrency(item.price) : "-"}
+            helper={item?.name ?? "Đang tải món"}
+          />
+          <PortalStatCard
+            label="Số lần thay đổi"
+            value={String(history.length)}
+            helper="Lịch sử giá từ hệ thống"
+          />
+          <PortalStatCard
+            label="Chi nhánh"
+            value={item?.branchName ?? "-"}
+            helper="Hệ thống kiểm tra phạm vi truy cập"
+          />
+          <PortalStatCard
+            label="Danh mục"
+            value={item?.categoryName ?? "-"}
+            helper="Danh mục của món"
+          />
         </>
       }
     >
       {itemQuery.isError || historyQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(itemQuery.error) || isForbiddenError(historyQuery.error)
-            ? "You do not have permission to access this branch"
-            : getManageApiErrorMessage(itemQuery.error ?? historyQuery.error, "Unable to load price history.")}
+            ? "Bạn không có quyền truy cập chi nhánh này"
+            : getManageApiErrorMessage(
+                itemQuery.error ?? historyQuery.error,
+                "Không thể tải lịch sử giá."
+              )}
         </div>
       ) : null}
 
@@ -82,21 +104,29 @@ export const PriceHistoryPage = ({ menuItemId, portal }: PriceHistoryPageProps) 
           <table className="divide-border/60 min-w-full divide-y text-left">
             <thead className="bg-muted/60">
               <tr>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Old Price</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">New Price</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Changed By</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Changed At</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Note</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Giá cũ</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Giá mới</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">
+                  Người thay đổi
+                </th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">
+                  Thời gian thay đổi
+                </th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Ghi chú</th>
               </tr>
             </thead>
             <tbody className="divide-border/40 divide-y">
               {historyQuery.isLoading ? (
                 <tr>
-                  <td colSpan={5} className="text-muted-foreground px-6 py-10 text-center text-sm">Loading price history...</td>
+                  <td colSpan={5} className="text-muted-foreground px-6 py-10 text-center text-sm">
+                    Đang tải lịch sử giá...
+                  </td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-muted-foreground px-6 py-10 text-center text-sm">No price history found.</td>
+                  <td colSpan={5} className="text-muted-foreground px-6 py-10 text-center text-sm">
+                    Chưa có lịch sử giá.
+                  </td>
                 </tr>
               ) : (
                 history.map((row) => (

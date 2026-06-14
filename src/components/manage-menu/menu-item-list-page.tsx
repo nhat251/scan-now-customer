@@ -3,7 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Check, Edit, History, PackageX, Plus, Power, PowerOff, Search, Star } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  Edit,
+  History,
+  PackageX,
+  Plus,
+  Power,
+  PowerOff,
+  Search,
+  Star,
+} from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { PortalShell, PortalStatCard } from "@/components/auth/portal-shell";
@@ -18,7 +30,10 @@ import {
   useToggleManageMenuItemAvailableMutation,
   useToggleManageMenuItemFeaturedMutation,
 } from "@/hooks/mutations/useManageMenuMutations";
-import { useManageCategoriesQuery, useManageMenuItemsQuery } from "@/hooks/queries/useManageMenuQueries";
+import {
+  useManageCategoriesQuery,
+  useManageMenuItemsQuery,
+} from "@/hooks/queries/useManageMenuQueries";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/stores/user";
@@ -116,7 +131,9 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
   const featuredCount = items.filter((item) => item.isFeatured).length;
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((current) => (current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]));
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]
+    );
   };
 
   const reorder = async (menuItemId: string, direction: "up" | "down") => {
@@ -163,8 +180,8 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
 
   return (
     <PortalShell
-      title="Menu Items"
-      description="Manage item list, filters, availability, featured flags, activation, ordering, and pricing."
+      title="Món ăn"
+      description="Quản lý danh sách món, bộ lọc, tình trạng phục vụ, món nổi bật, trạng thái, thứ tự và giá."
       portalLabel={copy.label}
       portalName={copy.name}
       navItems={getManageMenuNavItems(portal, "menu-items", branchId)}
@@ -173,15 +190,31 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
       headerAction={
         <Button onClick={() => router.push(getMenuItemCreatePath(portal, branchId))}>
           <Plus className="size-4" />
-          Create Menu Item
+          Tạo món
         </Button>
       }
       stats={
         <>
-          <PortalStatCard label="Total" value={String(totalItems)} helper="Menu items returned from backend" />
-          <PortalStatCard label="Available" value={String(availableCount)} helper="Available items on this page" />
-          <PortalStatCard label="Featured" value={String(featuredCount)} helper="Featured items on this page" />
-          <PortalStatCard label="Selected" value={String(selectedIds.length)} helper="Bulk availability target" />
+          <PortalStatCard
+            label="Tổng cộng"
+            value={String(totalItems)}
+            helper="Số món từ hệ thống"
+          />
+          <PortalStatCard
+            label="Đang phục vụ"
+            value={String(availableCount)}
+            helper="Món đang phục vụ trên trang"
+          />
+          <PortalStatCard
+            label="Nổi bật"
+            value={String(featuredCount)}
+            helper="Món nổi bật trên trang"
+          />
+          <PortalStatCard
+            label="Đã chọn"
+            value={String(selectedIds.length)}
+            helper="Các món sẽ được cập nhật cùng lúc"
+          />
         </>
       }
     >
@@ -189,50 +222,74 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
         <div className="grid gap-3 xl:grid-cols-[1fr_180px_180px_180px_180px]">
           <label className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <Input {...register("search")} placeholder="Search menu items" className="h-11 pl-10" />
+            <Input {...register("search")} placeholder="Tìm món" className="h-11 pl-10" />
           </label>
-          <select {...register("categoryId")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
-            <option value="all">All categories</option>
+          <select
+            {...register("categoryId")}
+            className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold"
+          >
+            <option value="all">Tất cả danh mục</option>
             {categories.map((category) => (
-              <option key={category.categoryId} value={category.categoryId}>{category.name}</option>
+              <option key={category.categoryId} value={category.categoryId}>
+                {category.name}
+              </option>
             ))}
           </select>
-          <select {...register("status")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
-            <option value="all">All statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+          <select
+            {...register("status")}
+            className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
           </select>
-          <select {...register("availability")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
-            <option value="all">All availability</option>
-            <option value="available">Available</option>
-            <option value="out-of-stock">Out of Stock</option>
+          <select
+            {...register("availability")}
+            className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold"
+          >
+            <option value="all">Tất cả tình trạng</option>
+            <option value="available">Đang phục vụ</option>
+            <option value="out-of-stock">Tạm hết món</option>
           </select>
-          <select {...register("featured")} className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold">
-            <option value="all">All featured</option>
-            <option value="featured">Featured</option>
-            <option value="not-featured">Not featured</option>
+          <select
+            {...register("featured")}
+            className="border-input bg-card h-11 rounded-md border px-3 text-sm font-semibold"
+          >
+            <option value="all">Tất cả trạng thái nổi bật</option>
+            <option value="featured">Nổi bật</option>
+            <option value="not-featured">Không nổi bật</option>
           </select>
         </div>
         <div className="border-border/60 mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <label className="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
             <input
               type="checkbox"
-              checked={items.length > 0 && items.every((item) => selectedIds.includes(item.menuItemId))}
+              checked={
+                items.length > 0 && items.every((item) => selectedIds.includes(item.menuItemId))
+              }
               onChange={() => {
                 const ids = items.map((item) => item.menuItemId);
                 setSelectedIds(ids.every((id) => selectedIds.includes(id)) ? [] : ids);
               }}
             />
-            Select visible items
+            Chọn các món đang hiển thị
           </label>
           <div className="flex flex-wrap gap-2">
-            <Button variant="success" disabled={selectedIds.length === 0 || isMutating} onClick={() => bulkAvailability(true)}>
+            <Button
+              variant="success"
+              disabled={selectedIds.length === 0 || isMutating}
+              onClick={() => bulkAvailability(true)}
+            >
               <Check className="size-4" />
-              Set Available
+              Đặt là đang phục vụ
             </Button>
-            <Button variant="warning" disabled={selectedIds.length === 0 || isMutating} onClick={() => bulkAvailability(false)}>
+            <Button
+              variant="warning"
+              disabled={selectedIds.length === 0 || isMutating}
+              onClick={() => bulkAvailability(false)}
+            >
               <PackageX className="size-4" />
-              Set Unavailable
+              Đặt là tạm hết
             </Button>
           </div>
         </div>
@@ -241,8 +298,8 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
       {menuQuery.isError ? (
         <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-xl border p-6 text-sm">
           {isForbiddenError(menuQuery.error)
-            ? "You do not have permission to access this branch"
-            : getManageApiErrorMessage(menuQuery.error, "Unable to load menu items.")}
+            ? "Bạn không có quyền truy cập chi nhánh này"
+            : getManageApiErrorMessage(menuQuery.error, "Không thể tải danh sách món.")}
         </div>
       ) : null}
 
@@ -252,74 +309,153 @@ export const MenuItemListPage = ({ branchId, portal }: MenuItemListPageProps) =>
             <thead className="bg-muted/60">
               <tr>
                 <th className="px-6 py-4"></th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Image</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Name</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Category</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Price</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Cost</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Prep</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Flags</th>
-                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Order</th>
-                <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">Actions</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Hình ảnh</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Tên món</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Danh mục</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Giá bán</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Giá vốn</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Chuẩn bị</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Thuộc tính</th>
+                <th className="text-muted-foreground px-6 py-4 text-sm font-bold">Đơn hàng</th>
+                <th className="text-muted-foreground px-6 py-4 text-right text-sm font-bold">
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody className="divide-border/40 divide-y">
               {menuQuery.isLoading ? (
                 <tr>
-                  <td colSpan={10} className="text-muted-foreground px-6 py-10 text-center text-sm">Loading menu items...</td>
+                  <td colSpan={10} className="text-muted-foreground px-6 py-10 text-center text-sm">
+                    Đang tải món...
+                  </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-muted-foreground px-6 py-10 text-center text-sm">No menu items found.</td>
+                  <td colSpan={10} className="text-muted-foreground px-6 py-10 text-center text-sm">
+                    Không tìm thấy món.
+                  </td>
                 </tr>
               ) : (
                 items.map((item, index) => (
-                  <tr key={item.menuItemId} className={cn("hover:bg-muted/30", selectedIds.includes(item.menuItemId) && "bg-primary/5")}>
+                  <tr
+                    key={item.menuItemId}
+                    className={cn(
+                      "hover:bg-muted/30",
+                      selectedIds.includes(item.menuItemId) && "bg-primary/5"
+                    )}
+                  >
                     <td className="px-6 py-4">
-                      <input type="checkbox" checked={selectedIds.includes(item.menuItemId)} onChange={() => toggleSelected(item.menuItemId)} />
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.menuItemId)}
+                        onChange={() => toggleSelected(item.menuItemId)}
+                      />
                     </td>
                     <td className="px-6 py-4">
                       <div className="bg-surface-container relative size-16 overflow-hidden rounded-lg">
-                        <Image src={item.imageUrl || FALLBACK_MENU_IMAGE} alt={item.name} fill unoptimized sizes="64px" className="object-cover" />
+                        <Image
+                          src={item.imageUrl || FALLBACK_MENU_IMAGE}
+                          alt={item.name}
+                          fill
+                          unoptimized
+                          sizes="64px"
+                          className="object-cover"
+                        />
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-bold">{item.name}</p>
-                      <p className="text-muted-foreground line-clamp-1 text-xs">{item.description || "-"}</p>
+                      <p className="text-muted-foreground line-clamp-1 text-xs">
+                        {item.description || "-"}
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-sm">{item.categoryName || "-"}</td>
                     <td className="px-6 py-4 text-sm font-bold">{formatCurrency(item.price)}</td>
                     <td className="px-6 py-4 text-sm">{formatCurrency(item.costPrice)}</td>
-                    <td className="px-6 py-4 text-sm">{item.preparationTime} min</td>
+                    <td className="px-6 py-4 text-sm">{item.preparationTime} phút</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        <Tag tagString={getAvailabilityLabel(item.isAvailable)} variant={item.isAvailable ? "success" : "warning"} />
-                        <Tag tagString={getFeaturedLabel(item.isFeatured)} variant={item.isFeatured ? "success" : "default"} />
-                        <Tag tagString={getStatusLabel(item.isActive)} variant={item.isActive ? "success" : "warning"} />
+                        <Tag
+                          tagString={getAvailabilityLabel(item.isAvailable)}
+                          variant={item.isAvailable ? "success" : "warning"}
+                        />
+                        <Tag
+                          tagString={getFeaturedLabel(item.isFeatured)}
+                          variant={item.isFeatured ? "success" : "default"}
+                        />
+                        <Tag
+                          tagString={getStatusLabel(item.isActive)}
+                          variant={item.isActive ? "success" : "warning"}
+                        />
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">{item.displayOrder}</td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
-                        <Button size="icon-sm" variant="outline" disabled={index === 0} onClick={() => reorder(item.menuItemId, "up")}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          disabled={index === 0}
+                          onClick={() => reorder(item.menuItemId, "up")}
+                        >
                           <ArrowUp className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant="outline" disabled={index === items.length - 1} onClick={() => reorder(item.menuItemId, "down")}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          disabled={index === items.length - 1}
+                          onClick={() => reorder(item.menuItemId, "down")}
+                        >
                           <ArrowDown className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant="outline" onClick={() => router.push(getMenuItemDetailPath(portal, item.menuItemId))}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          onClick={() =>
+                            router.push(getMenuItemDetailPath(portal, item.menuItemId))
+                          }
+                        >
                           <Edit className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant="outline" onClick={() => router.push(getPriceHistoryPath(portal, item.menuItemId))}>
+                        <Button
+                          size="icon-sm"
+                          variant="outline"
+                          onClick={() => router.push(getPriceHistoryPath(portal, item.menuItemId))}
+                        >
                           <History className="size-4" />
                         </Button>
-                        <Button size="icon-sm" variant={item.isActive ? "destructive" : "success"} onClick={() => activeMutation.mutateAsync({ menuItemId: item.menuItemId, isActive: !item.isActive })}>
-                          {item.isActive ? <PowerOff className="size-4" /> : <Power className="size-4" />}
+                        <Button
+                          size="icon-sm"
+                          variant={item.isActive ? "destructive" : "success"}
+                          onClick={() =>
+                            activeMutation.mutateAsync({
+                              menuItemId: item.menuItemId,
+                              isActive: !item.isActive,
+                            })
+                          }
+                        >
+                          {item.isActive ? (
+                            <PowerOff className="size-4" />
+                          ) : (
+                            <Power className="size-4" />
+                          )}
                         </Button>
-                        <Button size="icon-sm" variant={item.isAvailable ? "warning" : "success"} onClick={() => toggleAvailabilityMutation.mutateAsync(item.menuItemId)}>
-                          {item.isAvailable ? <PackageX className="size-4" /> : <Check className="size-4" />}
+                        <Button
+                          size="icon-sm"
+                          variant={item.isAvailable ? "warning" : "success"}
+                          onClick={() => toggleAvailabilityMutation.mutateAsync(item.menuItemId)}
+                        >
+                          {item.isAvailable ? (
+                            <PackageX className="size-4" />
+                          ) : (
+                            <Check className="size-4" />
+                          )}
                         </Button>
-                        <Button size="icon-sm" variant={item.isFeatured ? "warning" : "outline"} onClick={() => toggleFeaturedMutation.mutateAsync(item.menuItemId)}>
+                        <Button
+                          size="icon-sm"
+                          variant={item.isFeatured ? "warning" : "outline"}
+                          onClick={() => toggleFeaturedMutation.mutateAsync(item.menuItemId)}
+                        >
                           <Star className="size-4" />
                         </Button>
                       </div>

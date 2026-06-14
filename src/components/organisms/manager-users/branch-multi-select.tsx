@@ -18,29 +18,38 @@ type BranchMultiSelectProps = {
   onBranchToggle: (branchId: string) => void;
 };
 
-export const BranchMultiSelect = ({ branches, selectedBranchIds, onBranchToggle }: BranchMultiSelectProps) => {
+export const BranchMultiSelect = ({
+  branches,
+  selectedBranchIds,
+  onBranchToggle,
+}: BranchMultiSelectProps) => {
   const selectedCount = selectedBranchIds.length;
 
-  let triggerLabel = "Select managed branches";
+  let triggerLabel = "Chọn chi nhánh được quản lý";
 
   if (selectedCount === 1) {
-    triggerLabel = branches.find((branch) => branch.branchId === selectedBranchIds[0])?.name ?? "1 branch selected";
+    triggerLabel =
+      branches.find((branch) => branch.branchId === selectedBranchIds[0])?.name ??
+      "Đã chọn 1 chi nhánh";
   } else if (selectedCount > 1) {
-    triggerLabel = `${selectedCount} branches selected`;
+    triggerLabel = `Đã chọn ${selectedCount} chi nhánh`;
   }
 
   return (
     <div className="space-y-3">
-      <div className="text-sm font-medium">Managed branches</div>
+      <div className="text-sm font-medium">Chi nhánh được quản lý</div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="bg-muted/50 h-12 w-full justify-between rounded-lg px-3 font-normal">
+          <Button
+            variant="outline"
+            className="bg-muted/50 h-12 w-full justify-between rounded-lg px-3 font-normal"
+          >
             <span className="truncate">{triggerLabel}</span>
             <ChevronDown className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
-          <DropdownMenuLabel>Select branches</DropdownMenuLabel>
+          <DropdownMenuLabel>Chọn chi nhánh</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {branches.map((branch) => (
             <DropdownMenuCheckboxItem

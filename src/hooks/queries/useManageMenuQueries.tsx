@@ -22,7 +22,10 @@ export const useManageCategoriesQuery = (
   query: ManageCategoryQuery = {},
   enabled = true
 ): UseQueryResult<PagedResult<ManageCategoryResponse>, Error> => {
-  return useQuery<ApiResponse<PagedResult<ManageCategoryResponse>>, PagedResult<ManageCategoryResponse>>({
+  return useQuery<
+    ApiResponse<PagedResult<ManageCategoryResponse>>,
+    PagedResult<ManageCategoryResponse>
+  >({
     queryKey: [
       QUERY_KEY.MANAGE_CATEGORIES,
       branchId ?? "",
@@ -57,7 +60,10 @@ export const useManageMenuItemsQuery = (
   query: ManageMenuQuery = {},
   enabled = true
 ): UseQueryResult<PagedResult<ManageMenuItemResponse>, Error> => {
-  return useQuery<ApiResponse<PagedResult<ManageMenuItemResponse>>, PagedResult<ManageMenuItemResponse>>({
+  return useQuery<
+    ApiResponse<PagedResult<ManageMenuItemResponse>>,
+    PagedResult<ManageMenuItemResponse>
+  >({
     queryKey: [
       QUERY_KEY.MANAGE_MENU_ITEMS,
       branchId ?? "",

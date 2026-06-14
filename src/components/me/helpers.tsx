@@ -3,6 +3,7 @@ import { Building2, ChefHat, ClipboardList, LayoutList, Soup, Table2 } from "luc
 
 import type { PortalNavItem } from "@/components/auth/portal-shell";
 import { PATH } from "@/constants/path";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import type { MyBranchResponse, MyMenuItemResponse, MyTableStatus } from "@/types/me";
 
 export const STAFF_MENU_ROLES = ["STAFF"] as const;
@@ -82,7 +83,9 @@ const TABLE_STATUS_BY_CODE: Record<number, MyTableStatus> = {
   3: "DISABLED",
 };
 
-export const normalizeTableStatus = (status?: MyTableStatus | number | null): MyTableStatus | undefined => {
+export const normalizeTableStatus = (
+  status?: MyTableStatus | number | null
+): MyTableStatus | undefined => {
   if (typeof status === "number") {
     return TABLE_STATUS_BY_CODE[status];
   }
@@ -131,13 +134,7 @@ export const getTableStatusTone = (status?: MyTableStatus | number | null) => {
 };
 
 export const getApiErrorMessage = (error: unknown, fallback: string) => {
-  if (!isAxiosError(error)) {
-    return fallback;
-  }
-
-  const data = error.response?.data as { message?: string; detail?: string; title?: string } | undefined;
-
-  return data?.message ?? data?.detail ?? data?.title ?? fallback;
+  return getVietnameseApiErrorMessage(error, fallback);
 };
 
 export const isForbiddenError = (error: unknown) => {
@@ -195,7 +192,7 @@ export const getMyPortalNavItems = ({
 
   if (branchId && canSeeMenu) {
     items.push({
-      label: "Menu",
+      label: "Thực đơn",
       href: PATH.me.branchMenu(branchId),
       icon: <Soup className="size-4" />,
       active: active === "menu",

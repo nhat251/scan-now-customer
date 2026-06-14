@@ -1,3 +1,3 @@
 export const DEFAULT_TOAST_MESSAGES = {
-  errorMessage: "Oops, an error occurred!",
+  errorMessage: "Đã xảy ra lỗi.",
 };

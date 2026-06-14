@@ -1,7 +1,12 @@
 import { AxiosError } from "axios";
 
 import { getRoleLabel } from "@/constants/roleLabels";
-import type { BranchResponse, OwnerScopedUserResponse, UserStatusFilter } from "@/types/user-management";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
+import type {
+  BranchResponse,
+  OwnerScopedUserResponse,
+  UserStatusFilter,
+} from "@/types/user-management";
 
 export const STATUS_FILTER_OPTIONS: Array<{ label: string; value: UserStatusFilter }> = [
   { label: "Tất cả trạng thái", value: "all" },
@@ -54,10 +59,18 @@ export const getStatusBadge = (user: OwnerScopedUserResponse) => {
   return user.isActive ? "Hoạt động" : "Tạm tắt";
 };
 
+export const formatOwnerUserDate = (value: string) =>
+  new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
+
 export const getSortOptionLabel = (sortBy: string, sortDirection: "asc" | "desc") => {
   return (
-    SORT_OPTIONS.find((option) => option.sortBy === sortBy && option.sortDirection === sortDirection)?.label ??
-    "Sắp xếp"
+    SORT_OPTIONS.find(
+      (option) => option.sortBy === sortBy && option.sortDirection === sortDirection
+    )?.label ?? "Sắp xếp"
   );
 };
 
@@ -74,7 +87,9 @@ export const getBranchFilterLabel = (branchId: string, branches: BranchResponse[
 };
 
 export const getStatusFilterLabel = (status: UserStatusFilter) => {
-  return STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "Tất cả trạng thái";
+  return (
+    STATUS_FILTER_OPTIONS.find((option) => option.value === status)?.label ?? "Tất cả trạng thái"
+  );
 };
 
 export const isAuthorizationError = (error: unknown) => {
@@ -82,15 +97,7 @@ export const isAuthorizationError = (error: unknown) => {
 };
 
 export const getQueryErrorMessage = (error: unknown) => {
-  if (error instanceof AxiosError) {
-    return (error.response?.data as { message?: string } | undefined)?.message ?? error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Đã có lỗi xảy ra.";
+  return getVietnameseApiErrorMessage(error, "Đã có lỗi xảy ra.");
 };
 
 export const getOwnerPortalErrorState = (usersError: unknown, branchesError: unknown) => {

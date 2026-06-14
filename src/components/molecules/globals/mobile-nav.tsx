@@ -17,7 +17,7 @@ export const MobileNav = () => {
       <Button
         onClick={() => setMenuState(!menuState)}
         variant={"none"}
-        aria-label={menuState ? "Close Menu" : "Open Menu"}
+        aria-label={menuState ? "Đóng trình đơn" : "Mở trình đơn"}
       >
         {menuState ? <X className="size-6" /> : <Menu className="size-6" />}
       </Button>

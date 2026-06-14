@@ -1,11 +1,23 @@
-import type { Control, FieldErrors, UseFormRegister, UseFormSetValue} from "react-hook-form";
+import type { Control, FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { BranchResponse, ManagerUserFormValues, ManagerUserRoleOption } from "@/types/user-management";
+import { getRoleLabel } from "@/helpers/presentation";
+import type {
+  BranchResponse,
+  ManagerUserFormValues,
+  ManagerUserRoleOption,
+} from "@/types/user-management";
 
 import { BranchMultiSelect } from "./branch-multi-select";
 import { FilterDropdown } from "./filter-dropdown";
@@ -45,7 +57,7 @@ export const UserFormDialog = ({
   const branchIds = watchedValues.branchIds ?? [];
   const role = watchedValues.role ?? "STAFF";
 
-  const selectedRoleLabel = ROLE_OPTIONS.find((r) => r === role) ?? "Select role";
+  const selectedRoleLabel = role ? getRoleLabel(role) : "Chọn vai trò";
 
   const handleBranchToggle = (branchId: string) => {
     const nextBranchIds = branchIds.includes(branchId)
@@ -58,20 +70,23 @@ export const UserFormDialog = ({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent size="xl">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Create user" : "Update user"}</DialogTitle>
+          <DialogTitle>{mode === "create" ? "Tạo nhân sự" : "Cập nhật nhân sự"}</DialogTitle>
           <DialogDescription>
-            Branch Managers can manage STAFF, KITCHEN, and CASHIER users within their managed branches.
+            Quản lý chi nhánh có thể quản lý nhân viên phục vụ, nhân viên bếp và thu ngân trong các
+            chi nhánh được phân công.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 md:grid-cols-2">
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="fullName" required>Full name</FieldLabel>
+              <FieldLabel htmlFor="fullName" required>
+                Họ và tên
+              </FieldLabel>
               <FieldContent>
                 <Input
                   id="fullName"
-                  placeholder="Enter full name"
+                  placeholder="Nhập họ và tên"
                   aria-invalid={!!errors.fullName}
                   {...register("fullName")}
                 />
@@ -80,11 +95,13 @@ export const UserFormDialog = ({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="username" required>Username</FieldLabel>
+              <FieldLabel htmlFor="username" required>
+                Tên đăng nhập
+              </FieldLabel>
               <FieldContent>
                 <Input
                   id="username"
-                  placeholder="Enter username"
+                  placeholder="Nhập tên đăng nhập"
                   aria-invalid={!!errors.username}
                   {...register("username")}
                 />
@@ -93,7 +110,9 @@ export const UserFormDialog = ({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="email" required>Email</FieldLabel>
+              <FieldLabel htmlFor="email" required>
+                Email
+              </FieldLabel>
               <FieldContent>
                 <Input
                   id="email"
@@ -109,11 +128,11 @@ export const UserFormDialog = ({
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="phoneNumber">Phone number</FieldLabel>
+              <FieldLabel htmlFor="phoneNumber">Số điện thoại</FieldLabel>
               <FieldContent>
                 <Input
                   id="phoneNumber"
-                  placeholder="Optional phone number"
+                  placeholder="Số điện thoại (không bắt buộc)"
                   aria-invalid={!!errors.phoneNumber}
                   {...register("phoneNumber")}
                 />
@@ -123,7 +142,7 @@ export const UserFormDialog = ({
 
             <FilterDropdown
               id="role"
-              label="Role"
+              label="Vai trò"
               value={role}
               displayValue={selectedRoleLabel}
               options={ROLE_OPTIONS.map((roleOption) => ({ label: roleOption, value: roleOption }))}
@@ -132,12 +151,14 @@ export const UserFormDialog = ({
 
             {mode === "create" && (
               <Field>
-                <FieldLabel htmlFor="password" required>Password</FieldLabel>
+                <FieldLabel htmlFor="password" required>
+                  Mật khẩu
+                </FieldLabel>
                 <FieldContent>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Nhập mật khẩu"
                     aria-invalid={!!errors.password}
                     {...register("password")}
                   />
@@ -150,17 +171,21 @@ export const UserFormDialog = ({
 
         {showBranchSelection ? (
           <div className="space-y-2">
-            <BranchMultiSelect branches={branches} selectedBranchIds={branchIds} onBranchToggle={handleBranchToggle} />
+            <BranchMultiSelect
+              branches={branches}
+              selectedBranchIds={branchIds}
+              onBranchToggle={handleBranchToggle}
+            />
             <FieldError>{errors.branchIds?.message}</FieldError>
           </div>
         ) : null}
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={pending}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit} disabled={pending}>
-            {mode === "create" ? "Create user" : "Save changes"}
+            {mode === "create" ? "Tạo nhân sự" : "Lưu thay đổi"}
           </Button>
         </DialogFooter>
       </DialogContent>

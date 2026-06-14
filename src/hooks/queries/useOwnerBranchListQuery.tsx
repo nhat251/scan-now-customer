@@ -1,6 +1,5 @@
-import defaultAxios from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useQuery from "@/hooks/useQuery";
 import { axiosBasic } from "@/services/axiosBasic";
 import { showNotify } from "@/stores/global";
@@ -11,14 +10,6 @@ const getOwnerBranchList = async (query: OwnerBranchListQuery) => {
   return await axiosBasic.get<ApiResponse<PagedResult<BranchResponse>>>("/api/owner/branches", {
     params: query,
   });
-};
-
-const getOwnerBranchListErrorMessage = (error: unknown) => {
-  if (defaultAxios.isAxiosError(error)) {
-    return error.response?.data?.message ?? "Unable to load branches.";
-  }
-
-  return "Unable to load branches.";
 };
 
 export const useOwnerBranchListQuery = (query: OwnerBranchListQuery, enabled = true) => {
@@ -36,7 +27,10 @@ export const useOwnerBranchListQuery = (query: OwnerBranchListQuery, enabled = t
     select: (res) => res.data.result,
     enabled,
     onError: (error) => {
-      showNotify({ type: "error", message: getOwnerBranchListErrorMessage(error) });
+      showNotify({
+        type: "error",
+        message: getVietnameseApiErrorMessage(error, "Không thể tải danh sách chi nhánh."),
+      });
     },
   });
 };

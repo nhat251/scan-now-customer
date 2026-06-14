@@ -2,7 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChefHat, ClipboardList, Clock, Mail, MapPin, Phone, Soup, Table2, Tags } from "lucide-react";
+import {
+  ArrowLeft,
+  ChefHat,
+  ClipboardList,
+  Clock,
+  Mail,
+  MapPin,
+  Phone,
+  Soup,
+  Table2,
+  Tags,
+} from "lucide-react";
 
 import { PortalStatCard } from "@/components/auth/portal-shell";
 import { Button } from "@/components/ui/button";
@@ -24,18 +35,12 @@ import {
   getMyPortalNavItems,
   isForbiddenError,
 } from "./helpers";
+import { MeInfoRow } from "./me-info-row";
 import { MeRoleShell as PortalShell } from "./me-role-shell";
 
 type MyBranchDetailPageProps = {
   branchId: string;
 };
-
-const InfoRow = ({ label, value }: { label: string; value?: React.ReactNode }) => (
-  <div className="border-border/60 flex flex-col gap-1 border-b py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
-    <dt className="text-muted-foreground text-sm font-semibold">{label}</dt>
-    <dd className="text-on-surface text-sm font-medium sm:text-right">{value || "-"}</dd>
-  </div>
-);
 
 export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
   const router = useRouter();
@@ -81,7 +86,7 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
             <Button asChild>
               <Link href={PATH.me.branchMenu(branchId)}>
                 <Soup className="size-4" />
-                Menu
+                Thực đơn
               </Link>
             </Button>
           ) : null}
@@ -135,9 +140,21 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
       }
       stats={
         <>
-          <PortalStatCard label="Trạng thái" value={getBranchStatusLabel(branch)} helper="Trạng thái chi nhánh" />
-          <PortalStatCard label="Mã nhà hàng" value={branch?.restaurantId ?? "-"} helper="Nhà hàng liên kết" />
-          <PortalStatCard label="Quản lý" value={branch?.managerName ?? "-"} helper="Quản lý chi nhánh" />
+          <PortalStatCard
+            label="Trạng thái"
+            value={getBranchStatusLabel(branch)}
+            helper="Trạng thái chi nhánh"
+          />
+          <PortalStatCard
+            label="Mã nhà hàng"
+            value={branch?.restaurantId ?? "-"}
+            helper="Nhà hàng liên kết"
+          />
+          <PortalStatCard
+            label="Quản lý"
+            value={branch?.managerName ?? "-"}
+            helper="Quản lý chi nhánh"
+          />
           <PortalStatCard
             label="Giờ mở cửa"
             value={formatTime(branch?.openTime)}
@@ -177,19 +194,25 @@ export const MyBranchDetailPage = ({ branchId }: MyBranchDetailPageProps) => {
           <div className="bg-card border-border/60 rounded-xl border p-6 shadow-sm">
             <h2 className="text-xl font-bold">Thông tin chi nhánh</h2>
             <dl className="mt-4">
-              <InfoRow label="Tên chi nhánh" value={branch.name} />
-              <InfoRow label="Mã nhà hàng" value={branch.restaurantId} />
-              <InfoRow label="Quản lý" value={branch.managerName || "-"} />
-              <InfoRow label="Địa chỉ" value={branch.address || "-"} />
-              <InfoRow label="Số điện thoại" value={branch.phone || "-"} />
-              <InfoRow label="Email" value={branch.email || "-"} />
-              <InfoRow label="Giờ mở cửa" value={formatTime(branch.openTime)} />
-              <InfoRow label="Giờ đóng cửa" value={formatTime(branch.closeTime)} />
-              <InfoRow label="VAT" value={formatPercent(branch.vatPercent)} />
-              <InfoRow label="Phí dịch vụ (%)" value={formatPercent(branch.serviceChargePercent)} />
-              <InfoRow label="Phí dịch vụ cố định" value={formatFixedAmount(branch.serviceChargeFixed)} />
-              <InfoRow label="Trạng thái" value={getBranchStatusLabel(branch)} />
-              <InfoRow label="Quyền" value="Chỉ xem" />
+              <MeInfoRow label="Tên chi nhánh" value={branch.name} />
+              <MeInfoRow label="Mã nhà hàng" value={branch.restaurantId} />
+              <MeInfoRow label="Quản lý" value={branch.managerName || "-"} />
+              <MeInfoRow label="Địa chỉ" value={branch.address || "-"} />
+              <MeInfoRow label="Số điện thoại" value={branch.phone || "-"} />
+              <MeInfoRow label="Email" value={branch.email || "-"} />
+              <MeInfoRow label="Giờ mở cửa" value={formatTime(branch.openTime)} />
+              <MeInfoRow label="Giờ đóng cửa" value={formatTime(branch.closeTime)} />
+              <MeInfoRow label="VAT" value={formatPercent(branch.vatPercent)} />
+              <MeInfoRow
+                label="Phí dịch vụ (%)"
+                value={formatPercent(branch.serviceChargePercent)}
+              />
+              <MeInfoRow
+                label="Phí dịch vụ cố định"
+                value={formatFixedAmount(branch.serviceChargeFixed)}
+              />
+              <MeInfoRow label="Trạng thái" value={getBranchStatusLabel(branch)} />
+              <MeInfoRow label="Quyền" value="Chỉ xem" />
             </dl>
           </div>
 

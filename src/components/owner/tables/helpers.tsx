@@ -1,30 +1,42 @@
 import { AxiosError } from "axios";
 
 import type { PortalNavItem } from "@/components/auth/portal-shell";
-import { getManageMenuNavItems, getPortalCopy, type ManagePortal } from "@/components/manage-menu/helpers";
+import {
+  getManageMenuNavItems,
+  getPortalCopy,
+  type ManagePortal,
+} from "@/components/manage-menu/helpers";
 import { PATH } from "@/constants/path";
-import type { OwnerTableFormValues, OwnerTableResponse, OwnerTableStatus } from "@/types/owner-table";
+import { getTableStatusLabel, getVietnameseApiErrorMessage } from "@/helpers/presentation";
+import type {
+  OwnerTableFormValues,
+  OwnerTableResponse,
+  OwnerTableStatus,
+} from "@/types/owner-table";
 
 export type OwnerTableStatusFilter = "all" | OwnerTableStatus;
 export type OwnerTableActiveFilter = "all" | "active" | "inactive";
 
 export const OWNER_TABLE_PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
-export const OWNER_TABLE_STATUS_FILTER_OPTIONS: Array<{ label: string; value: OwnerTableStatusFilter }> = [
-  { label: "All statuses", value: "all" },
-  { label: "Available", value: "AVAILABLE" },
-  { label: "Occupied", value: "OCCUPIED" },
-  { label: "Reserved", value: "RESERVED" },
-  { label: "Disabled", value: "DISABLED" },
+export const OWNER_TABLE_STATUS_FILTER_OPTIONS: Array<{
+  label: string;
+  value: OwnerTableStatusFilter;
+}> = [
+  { label: "Tất cả trạng thái", value: "all" },
+  { label: "Còn trống", value: "AVAILABLE" },
+  { label: "Đang có khách", value: "OCCUPIED" },
+  { label: "Đã đặt trước", value: "RESERVED" },
+  { label: "Ngừng sử dụng", value: "DISABLED" },
 ];
 
 export const OWNER_TABLE_STATUS_UPDATE_OPTIONS: Array<{
   label: string;
   value: Exclude<OwnerTableStatus, "OCCUPIED">;
 }> = [
-  { label: "Available", value: "AVAILABLE" },
-  { label: "Reserved", value: "RESERVED" },
-  { label: "Disabled", value: "DISABLED" },
+  { label: "Còn trống", value: "AVAILABLE" },
+  { label: "Đã đặt trước", value: "RESERVED" },
+  { label: "Ngừng sử dụng", value: "DISABLED" },
 ];
 
 const OWNER_TABLE_STATUS_BY_CODE: Record<number, OwnerTableStatus> = {
@@ -34,7 +46,9 @@ const OWNER_TABLE_STATUS_BY_CODE: Record<number, OwnerTableStatus> = {
   3: "DISABLED",
 };
 
-export const normalizeOwnerTableStatus = (status?: OwnerTableStatus | number | null): OwnerTableStatus | undefined => {
+export const normalizeOwnerTableStatus = (
+  status?: OwnerTableStatus | number | null
+): OwnerTableStatus | undefined => {
   if (typeof status === "number") {
     return OWNER_TABLE_STATUS_BY_CODE[status];
   }
@@ -49,7 +63,7 @@ export const getOwnerTableStatusLabel = (status?: OwnerTableStatus | number | nu
     return "-";
   }
 
-  return normalizedStatus.charAt(0) + normalizedStatus.slice(1).toLowerCase();
+  return getTableStatusLabel(normalizedStatus);
 };
 
 export const getOwnerTableStatusTone = (status?: OwnerTableStatus | number | null) => {
@@ -104,17 +118,11 @@ export const getActiveLabel = (value?: boolean | null) => {
     return "-";
   }
 
-  return value ? "Active" : "Inactive";
+  return value ? "Đang hoạt động" : "Ngừng hoạt động";
 };
 
 export const getOwnerTableErrorMessage = (error: unknown, fallback: string) => {
-  if (!(error instanceof AxiosError)) {
-    return fallback;
-  }
-
-  const data = error.response?.data as { message?: string; detail?: string; title?: string } | undefined;
-
-  return data?.message ?? data?.detail ?? data?.title ?? fallback;
+  return getVietnameseApiErrorMessage(error, fallback);
 };
 
 export const isForbiddenError = (error: unknown) => {
@@ -126,7 +134,9 @@ export const emptyOwnerTableForm: OwnerTableFormValues = {
   capacity: "2",
 };
 
-export const toOwnerTableFormValues = (table?: OwnerTableResponse | null): OwnerTableFormValues => ({
+export const toOwnerTableFormValues = (
+  table?: OwnerTableResponse | null
+): OwnerTableFormValues => ({
   tableNumber: table?.tableNumber ?? "",
   capacity: table?.capacity === undefined ? "2" : String(table.capacity),
 });
@@ -140,20 +150,30 @@ export type TableManagementPortal = ManagePortal;
 
 export const getTablePortalCopy = (portal: TableManagementPortal) => getPortalCopy(portal);
 
-export const getTablePortalNavItems = (portal: TableManagementPortal, branchId: string): PortalNavItem[] =>
-  getManageMenuNavItems(portal, "tables", branchId);
+export const getTablePortalNavItems = (
+  portal: TableManagementPortal,
+  branchId: string
+): PortalNavItem[] => getManageMenuNavItems(portal, "tables", branchId);
 
 export const getOwnerTableListPath = (branchId: string, portal: TableManagementPortal = "owner") =>
   portal === "owner" ? PATH.owner.branchTables(branchId) : PATH.manager.branchTables(branchId);
 
-export const getOwnerTableCreatePath = (branchId: string, portal: TableManagementPortal = "owner") =>
-  portal === "owner" ? PATH.owner.branchTableCreate(branchId) : PATH.manager.branchTableCreate(branchId);
+export const getOwnerTableCreatePath = (
+  branchId: string,
+  portal: TableManagementPortal = "owner"
+) =>
+  portal === "owner"
+    ? PATH.owner.branchTableCreate(branchId)
+    : PATH.manager.branchTableCreate(branchId);
 
 export const getOwnerTableDetailPath = (
   branchId: string,
   tableId: string,
   portal: TableManagementPortal = "owner"
-) => (portal === "owner" ? PATH.owner.branchTableDetail(branchId, tableId) : PATH.manager.branchTableDetail(branchId, tableId));
+) =>
+  portal === "owner"
+    ? PATH.owner.branchTableDetail(branchId, tableId)
+    : PATH.manager.branchTableDetail(branchId, tableId);
 
 export const downloadQrBlob = (blob: Blob, fileName: string) => {
   const url = window.URL.createObjectURL(blob);
@@ -167,7 +187,9 @@ export const downloadQrBlob = (blob: Blob, fileName: string) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const getQrFileName = (table?: Pick<OwnerTableResponse, "tableNumber" | "tableId"> | null) => {
+export const getQrFileName = (
+  table?: Pick<OwnerTableResponse, "tableNumber" | "tableId"> | null
+) => {
   const suffix = table?.tableNumber || table?.tableId || "table";
 
   return `scannow-table-${suffix}-qr.png`;

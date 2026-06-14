@@ -1,6 +1,5 @@
-import defaultAxios from "axios";
-
 import { QUERY_KEY } from "@/constants/queryKeys";
+import { getVietnameseApiErrorMessage } from "@/helpers/presentation";
 import useMutation from "@/hooks/useMutation";
 import { axiosBasic } from "@/services/axiosBasic";
 import { showNotify } from "@/stores/global";
@@ -37,14 +36,6 @@ const inactivateOwnerBranch = async ({ id }: ToggleOwnerBranchPayload) => {
   return await axiosBasic.patch<ApiResponse<BranchResponse>>(`/api/owner/branches/${id}/inactive`);
 };
 
-const getApiErrorMessage = (error: unknown, fallbackMessage: string) => {
-  if (defaultAxios.isAxiosError(error)) {
-    return error.response?.data?.message ?? fallbackMessage;
-  }
-
-  return fallbackMessage;
-};
-
 const useOwnerBranchMutationHelpers = () => {
   const queryClient = useQueryClient();
 
@@ -58,7 +49,7 @@ const useOwnerBranchMutationHelpers = () => {
       showNotify({
         type: "warning",
         message:
-          "The change was saved, but we could not refresh the branch data. Please refresh the page.",
+          "Đã lưu thay đổi nhưng chưa thể tải lại dữ liệu chi nhánh. Vui lòng tải lại trang.",
       });
     }
   };
@@ -73,12 +64,12 @@ export const useCreateOwnerBranchMutation = () => {
     mutationFn: createOwnerBranch,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerBranches("Branch created successfully.");
+      await refreshOwnerBranches("Đã tạo chi nhánh.");
     },
     onError: (error) => {
       showNotify({
         type: "error",
-        message: getApiErrorMessage(error, "Unable to create this branch."),
+        message: getVietnameseApiErrorMessage(error, "Không thể tạo chi nhánh."),
       });
     },
   });
@@ -91,12 +82,12 @@ export const useUpdateOwnerBranchMutation = () => {
     mutationFn: updateOwnerBranch,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerBranches("Branch updated successfully.");
+      await refreshOwnerBranches("Đã cập nhật chi nhánh.");
     },
     onError: (error) => {
       showNotify({
         type: "error",
-        message: getApiErrorMessage(error, "Unable to update this branch."),
+        message: getVietnameseApiErrorMessage(error, "Không thể cập nhật chi nhánh."),
       });
     },
   });
@@ -109,12 +100,12 @@ export const useActivateOwnerBranchMutation = () => {
     mutationFn: activateOwnerBranch,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerBranches("Branch activated successfully.");
+      await refreshOwnerBranches("Đã kích hoạt chi nhánh.");
     },
     onError: (error) => {
       showNotify({
         type: "error",
-        message: getApiErrorMessage(error, "Unable to activate this branch."),
+        message: getVietnameseApiErrorMessage(error, "Không thể kích hoạt chi nhánh."),
       });
     },
   });
@@ -127,12 +118,12 @@ export const useInactivateOwnerBranchMutation = () => {
     mutationFn: inactivateOwnerBranch,
     hasLoading: true,
     onSuccess: async () => {
-      await refreshOwnerBranches("Branch deactivated successfully.");
+      await refreshOwnerBranches("Đã ngừng hoạt động chi nhánh.");
     },
     onError: (error) => {
       showNotify({
         type: "error",
-        message: getApiErrorMessage(error, "Unable to deactivate this branch."),
+        message: getVietnameseApiErrorMessage(error, "Không thể ngừng hoạt động chi nhánh."),
       });
     },
   });
