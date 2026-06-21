@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ChevronLeft,
@@ -40,6 +41,7 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80";
 
 export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
+  const router = useRouter();
   const normalizedSessionCode = sessionCode.toUpperCase();
   const [session, setSession] = useState<PersistedCustomerSession | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
@@ -105,6 +107,8 @@ export const SessionMenuItemPage = ({ sessionCode, menuItemId }: Props) => {
       message:
         currentQuantity > 0 ? "Đã cập nhật món trong giỏ hàng." : "Đã thêm món vào giỏ hàng.",
     });
+
+    router.replace(PATH.customer.sessionMenu(normalizedSessionCode));
   };
 
   return (

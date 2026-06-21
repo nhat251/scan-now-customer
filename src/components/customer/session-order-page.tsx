@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
   Clock,
   ConciergeBell,
   CookingPot,
@@ -21,6 +24,7 @@ import {
 import { PayOsQrPanel } from "@/components/payment/payos-qr-panel";
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
+import { QUERY_KEY } from "@/constants/queryKeys";
 import {
   useCancelPublicPaymentMutation,
   useCreatePublicCheckoutMutation,
@@ -31,12 +35,14 @@ import {
 } from "@/hooks/queries/useOrderQueries";
 import { useOrderUpdates } from "@/hooks/useOrderUpdates";
 import { cn } from "@/lib/utils";
-import type { CheckoutResponse, OrderStatus } from "@/types/order";
+import { getOrderDetail } from "@/services/order";
+import type { CheckoutResponse, CustomerOrderResponse, OrderStatus } from "@/types/order";
+import { useQueries } from "@tanstack/react-query";
 
 import {
-  clearPersistedCustomerOrder,
   formatCurrency,
   getCustomerApiErrorMessage,
+  readPersistedCustomerOrders,
 } from "./customer-session-utils";
 
 type Props = {
@@ -235,30 +241,336 @@ const LIVE_STATUS: Record<
   },
 };
 
-export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
-  const router = useRouter();
-  const normalizedSessionCode = sessionCode.toUpperCase();
-  const [checkout, setCheckout] = useState<CheckoutResponse | null>(null);
-  const hasRefetchedCompletedPayment = useRef(false);
-  const { status: liveStatus, latestOrder } = useOrderUpdates(normalizedSessionCode, orderId);
+// ─── Single Order Card (accordion item) ──────────────────────────────────────
+
+type OrderCardProps = {
+  sessionCode: string;
+  orderId: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isCurrentOrder: boolean;
+};
+
+const OrderCard = ({
+  sessionCode,
+  orderId,
+  isExpanded,
+  onToggle,
+  isCurrentOrder,
+}: OrderCardProps) => {
+  const { status: liveStatus, latestOrder } = useOrderUpdates(sessionCode, orderId);
   const orderQuery = usePublicOrderDetailQuery(
-    normalizedSessionCode,
+    sessionCode,
     orderId,
     liveStatus !== "connected"
   );
-  const checkoutMutation = useCreatePublicCheckoutMutation();
-  const cancelPaymentMutation = useCancelPublicPaymentMutation();
   const order =
     liveStatus === "connected" && latestOrder ? latestOrder : (orderQuery.data ?? latestOrder);
-  const paymentStatusQuery = usePublicPaymentStatusQuery(
-    normalizedSessionCode,
-    checkout?.paymentMethod === "PAYOS" && order?.status !== "Completed"
-  );
   const status = order ? CUSTOMER_STATUS[order.status] : undefined;
   const liveIndicator = LIVE_STATUS[liveStatus];
   const currentTimelineIndex = order ? TIMELINE_CURRENT_INDEX[order.status] : null;
   const completedTimelineIndex = order ? TIMELINE_COMPLETED_INDEX[order.status] : -1;
-  const refetchOrder = orderQuery.refetch;
+
+
+
+  // Summary line for collapsed view
+  const itemSummary = order?.items
+    .map((i) => `${i.menuItemName} (x${i.quantity})`)
+    .join(", ");
+
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300",
+        isExpanded
+          ? "border-primary/30 shadow-primary/10 shadow-md"
+          : "border-outline-variant/30",
+        isCurrentOrder && !isExpanded && "border-primary/20"
+      )}
+    >
+      {/* ── Accordion Header ── */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-start gap-3 px-4 py-4 text-left transition-colors duration-150 hover:bg-gray-50 active:bg-gray-100"
+        aria-expanded={isExpanded}
+      >
+        <div className="min-w-0 flex-1">
+          {/* Order number + time */}
+          <div className="flex flex-wrap items-center gap-2">
+            {order ? (
+              <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-0.5 text-sm font-black tracking-wide">
+                {order.orderNumber}
+              </span>
+            ) : (
+              <span className="rounded-lg bg-gray-100 px-2.5 py-0.5 text-sm font-bold text-gray-400">
+                ...
+              </span>
+            )}
+            {order && (
+              <span className="text-on-surface-variant text-sm">
+                {formatOrderTime(order.createdAt)}
+              </span>
+            )}
+            {status && (
+              <span
+                className={cn(
+                  "ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold",
+                  status.tone
+                )}
+              >
+                {status.label}
+              </span>
+            )}
+          </div>
+
+          {/* Item count + total */}
+          {order ? (
+            <div className="mt-1.5">
+              <p className="text-on-surface text-[15px] font-bold">
+                {order.items.length} món · {formatCurrency(order.totalAmount)}
+              </p>
+              {!isExpanded && itemSummary && (
+                <p className="text-primary mt-0.5 truncate text-sm">
+                  {itemSummary}
+                </p>
+              )}
+            </div>
+          ) : orderQuery.isLoading ? (
+            <div className="mt-2 flex items-center gap-2">
+              <Loader2 className="text-primary size-4 animate-spin" />
+              <span className="text-on-surface-variant text-sm">Đang tải...</span>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="text-on-surface-variant mt-0.5 shrink-0">
+          {isExpanded ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
+        </div>
+      </button>
+
+      {/* ── Accordion Body ── */}
+      {isExpanded && (
+        <div className="border-t border-gray-100 px-4 pt-4 pb-5">
+          {orderQuery.isLoading && !order ? (
+            <div className="flex min-h-32 items-center justify-center">
+              <Loader2 className="text-primary size-8 animate-spin" />
+            </div>
+          ) : orderQuery.isError && !order ? (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <XCircle className="text-error size-10" />
+              <p className="text-on-surface-variant text-sm">
+                {getCustomerApiErrorMessage(orderQuery.error, "Không tải được đơn hàng.")}
+              </p>
+              <Button size="sm" onClick={() => orderQuery.refetch()}>
+                Thử lại
+              </Button>
+            </div>
+          ) : order && status ? (
+            <div className="flex flex-col gap-5">
+              {/* Status message + live indicator */}
+              <div className="bg-surface-container-low flex items-start gap-4 rounded-2xl p-4">
+                <div className={cn("rounded-full p-2", status.iconBg, status.iconColor)}>
+                  {order.status === "Completed" ? (
+                    <CheckCircle2 className="size-5" />
+                  ) : order.status === "Preparing" ? (
+                    <CookingPot className="size-5" />
+                  ) : (
+                    <Clock className="size-5" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <p className="font-body-sm text-body-sm text-on-surface leading-tight">
+                    {status.message}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        liveIndicator.dot,
+                        liveIndicator.dotAnimation
+                      )}
+                    />
+                    <span className={cn("font-label-sm text-label-sm font-medium", liveIndicator.text)}>
+                      {liveIndicator.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              {order.status !== "Cancelled" ? (
+                <div className="relative flex flex-col gap-5 px-2">
+                  {ORDER_TIMELINE.map((step, index) => {
+                    const isCompleted = index <= completedTimelineIndex;
+                    const isCurrent = index === currentTimelineIndex;
+                    const Icon = isCompleted ? Check : step.icon;
+
+                    return (
+                      <div key={step.label} className="relative flex gap-4">
+                        {index < ORDER_TIMELINE.length - 1 ? (
+                          <div
+                            className={cn(
+                              "absolute top-6 bottom-[-20px] left-[11px] w-[2px]",
+                              index < completedTimelineIndex
+                                ? "bg-primary-container"
+                                : "bg-outline-variant/60"
+                            )}
+                          />
+                        ) : null}
+
+                        <div
+                          className={cn(
+                            "z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+                            isCompleted && "bg-primary-container text-white",
+                            isCurrent &&
+                              "border-primary-container text-primary-container border-2 bg-white",
+                            !isCompleted &&
+                              !isCurrent &&
+                              "bg-surface-variant text-on-surface-variant"
+                          )}
+                        >
+                          <Icon className="size-3.5" strokeWidth={isCompleted || isCurrent ? 3 : 2} />
+                        </div>
+
+                        <div className="flex flex-col pb-1">
+                          <p
+                            className={cn(
+                              "font-label-md text-label-md",
+                              isCurrent
+                                ? "text-primary font-bold"
+                                : isCompleted
+                                  ? "text-on-surface font-bold"
+                                  : "text-on-surface-variant opacity-60"
+                            )}
+                          >
+                            {step.label}
+                          </p>
+                          {(isCompleted || isCurrent) && (
+                            <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
+                              {index === 0 ? `${formatOrderTime(order.createdAt)} • ` : ""}
+                              {step.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+
+              {/* Items list */}
+              <div className="rounded-2xl border border-orange-100/70 bg-white p-4 shadow-sm shadow-orange-100/30">
+                <h3 className="text-base font-bold">Món đã đặt</h3>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Mỗi món được cập nhật riêng theo xác nhận từ bếp.
+                </p>
+                <div className="mt-3 space-y-3">
+                  {order.items.map((item) => {
+                    const itemStatus =
+                      CUSTOMER_ITEM_STATUS[item.status] ?? CUSTOMER_ITEM_STATUS.Pending;
+                    return (
+                      <div
+                        key={item.orderItemId}
+                        className="flex justify-between gap-3 border-b border-gray-100 pb-3 last:border-0 last:pb-0"
+                      >
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold">{item.menuItemName}</p>
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 text-[10px] font-bold",
+                                itemStatus.tone
+                              )}
+                            >
+                              {itemStatus.label}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            {item.quantity} x {formatCurrency(item.unitPrice)}
+                          </p>
+                          {item.note && (
+                            <p className="mt-0.5 text-xs text-gray-400">Ghi chú: {item.note}</p>
+                          )}
+                        </div>
+                        <p className="shrink-0 text-sm font-bold">{formatCurrency(item.subTotal)}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Totals */}
+                <dl className="mt-4 space-y-1.5 border-t border-gray-100 pt-3 text-sm">
+                  <div className="flex justify-between">
+                    <p className="text-on-surface-variant">Tạm tính</p>
+                    <p className="font-medium">{formatCurrency(order.subTotal)}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p className="text-on-surface-variant">VAT ({order.vatPercent}%)</p>
+                    <p className="font-medium">{formatCurrency(order.vatAmount)}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p className="text-on-surface-variant">
+                      Phí dịch vụ ({order.serviceChargePercent}%)
+                    </p>
+                    <p className="font-medium">{formatCurrency(order.serviceChargeAmount)}</p>
+                  </div>
+                  <div className="mt-1 flex justify-between border-t border-gray-100 pt-2">
+                    <p className="font-bold">Tổng cộng</p>
+                    <p className="text-primary-container font-black">{formatCurrency(order.totalAmount)}</p>
+                  </div>
+                </dl>
+              </div>
+
+
+
+              {/* Refresh button for this order */}
+              <button
+                type="button"
+                onClick={() => orderQuery.refetch()}
+                disabled={orderQuery.isRefetching}
+                className="hover:bg-surface-container-high text-on-surface-variant flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm transition-colors duration-150 active:scale-95 disabled:opacity-50"
+              >
+                <RefreshCw className={cn("size-4", orderQuery.isRefetching && "animate-spin")} />
+                Cập nhật đơn này
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Session Payment Summary ──────────────────────────────────────────────────
+
+function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: string; allOrderIds: string[] }) {
+  const [checkout, setCheckout] = useState<CheckoutResponse | null>(null);
+  const hasRefetchedCompletedPayment = useRef(false);
+  const checkoutMutation = useCreatePublicCheckoutMutation();
+  const cancelPaymentMutation = useCancelPublicPaymentMutation();
+  
+  const orderQueries = useQueries({
+    queries: allOrderIds.map((id) => ({
+      queryKey: [QUERY_KEY.PUBLIC_ORDER, sessionCode, id],
+      queryFn: () => getOrderDetail(sessionCode, id),
+      select: (response: Awaited<ReturnType<typeof getOrderDetail>>) => response?.data?.result,
+    })),
+  });
+
+  const orders = orderQueries.map(q => q.data).filter(Boolean) as CustomerOrderResponse[];
+  
+  const refetchAll = async () => {
+    await Promise.all(orderQueries.map(q => q.refetch()));
+  };
+
+  const isAlreadyCompleted = orders.length > 0 && orders.every(o => o.status === "Completed");
+  const canCheckout = orders.length > 0 && orders.every(o => o.status === "Served" || o.status === "Completed");
+
+  const paymentStatusQuery = usePublicPaymentStatusQuery(
+    sessionCode,
+    checkout?.paymentMethod === "PAYOS" && !isAlreadyCompleted
+  );
 
   useEffect(() => {
     if (
@@ -266,340 +578,209 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
       !hasRefetchedCompletedPayment.current
     ) {
       hasRefetchedCompletedPayment.current = true;
-      void refetchOrder();
+      void refetchAll();
     }
-  }, [paymentStatusQuery.data?.paymentStatus, refetchOrder]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentStatusQuery.data?.paymentStatus]);
 
   const requestPayOSPayment = async () => {
     const response = await checkoutMutation.mutateAsync({
-      sessionCode: normalizedSessionCode,
+      sessionCode,
       request: { paymentMethod: "PAYOS" },
     });
-
     setCheckout(response.result);
   };
 
   const cancelPayOSPayment = async () => {
-    await cancelPaymentMutation.mutateAsync({ sessionCode: normalizedSessionCode });
+    await cancelPaymentMutation.mutateAsync({ sessionCode });
     setCheckout(null);
     hasRefetchedCompletedPayment.current = false;
-    await refetchOrder();
+    await refetchAll();
   };
 
+  if (orders.length === 0) return null;
+
+  const aggregatedSubTotal = orders.reduce((sum, o) => sum + o.subTotal, 0);
+  const aggregatedVat = orders.reduce((sum, o) => sum + o.vatAmount, 0);
+  const aggregatedService = orders.reduce((sum, o) => sum + o.serviceChargeAmount, 0);
+  const aggregatedTotal = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+  return (
+    <div className="border-primary/20 mt-2 rounded-2xl border bg-white p-5 shadow-sm">
+      <h3 className="text-lg font-bold">Tổng hoá đơn</h3>
+      
+      <dl className="mt-4 space-y-2 text-sm">
+        <div className="flex justify-between">
+          <p className="text-on-surface-variant">Tạm tính ({orders.length} đơn)</p>
+          <p className="font-medium">{formatCurrency(aggregatedSubTotal)}</p>
+        </div>
+        <div className="flex justify-between">
+          <p className="text-on-surface-variant">VAT</p>
+          <p className="font-medium">{formatCurrency(aggregatedVat)}</p>
+        </div>
+        <div className="flex justify-between">
+          <p className="text-on-surface-variant">Phí dịch vụ</p>
+          <p className="font-medium">{formatCurrency(aggregatedService)}</p>
+        </div>
+        <div className="mt-2 flex justify-between border-t border-gray-100 pt-3">
+          <p className="text-base font-bold">Tổng cộng</p>
+          <p className="text-primary text-lg font-black">{formatCurrency(aggregatedTotal)}</p>
+        </div>
+      </dl>
+
+      <div className="mt-6 border-t border-gray-100 pt-5">
+        <h4 className="font-bold">Thanh toán</h4>
+        {isAlreadyCompleted ? (
+          <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-green-700">
+            <CheckCircle2 className="size-5" />
+            Thanh toán đã hoàn tất.
+          </p>
+        ) : !canCheckout ? (
+          <p className="text-warning-foreground bg-warning/10 border-warning/20 mt-2 rounded-xl border p-3 text-sm">
+            Vui lòng chờ bếp chuẩn bị và phục vụ xong các món để thanh toán.
+          </p>
+        ) : (
+          <>
+            <p className="mt-1 mb-3 text-sm text-gray-500">
+              Quét QR PayOS bên dưới để thanh toán cho toàn bộ phiên.
+            </p>
+            <Button
+              className="w-full rounded-xl"
+              onClick={requestPayOSPayment}
+              disabled={checkoutMutation.isPending}
+            >
+              <CreditCard className="mr-2 size-4" />
+              {checkout ? "Hiển thị lại QR PayOS" : "Thanh toán PayOS"}
+            </Button>
+            {checkout && (
+              <div className="mt-4">
+                <PayOsQrPanel
+                  qrCode={checkout.qrCode}
+                  checkoutUrl={checkout.checkoutUrl}
+                  amount={checkout.amount}
+                  description={checkout.description}
+                  accountName={checkout.accountName}
+                  accountNumber={checkout.accountNumber}
+                  bin={checkout.bin}
+                  expiresAt={checkout.paymentExpiresAt}
+                  isChecking={paymentStatusQuery.isFetching}
+                  onCancel={cancelPayOSPayment}
+                  cancelDisabled={cancelPaymentMutation.isPending}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
+  const router = useRouter();
+  const normalizedSessionCode = sessionCode.toUpperCase();
+  const [allOrderIds, setAllOrderIds] = useState<string[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(orderId);
+
+  // Load all tracked order IDs for this session
+  useEffect(() => {
+    const all = readPersistedCustomerOrders(normalizedSessionCode);
+    // Put the current orderId first if present, then the rest in reverse (newest first)
+    const withoutCurrent = all.filter((id) => id !== orderId);
+    const sorted = [orderId, ...withoutCurrent.reverse()];
+    setAllOrderIds(sorted);
+  }, [normalizedSessionCode, orderId]);
+
   const handleReorder = () => {
-    clearPersistedCustomerOrder(normalizedSessionCode);
+    // Do NOT clear persisted orders here — we want to keep tracking all existing orders.
+    // The new order will be added to the list via persistCustomerOrder in the checkout flow.
     router.push(PATH.customer.sessionMenu(normalizedSessionCode));
+  };
+
+  const handleToggle = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
   return (
     <main className="bg-background text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed mx-auto flex min-h-screen max-w-[480px] flex-col gap-6 pb-32">
-      {/* 1. Sticky Header */}
+      {/* Sticky Header */}
       <header className="border-outline-variant/30 sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b bg-white/95 px-4 shadow-sm backdrop-blur-xl">
         <div className="flex items-center gap-2">
+          <Link
+            href={PATH.customer.sessionMenu(normalizedSessionCode)}
+            className="hover:bg-surface-container-high text-primary flex size-10 items-center justify-center rounded-full transition-colors duration-150 active:scale-95"
+            aria-label="Quay lại menu"
+          >
+            <ChevronLeft className="size-6" />
+          </Link>
           <Utensils className="text-primary size-6" />
           <h1 className="font-headline-md text-headline-md text-primary font-bold tracking-tight">
             ScanNow
           </h1>
         </div>
-        <button
-          onClick={() => orderQuery.refetch()}
-          disabled={orderQuery.isRefetching}
-          className="hover:bg-surface-container-high text-on-surface-variant flex items-center gap-1.5 rounded-full px-3 py-2 transition-colors duration-150 active:scale-95 disabled:opacity-50"
-        >
-          <RefreshCw className={cn("size-[18px]", orderQuery.isRefetching && "animate-spin")} />
-          <span className="font-label-md text-label-md">Cập nhật</span>
-        </button>
+        <div className="text-on-surface-variant text-sm font-medium">
+          Theo dõi đơn hàng
+        </div>
       </header>
 
-      <div className="flex flex-col gap-6 px-4">
-        {liveStatus === "reconnecting" ||
-        liveStatus === "disconnected" ||
-        liveStatus === "error" ? (
-          <p className="bg-warning/30 text-warning-foreground rounded-xl px-4 py-2 text-center text-xs font-semibold">
-            Đang kết nối lại cập nhật trực tiếp. Bạn vẫn có thể bấm Cập nhật.
-          </p>
-        ) : null}
+      <div className="flex flex-col gap-4 px-4">
+        {/* Section title */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-on-surface-variant text-xs font-semibold tracking-wider uppercase">
+              Phiên {normalizedSessionCode}
+            </p>
+            <h2 className="text-on-surface text-lg font-bold">
+              {allOrderIds.length > 1
+                ? `${allOrderIds.length} đơn hàng`
+                : "Đơn hàng của bạn"}
+            </h2>
+          </div>
+        </div>
 
-        {orderQuery.isLoading && !order ? (
-          <div className="flex min-h-72 items-center justify-center">
+        {/* Order cards list */}
+        {allOrderIds.length === 0 ? (
+          <div className="flex min-h-32 items-center justify-center">
             <Loader2 className="text-primary size-8 animate-spin" />
           </div>
-        ) : null}
+        ) : (
+          <div className="flex flex-col gap-3">
+            {allOrderIds.map((id) => (
+              <OrderCard
+                key={id}
+                sessionCode={normalizedSessionCode}
+                orderId={id}
+                isExpanded={expandedId === id}
+                onToggle={() => handleToggle(id)}
+                isCurrentOrder={id === orderId}
+              />
+            ))}
+          </div>
+        )}
 
-        {orderQuery.isError && !order ? (
-          <section className="border-outline-variant/30 flex flex-col gap-4 rounded-3xl border bg-white p-6 text-center shadow-sm">
-            <XCircle className="text-error mx-auto size-12" />
-            <h1 className="text-xl font-bold">Không thể tải đơn hàng</h1>
-            <p className="text-on-surface-variant text-sm">
-              {getCustomerApiErrorMessage(orderQuery.error, "Không tìm thấy đơn hàng này.")}
-            </p>
-            <Button className="bg-primary mt-2 text-white" onClick={() => orderQuery.refetch()}>
-              Thử lại
-            </Button>
-          </section>
-        ) : null}
+        <SessionPaymentSummary sessionCode={normalizedSessionCode} allOrderIds={allOrderIds} />
 
-        {order && status ? (
-          <>
-            {/* 2. Order Status Card */}
-            <section className="border-primary-container/20 relative flex flex-col gap-5 overflow-hidden rounded-3xl border bg-white p-5 shadow-sm">
-              <div className="z-10 flex items-start justify-between">
-                <div>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">Mã đơn hàng</p>
-                  <h2 className="font-headline-sm text-headline-sm text-on-surface font-black">
-                    #{order.orderNumber}
-                  </h2>
-                </div>
-                <div
-                  className={cn("font-label-sm text-label-sm rounded-full px-3 py-1", status.tone)}
-                >
-                  {status.label}
-                </div>
-              </div>
+        {/* Action buttons */}
+        <div className="mt-2 flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={handleReorder}
+            className="bg-primary font-headline-sm hover:bg-primary/90 shadow-primary/20 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white shadow-lg transition-colors transition-transform active:scale-95"
+          >
+            <Plus className="size-5" />
+            Đặt thêm món
+          </button>
 
-              <div className="bg-surface-container-low z-10 flex items-start gap-4 rounded-2xl p-4">
-                <div className={cn("rounded-full p-2", status.iconBg, status.iconColor)}>
-                  {order.status === "Completed" ? (
-                    <CheckCircle2 className="size-6" />
-                  ) : order.status === "Preparing" ? (
-                    <CookingPot className="size-6" />
-                  ) : (
-                    <Clock className="size-6" />
-                  )}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <p className="font-body-sm text-body-sm text-on-surface leading-tight">
-                    {status.message}
-                  </p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    <span
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        liveIndicator.dot,
-                        liveIndicator.dotAnimation
-                      )}
-                    ></span>
-                    <span
-                      className={cn("font-label-sm text-label-sm font-medium", liveIndicator.text)}
-                    >
-                      {liveIndicator.label}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* 3. Timeline Steps */}
-            {order.status !== "Cancelled" ? (
-              <section className="relative mt-2 flex flex-col gap-6 px-4">
-                {ORDER_TIMELINE.map((step, index) => {
-                  const isCompleted = index <= completedTimelineIndex;
-                  const isCurrent = index === currentTimelineIndex;
-                  const Icon = isCompleted ? Check : step.icon;
-
-                  return (
-                    <div key={step.label} className="relative flex gap-5">
-                      {/* Step Line */}
-                      {index < ORDER_TIMELINE.length - 1 ? (
-                        <div
-                          className={cn(
-                            "absolute top-6 bottom-[-24px] left-[11px] w-[2px]",
-                            index < completedTimelineIndex
-                              ? "bg-primary-container"
-                              : "bg-outline-variant/60"
-                          )}
-                        />
-                      ) : null}
-
-                      {/* Step Icon */}
-                      <div
-                        className={cn(
-                          "z-10 flex h-6 w-6 items-center justify-center rounded-full",
-                          isCompleted && "bg-primary-container text-white",
-                          isCurrent &&
-                            "border-primary-container text-primary-container border-2 bg-white",
-                          !isCompleted && !isCurrent && "bg-surface-variant text-on-surface-variant"
-                        )}
-                      >
-                        <Icon className="size-3.5" strokeWidth={isCompleted || isCurrent ? 3 : 2} />
-                      </div>
-
-                      {/* Step Text */}
-                      <div className="flex flex-col pb-1">
-                        <p
-                          className={cn(
-                            "font-label-md text-label-md",
-                            isCurrent
-                              ? "text-primary font-bold"
-                              : isCompleted
-                                ? "text-on-surface font-bold"
-                                : "text-on-surface-variant opacity-60"
-                          )}
-                        >
-                          {step.label}
-                        </p>
-                        {isCompleted || isCurrent ? (
-                          <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
-                            {index === 0 ? `${formatOrderTime(order.createdAt)} • ` : ""}
-                            {step.description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
-              </section>
-            ) : null}
-
-            {/* 4. Order Summary Card */}
-            <section className="border-outline-variant/30 overflow-hidden rounded-3xl border bg-white shadow-sm">
-              <div className="border-surface-container border-b p-5">
-                <h3 className="font-headline-sm text-headline-sm text-on-surface">Món đã đặt</h3>
-              </div>
-            </section>
-
-            <section className="mt-5 px-4">
-              <div className="rounded-3xl border border-orange-100/70 bg-white p-5 shadow-md shadow-orange-100/30">
-                <h2 className="text-lg font-bold">Món đã đặt</h2>
-                <p className="mt-1 text-xs text-gray-500">
-                  Mỗi món được cập nhật riêng theo xác nhận từ bếp.
-                </p>
-                <div className="mt-4 space-y-4">
-                  {order.items.map((item) => {
-                    const itemStatus =
-                      CUSTOMER_ITEM_STATUS[item.status] ?? CUSTOMER_ITEM_STATUS.Pending;
-
-                    return (
-                      <div
-                        key={item.orderItemId}
-                        className="flex justify-between gap-3 border-b border-gray-100 pb-4 last:border-0 last:pb-0"
-                      >
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold">{item.menuItemName}</p>
-                            <span
-                              className={cn(
-                                "rounded-full px-2.5 py-1 text-[11px] font-bold",
-                                itemStatus.tone
-                              )}
-                            >
-                              {itemStatus.label}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {item.quantity} x {formatCurrency(item.unitPrice)}
-                          </p>
-                          {item.note ? (
-                            <p className="mt-1 text-xs text-gray-500">Ghi chú: {item.note}</p>
-                          ) : null}
-                        </div>
-                        <p className="shrink-0 font-bold">{formatCurrency(item.subTotal)}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <dl className="mt-5 space-y-2 border-t border-gray-100 pt-4 text-sm">
-                  <div className="flex justify-between">
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">Tạm tính</p>
-                    <p className="font-label-md text-label-md text-on-surface">
-                      {formatCurrency(order.subTotal)}
-                    </p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">
-                      VAT ({order.vatPercent}%)
-                    </p>
-                    <p className="font-label-md text-label-md text-on-surface">
-                      {formatCurrency(order.vatAmount)}
-                    </p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">
-                      Phí dịch vụ ({order.serviceChargePercent}%)
-                    </p>
-                    <p className="font-label-md text-label-md text-on-surface">
-                      {formatCurrency(order.serviceChargeAmount)}
-                    </p>
-                  </div>
-                  <div className="border-surface-container mt-2 flex justify-between border-t pt-2">
-                    <p className="font-headline-sm text-headline-sm text-on-surface">Tổng cộng</p>
-                    <p className="font-headline-sm text-headline-sm text-primary-container font-black">
-                      {formatCurrency(order.totalAmount)}
-                    </p>
-                  </div>
-                </dl>
-              </div>
-            </section>
-
-            {/* 5. Payment Section */}
-            {order.status === "Served" || checkout || order.status === "Completed" ? (
-              <section className="mt-5 px-4">
-                <div className="rounded-2xl border border-orange-100/70 bg-white p-5 shadow-sm">
-                  <h2 className="text-lg font-bold">Thanh toán</h2>
-                  {order.status === "Completed" ? (
-                    <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-green-700">
-                      <CheckCircle2 className="size-5" />
-                      Thanh toán đã hoàn tất.
-                    </p>
-                  ) : (
-                    <>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Quét QR PayOS bên dưới và giữ nguyên trang này để hệ thống cập nhật trạng
-                        thái.
-                      </p>
-                      <Button
-                        className="mt-4 w-full rounded-xl"
-                        onClick={requestPayOSPayment}
-                        disabled={checkoutMutation.isPending}
-                      >
-                        <CreditCard className="size-4" />
-                        {checkout ? "Hiển thị lại QR PayOS" : "Thanh toán PayOS"}
-                      </Button>
-                      {checkout ? (
-                        <div className="mt-4">
-                          <PayOsQrPanel
-                            qrCode={checkout.qrCode}
-                            checkoutUrl={checkout.checkoutUrl}
-                            amount={checkout.amount}
-                            description={checkout.description}
-                            accountName={checkout.accountName}
-                            accountNumber={checkout.accountNumber}
-                            bin={checkout.bin}
-                            expiresAt={checkout.paymentExpiresAt}
-                            isChecking={paymentStatusQuery.isFetching}
-                            onCancel={cancelPayOSPayment}
-                            cancelDisabled={cancelPaymentMutation.isPending}
-                          />
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              </section>
-            ) : null}
-
-            {/* 6. Action Buttons */}
-            <section className="flex flex-col gap-4">
-              {order.status === "Completed" ? (
-                <button
-                  type="button"
-                  onClick={handleReorder}
-                  className="bg-primary font-headline-sm hover:bg-primary/90 shadow-primary/20 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white shadow-lg transition-colors transition-transform active:scale-95"
-                >
-                  <Plus className="size-5" />
-                  Đặt thêm món
-                </button>
-              ) : null}
-              <Link
-                href={PATH.customer.sessionMenu(normalizedSessionCode)}
-                className="border-primary-container/30 text-primary font-headline-sm hover:bg-primary-container/5 active-scale flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-4 text-base font-bold transition-colors transition-transform"
-              >
-                <UtensilsCrossed className="size-5" />
-                Xem thực đơn
-              </Link>
-            </section>
-          </>
-        ) : null}
+          <Link
+            href={PATH.customer.sessionMenu(normalizedSessionCode)}
+            className="border-primary-container/30 text-primary font-headline-sm hover:bg-primary-container/5 flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-4 text-base font-bold transition-colors transition-transform active:scale-95"
+          >
+            <UtensilsCrossed className="size-5" />
+            Xem thực đơn
+          </Link>
+        </div>
       </div>
     </main>
   );

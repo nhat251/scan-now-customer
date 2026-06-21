@@ -60,6 +60,7 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
     }
 
     let mounted = true;
+    let shouldStopAfterStart = false;
     setLatestOrder(null);
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(getOrderHubUrl())
@@ -114,6 +115,12 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
     const start = async () => {
       try {
         await connection.start();
+
+        if (!mounted || shouldStopAfterStart) {
+          await connection.stop();
+          return;
+        }
+
         const order = await connection.invoke<CustomerOrderResponse>(
           "JoinOrder",
           normalizedSessionCode,
@@ -121,6 +128,7 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
         );
 
         if (!mounted) {
+          await connection.stop();
           return;
         }
 
@@ -144,6 +152,11 @@ export const useOrderUpdates = (sessionCode: string, orderId: string) => {
       mounted = false;
       const activeConnection = connectionRef.current;
       connectionRef.current = null;
+
+      if (activeConnection?.state === signalR.HubConnectionState.Connecting) {
+        shouldStopAfterStart = true;
+        return;
+      }
 
       if (
         activeConnection?.state === signalR.HubConnectionState.Connected &&
