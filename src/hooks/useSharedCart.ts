@@ -47,6 +47,7 @@ export const useSharedCart = (sessionCode: string) => {
     }
 
     let mounted = true;
+    let shouldStopAfterStart = false;
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(getCartHubUrl())
       .withAutomaticReconnect()
@@ -98,9 +99,16 @@ export const useSharedCart = (sessionCode: string) => {
     const start = async () => {
       try {
         await connection.start();
+
+        if (!mounted || shouldStopAfterStart) {
+          await connection.stop();
+          return;
+        }
+
         const currentCart = await connection.invoke<CartDto>("JoinSession", normalizedSessionCode);
 
         if (!mounted) {
+          await connection.stop();
           return;
         }
 
@@ -121,6 +129,11 @@ export const useSharedCart = (sessionCode: string) => {
       mounted = false;
       const activeConnection = connectionRef.current;
       connectionRef.current = null;
+
+      if (activeConnection?.state === signalR.HubConnectionState.Connecting) {
+        shouldStopAfterStart = true;
+        return;
+      }
 
       if (
         activeConnection?.state === signalR.HubConnectionState.Connected &&

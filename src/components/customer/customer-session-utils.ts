@@ -38,11 +38,34 @@ export const readPersistedCustomerSession = () => {
 };
 
 export const persistCustomerOrder = (sessionCode: string, orderId: string) => {
-  window.localStorage.setItem(`${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`, orderId);
+  const key = `${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`;
+  const existing = readPersistedCustomerOrders(sessionCode);
+  if (!existing.includes(orderId)) {
+    existing.push(orderId);
+  }
+  window.localStorage.setItem(key, JSON.stringify(existing));
 };
 
-export const readPersistedCustomerOrder = (sessionCode: string) => {
-  return window.localStorage.getItem(`${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`);
+export const readPersistedCustomerOrders = (sessionCode: string): string[] => {
+  const raw = window.localStorage.getItem(
+    `${CUSTOMER_ORDER_KEY_PREFIX}.${sessionCode.toUpperCase()}`
+  );
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    // Backward-compat: if old format was a plain string, wrap it
+    if (typeof parsed === "string") return [parsed];
+    if (Array.isArray(parsed)) return parsed as string[];
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/** Returns the most recently added orderId (backward compat). */
+export const readPersistedCustomerOrder = (sessionCode: string): string | null => {
+  const orders = readPersistedCustomerOrders(sessionCode);
+  return orders.length > 0 ? (orders[orders.length - 1] ?? null) : null;
 };
 
 export const clearPersistedCustomerOrder = (sessionCode: string) => {

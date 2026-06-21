@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { QUERY_KEY } from "@/constants/queryKeys";
 import useQuery from "@/hooks/useQuery";
 import {
@@ -15,6 +17,16 @@ import type {
   SessionMenuResponse,
 } from "@/types/customer-session";
 import type { UseQueryResult } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+
+const PUBLIC_TABLE_STALE_TIME = 60 * 1000;
+const PUBLIC_MENU_STALE_TIME = 2 * 60 * 1000;
+const PUBLIC_CATEGORIES_STALE_TIME = 10 * 60 * 1000;
+const PUBLIC_CUSTOMER_GC_TIME = 30 * 60 * 1000;
+
+type PublicMenuItemQueryData = {
+  data: ApiResponse<PublicMenuItemResponse>;
+};
 
 export const usePublicTableQuery = (
   qrCodeToken: string
@@ -24,6 +36,8 @@ export const usePublicTableQuery = (
     queryFn: () => getPublicTable(qrCodeToken),
     select: (res) => res.data.result,
     enabled: Boolean(qrCodeToken),
+    staleTime: PUBLIC_TABLE_STALE_TIME,
+    gcTime: PUBLIC_CUSTOMER_GC_TIME,
   });
 };
 
@@ -31,7 +45,9 @@ export const usePublicSessionMenuQuery = (
   sessionCode: string,
   query: SessionMenuQuery
 ): UseQueryResult<SessionMenuResponse, Error> => {
-  return useQuery<ApiResponse<SessionMenuResponse>, SessionMenuResponse>({
+  const queryClient = useQueryClient();
+
+  const queryInfo = useQuery<ApiResponse<SessionMenuResponse>, SessionMenuResponse>({
     queryKey: [
       QUERY_KEY.PUBLIC_SESSION_MENU,
       sessionCode,
@@ -46,7 +62,29 @@ export const usePublicSessionMenuQuery = (
     queryFn: () => getPublicSessionMenu(sessionCode, query),
     select: (res) => res.data.result,
     enabled: Boolean(sessionCode),
+    staleTime: PUBLIC_MENU_STALE_TIME,
+    gcTime: PUBLIC_CUSTOMER_GC_TIME,
   });
+
+  useEffect(() => {
+    if (queryInfo.data) {
+      queryInfo.data.menu.items.forEach((category) => {
+        category.items.forEach((item) => {
+          queryClient.setQueryData<PublicMenuItemQueryData>(
+            [QUERY_KEY.PUBLIC_MENU_ITEM, item.branchId, item.menuItemId],
+            {
+              data: {
+                message: "Cached public menu item from session menu.",
+                result: item,
+              },
+            }
+          );
+        });
+      });
+    }
+  }, [queryClient, queryInfo.data]);
+
+  return queryInfo;
 };
 
 export const usePublicBranchCategoriesQuery = (
@@ -57,6 +95,8 @@ export const usePublicBranchCategoriesQuery = (
     queryFn: () => getPublicBranchCategories(branchId ?? ""),
     select: (res) => res.data.result,
     enabled: Boolean(branchId),
+    staleTime: PUBLIC_CATEGORIES_STALE_TIME,
+    gcTime: PUBLIC_CUSTOMER_GC_TIME,
   });
 };
 
@@ -69,5 +109,7 @@ export const usePublicMenuItemQuery = (
     queryFn: () => getPublicMenuItem(branchId ?? "", menuItemId),
     select: (res) => res.data.result,
     enabled: Boolean(branchId) && Boolean(menuItemId),
+    staleTime: PUBLIC_MENU_STALE_TIME,
+    gcTime: PUBLIC_CUSTOMER_GC_TIME,
   });
 };
