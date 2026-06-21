@@ -21,8 +21,6 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { useQueries } from "@tanstack/react-query";
-
 import { PayOsQrPanel } from "@/components/payment/payos-qr-panel";
 import { Button } from "@/components/ui/button";
 import { PATH } from "@/constants/path";
@@ -39,6 +37,7 @@ import { useOrderUpdates } from "@/hooks/useOrderUpdates";
 import { cn } from "@/lib/utils";
 import { getOrderDetail } from "@/services/order";
 import type { CheckoutResponse, CustomerOrderResponse, OrderStatus } from "@/types/order";
+import { useQueries } from "@tanstack/react-query";
 
 import {
   formatCurrency,
@@ -271,7 +270,6 @@ const OrderCard = ({
   const liveIndicator = LIVE_STATUS[liveStatus];
   const currentTimelineIndex = order ? TIMELINE_CURRENT_INDEX[order.status] : null;
   const completedTimelineIndex = order ? TIMELINE_COMPLETED_INDEX[order.status] : -1;
-  const refetchOrder = orderQuery.refetch;
 
 
 
@@ -299,13 +297,13 @@ const OrderCard = ({
       >
         <div className="min-w-0 flex-1">
           {/* Order number + time */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-wrap items-center gap-2">
             {order ? (
               <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-0.5 text-sm font-black tracking-wide">
                 {order.orderNumber}
               </span>
             ) : (
-              <span className="bg-gray-100 text-gray-400 rounded-lg px-2.5 py-0.5 text-sm font-bold">
+              <span className="rounded-lg bg-gray-100 px-2.5 py-0.5 text-sm font-bold text-gray-400">
                 ...
               </span>
             )}
@@ -346,14 +344,14 @@ const OrderCard = ({
           ) : null}
         </div>
 
-        <div className="mt-0.5 shrink-0 text-on-surface-variant">
+        <div className="text-on-surface-variant mt-0.5 shrink-0">
           {isExpanded ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
         </div>
       </button>
 
       {/* ── Accordion Body ── */}
       {isExpanded && (
-        <div className="border-t border-gray-100 px-4 pb-5 pt-4">
+        <div className="border-t border-gray-100 px-4 pt-4 pb-5">
           {orderQuery.isLoading && !order ? (
             <div className="flex min-h-32 items-center justify-center">
               <Loader2 className="text-primary size-8 animate-spin" />
@@ -478,7 +476,7 @@ const OrderCard = ({
                       >
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold text-sm">{item.menuItemName}</p>
+                            <p className="text-sm font-semibold">{item.menuItemName}</p>
                             <span
                               className={cn(
                                 "rounded-full px-2 py-0.5 text-[10px] font-bold",
@@ -556,7 +554,7 @@ function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: stri
     queries: allOrderIds.map((id) => ({
       queryKey: [QUERY_KEY.PUBLIC_ORDER, sessionCode, id],
       queryFn: () => getOrderDetail(sessionCode, id),
-      select: (response: any) => response?.data?.result,
+      select: (response: Awaited<ReturnType<typeof getOrderDetail>>) => response?.data?.result,
     })),
   });
 
@@ -582,6 +580,7 @@ function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: stri
       hasRefetchedCompletedPayment.current = true;
       void refetchAll();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentStatusQuery.data?.paymentStatus]);
 
   const requestPayOSPayment = async () => {
@@ -607,7 +606,7 @@ function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: stri
   const aggregatedTotal = orders.reduce((sum, o) => sum + o.totalAmount, 0);
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-white p-5 shadow-sm mt-2">
+    <div className="border-primary/20 mt-2 rounded-2xl border bg-white p-5 shadow-sm">
       <h3 className="text-lg font-bold">Tổng hoá đơn</h3>
       
       <dl className="mt-4 space-y-2 text-sm">
@@ -624,8 +623,8 @@ function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: stri
           <p className="font-medium">{formatCurrency(aggregatedService)}</p>
         </div>
         <div className="mt-2 flex justify-between border-t border-gray-100 pt-3">
-          <p className="font-bold text-base">Tổng cộng</p>
-          <p className="text-primary font-black text-lg">{formatCurrency(aggregatedTotal)}</p>
+          <p className="text-base font-bold">Tổng cộng</p>
+          <p className="text-primary text-lg font-black">{formatCurrency(aggregatedTotal)}</p>
         </div>
       </dl>
 
@@ -637,12 +636,12 @@ function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: stri
             Thanh toán đã hoàn tất.
           </p>
         ) : !canCheckout ? (
-          <p className="mt-2 text-sm text-warning-foreground bg-warning/10 p-3 rounded-xl border border-warning/20">
+          <p className="text-warning-foreground bg-warning/10 border-warning/20 mt-2 rounded-xl border p-3 text-sm">
             Vui lòng chờ bếp chuẩn bị và phục vụ xong các món để thanh toán.
           </p>
         ) : (
           <>
-            <p className="mt-1 text-sm text-gray-500 mb-3">
+            <p className="mt-1 mb-3 text-sm text-gray-500">
               Quét QR PayOS bên dưới để thanh toán cho toàn bộ phiên.
             </p>
             <Button
@@ -650,7 +649,7 @@ function SessionPaymentSummary({ sessionCode, allOrderIds }: { sessionCode: stri
               onClick={requestPayOSPayment}
               disabled={checkoutMutation.isPending}
             >
-              <CreditCard className="size-4 mr-2" />
+              <CreditCard className="mr-2 size-4" />
               {checkout ? "Hiển thị lại QR PayOS" : "Thanh toán PayOS"}
             </Button>
             {checkout && (
@@ -730,7 +729,7 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
         {/* Section title */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider">
+            <p className="text-on-surface-variant text-xs font-semibold tracking-wider uppercase">
               Phiên {normalizedSessionCode}
             </p>
             <h2 className="text-on-surface text-lg font-bold">
@@ -764,7 +763,7 @@ export const SessionOrderPage = ({ sessionCode, orderId }: Props) => {
         <SessionPaymentSummary sessionCode={normalizedSessionCode} allOrderIds={allOrderIds} />
 
         {/* Action buttons */}
-        <div className="flex flex-col gap-3 mt-2">
+        <div className="mt-2 flex flex-col gap-3">
           <button
             type="button"
             onClick={handleReorder}

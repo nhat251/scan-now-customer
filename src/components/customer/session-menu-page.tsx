@@ -226,7 +226,7 @@ export const SessionMenuPage = ({ sessionCode }: Props) => {
 
       {trackedOrderIds.length > 0 ? (
         <div className="bg-surface/95 border-outline-variant/30 sticky top-16 z-40 border-b px-4 py-2.5 shadow-sm backdrop-blur-xl">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
             {trackedOrderIds.map((orderId, index) => (
               <button
                 key={orderId}
